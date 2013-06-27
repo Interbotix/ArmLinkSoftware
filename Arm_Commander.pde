@@ -66,6 +66,16 @@ Textarea successSet;          //text that displays info on a successful set afte
 Button connectButton;
 Button disconnectButton;
 Button autoSearchButton;
+Button update;
+
+CheckBox autoUpdate;
+
+CheckBox buttonBox;
+
+
+
+Slider xSlider, ySlider, zSlider, wristRotSlider, wristAngleSlider, gripperSlider;
+
 
 int cnt = 0;                  //count for listbox items
 int selectedPort;             //currently selected port from serialList drop down
@@ -73,12 +83,14 @@ int selectedPort;             //currently selected port from serialList drop dow
 int debug = 0;                //change to '0' to disable bedbugginf messages from the console, '1' to enable TODO:log debugging to a file, add option to enable debugging
 int running = 0;              //enabled on draw(), used to avoid controlp5 from running functions immidealty on startup
 
+int updateFlag = 1;
 
 int time = 0;                 //holds the time of the last time the servo and arbotix connections were checked.
 
 PImage img;                   //image object for TR logo
 
-
+long prevMillis = 0;
+long currentMillis = 0;
 void setup() 
 {
   size(220, 443);//size of application working area
@@ -91,7 +103,7 @@ void setup()
                 .setPosition(10,60)
                 .setBackgroundColor(color(0, 255))
                 .setWidth(200)
-                .setBackgroundHeight(400)
+                .setBackgroundHeight(350)
                 .disableCollapse()
                 .bringToFront()
                 .setCaptionLabel("Control Options")
@@ -101,91 +113,177 @@ void setup()
    
 /*********************CONTROL GROUP******************/
   //scan button
- /* scanDynaButton = cp5.addButton("scanDyn`aButton")
+  update = cp5.addButton("updateButton")
    .setValue(1)
-   .setPosition(10,10)
-   .setSize(70,70)
-   .setCaptionLabel("  Scan")  
-   .moveTo(scanGroup)   
+   .setPosition(10,350)
+   .setSize(70,45)
+   .setCaptionLabel("Update")  
+   .moveTo(controGroup)   
    ;
-  //set font for the scan button                
-  cp5.getController("scanDynaButton")
+ // set font for the scan button                
+  
+  cp5.getController("updateButton")
      .getCaptionLabel()
      .setFont(cf1)     
      ;    
-   */ 
-   
+    
+
+  autoUpdate = cp5.addCheckBox("autoUpdate")
+                .setPosition(100, 350)
+                .setColorForeground(color(120))
+                .setColorActive(color(255))
+                .setColorLabel(color(255))
+                .setSize(10, 10)
+                .setItemsPerRow(3)
+                .setSpacingColumn(30)
+                .setSpacingRow(20)
+                .addItem("Auto Update", 0)
+   .moveTo(controGroup)   
+                
+                ;
+
+
+  buttonBox = cp5.addCheckBox("buttonBox")
+                .setPosition(10, 300)
+                .setColorForeground(color(120))
+                .setColorActive(color(255))
+                .setColorLabel(color(255))
+                .setSize(10, 10)
+                .setItemsPerRow(3)
+                .setSpacingColumn(30)
+                .setSpacingRow(20)
+                .addItem("1", 0)
+                .addItem("2", 1)
+                .addItem("3", 2)
+                .addItem("4", 3)
+                .addItem("5", 4)
+                .addItem("6", 5)
+                .addItem("7", 6)
+                .addItem("8", 7)
+   .moveTo(controGroup)   
+                
+                ;
+
   //text field that will hold the current servo's ID (when nothing is connected or during scanning, this field will show a message)
   xField = cp5.addTextfield("xField")
                   .setPosition(10,10)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("X Coord:[-512:512]") 
-                  .setWidth(100)
+                  .setCaptionLabel("X Coord:[-512:511]") 
+                  .setWidth(30)
                   .setValue("0")
                   .moveTo(controGroup)   
                   ;   
+
+  xSlider =   cp5.addSlider("xSlider")
+                 .setPosition(50,10)
+                 .setRange(-512,512)
+                 .setSize(100,20)
+                  .moveTo(controGroup)
+                  .setCaptionLabel("") 
+                 ;
+  
  
   yField = cp5.addTextfield("yField")
                   .setPosition(10,50)
                   .setAutoClear(false)
-                  .lock()
-                  .setCaptionLabel("Y Coord: [0:1024]") 
-                  .setWidth(100)
+
+                  .setCaptionLabel("Y Coord: [0:1023]") 
+                  .setWidth(30)
                   .setValue("512")
                   .moveTo(controGroup)   
-                  ;   
+                  ;
+
+  ySlider =   cp5.addSlider("ySlider")
+                 .setPosition(50,50)
+                 .setRange(0,1023)
+                 .setSize(100,20)
+                  .moveTo(controGroup)
+                  .setCaptionLabel("") 
+                 ;   
                   
   zField = cp5.addTextfield("zField")
                   .setPosition(10,90)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Z Coord: [0:1024]") 
-                  .setWidth(100)
+                  .setCaptionLabel("Z Coord: [0:1023]") 
+                  .setWidth(30)
                   .setValue("512")
                   .moveTo(controGroup)   
-                  ;   
+                  ;  
+
+  zSlider =   cp5.addSlider("zSlider")
+                 .setPosition(50,90)
+                 .setRange(0,1023)
+                 .setSize(100,20)
+                  .moveTo(controGroup)
+                  .setCaptionLabel("") 
+                 ;    
 
                   
   wristAngleField = cp5.addTextfield("wristAngleField")
                   .setPosition(10,130)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Wrist Angle: [0:1024]") 
-                  .setWidth(100)
+                  .setCaptionLabel("Wrist Angle: [0:1023]") 
+                  .setWidth(30)
                   .setValue("512")
                   .moveTo(controGroup)   
                   ;   
 
+
+  wristAngleSlider =   cp5.addSlider("wristAngleSlider")
+                 .setPosition(50,130)
+                 .setRange(0,1023)
+                 .setSize(100,20)
+                  .moveTo(controGroup)
+                  .setCaptionLabel("") 
+                 ;   
                   
   wristRotField = cp5.addTextfield("wristRotField")
                   .setPosition(10,170)
                   .setAutoClear(false)
 
                   .setCaptionLabel("Wrist Rotate: [0:1024]") 
-                  .setWidth(100)
+                  .setWidth(30)
                   .setValue("512")
                   .moveTo(controGroup)   
                   ;   
 
+
+  wristRotSlider =   cp5.addSlider("wristRotSlider")
+                 .setPosition(50,170)
+                 .setRange(0,1023)
+                 .setSize(100,20)
+                  .moveTo(controGroup)
+                  .setCaptionLabel("") 
+                 ;   
                   
   gripperField = cp5.addTextfield("gripperField")
                   .setPosition(10,210)
                   .setAutoClear(false)
 
                   .setCaptionLabel("Gripper: [0:1024]") 
-                  .setWidth(100)
+                  .setWidth(30)
                   .setValue("512")
                   .moveTo(controGroup)   
                   ;   
 
-                  
+
+
+  gripperSlider =   cp5.addSlider("gripperSlider")
+                 .setPosition(50,210)
+                 .setRange(0,1023)
+                 .setSize(100,20)
+                  .moveTo(controGroup)
+                  .setCaptionLabel("") 
+                 ;                     
   detlaField = cp5.addTextfield("detlaField")
                   .setPosition(10,250)
                   .setAutoClear(false)
 
                   .setCaptionLabel("Delta: [0:1024]") 
-                  .setWidth(100)
+                  .setWidth(30)
                   .setValue("512")
                   .moveTo(controGroup)   
                   ;   
@@ -332,6 +430,50 @@ void setup()
 
 /*****************************************************START P5 CONTROLLER FUNCTIONS****************************/
 
+
+
+void controlEvent(ControlEvent theEvent) 
+{
+  if (theEvent.isFrom(autoUpdate)) 
+  { 
+    if((int)update.getArrayValue()[0] ==1)
+    {
+     updateFlag = 1; 
+    }
+    else
+    {
+      updateFlag = 0; 
+    }
+  } 
+/*
+  if (theEvent.isFrom(buttonBox)) {
+    myColorBackground = 0;
+    print("got an event from "+checkbox.getName()+"\t\n");
+    // checkbox uses arrayValue to store the state of 
+    // individual checkbox-items. usage:
+    println(checkbox.getArrayValue());
+    int col = 0;
+    for (int i=0;i<checkbox.getArrayValue().length;i++) {
+      int n = (int)checkbox.getArrayValue()[i];
+      print(n);
+      if(n==1) {
+        myColorBackground += checkbox.getItem(i).internalValue();
+      }
+    }
+    println();    
+  }   
+  */ 
+   
+   
+}
+
+
+
+
+
+
+
+
 /************************************
  * errorButton
  *
@@ -347,6 +489,17 @@ public void errorButton(int theValue)
 }  //end error button
 
 
+
+
+/************************************
+ * errorButton
+ *
+ * updateButton will update the serial packet with the new numbers
+ ************************************/
+public void updateButton(int theValue) 
+{
+ updateFlag =1; 
+}
 
 
 /************************************
@@ -572,6 +725,145 @@ void draw()
   int curServoId = 0;//id of the current servo
   running = 1;//set to run mode, so that P5 control functions can begein working
   background(128);    //set the background color
+  /*
+  int xValInt = (int)xField.value() + 512;//the x value can be from -512 to 511, add 512 to offset it to 0 to 1023 for
+  int yValInt = (int)yField.value();
+  int zValInt = (int)zField.value();
+  int wristRotValInt= (int)wristRotField.value();
+  int wristAngleValInt = (int)wristAngleField.value();
+  int gripperValIn = (int)gripperField.value();
+  //int extValIn = (int)extField.value();
+  int detlaValInt = (int)detlaField.value();
+  */
+  //retreiving the field value from each field, casting it to an int, then converting it into 2 bytes
+  byte[] xValBytes = {0,0};
+  byte[] yValBytes = {0,0};
+  byte[] zValBytes = {0,0};
+  byte[] wristRotValBytes = {0,0};
+  byte[] wristAngleValBytes = {0,0};
+  byte[] gripperValBytes = {0,0};
+  
+  
+  //byte[] extValBytes = {0,0};
+  
+  
+
+  byte[] deltaValBytes = intToBytes( (int)detlaField.value());
+  byte buttonByte = 0;
+  byte extValByte = 0;
+  //xValInt = xValInt + 512; 
+
+  
+  if(xField.isActive())
+  {
+     xSlider.setValue(int(xField.getText()));
+  }
+  else
+  {
+    xField.setValue(""+(int(xSlider.value())));//cast to int then to string what maddness is this
+  }
+    
+  if(yField.isActive())
+  {
+     ySlider.setValue(int(yField.getText()));
+  }
+  else
+  {
+    yField.setValue(""+(int(ySlider.value())));//cast to int then to string what maddness is this
+  }
+    
+  if(zField.isActive())
+  {
+     zSlider.setValue(int(zField.getText()));
+  }
+  else
+  {
+    zField.setValue(""+(int(zSlider.value())));//cast to int then to string what maddness is this
+  }
+    
+  if(wristAngleField.isActive())
+  {
+     wristAngleSlider.setValue(int(wristAngleField.getText()));
+  }
+  else
+  {
+    wristAngleField.setValue(""+(int(wristAngleSlider.value())));//cast to int then to string what maddness is this
+  }
+    
+  if(wristRotField.isActive())
+  {
+     wristRotSlider.setValue(int(wristRotField.getText()));
+  }
+  else
+  {
+    wristRotField.setValue(""+(int(wristRotSlider.value())));//cast to int then to string what maddness is this
+  }
+    
+  if(gripperField.isActive())
+  {
+     gripperSlider.setValue(int(gripperField.getText()));
+  }
+  else
+  {
+    gripperField.setValue(""+(int(gripperSlider.value())));//cast to int then to string what maddness is this
+  }
+  
+  
+  if(updateFlag ==1)
+  {
+    xValBytes = intToBytes((int)xField.value() + 512);//the x value can be from -512 to 511, add 512 to offset it to 0 to 1023 for
+    yValBytes = intToBytes((int)yField.value());
+    zValBytes = intToBytes((int)zField.value());
+    wristRotValBytes = intToBytes((int)wristRotField.value());
+    wristAngleValBytes = intToBytes((int)wristAngleField.value());
+    gripperValBytes = intToBytes((int)gripperField.value()); 
+    updateFlag =0 ; 
+  }
+  
+  
+
+  currentMillis = millis();
+  
+  
+  
+  
+  if(currentMillis - prevMillis > 33)
+  {
+    prevMillis = currentMillis;
+      //if the serial port is connected, then send 
+    if(sPort != null)
+    {
+      sPort.write(0xff);          //header
+ 
+      sPort.write(xValBytes[1]); //X Coord High Byte
+      sPort.write(xValBytes[0]); //X Coord Low Byte
+
+      sPort.write(yValBytes[1]); //Y Coord High Byte
+      sPort.write(yValBytes[0]); //Y Coord Low Byte
+
+      sPort.write(zValBytes[1]); //Z Coord High Byte
+      sPort.write(zValBytes[0]); //Z Coord Low Byte
+      
+      sPort.write(wristAngleValBytes[1]); //Write Angle High Byte
+      sPort.write(wristAngleValBytes[0]); //Writs Angle Low Byte
+      
+      sPort.write(wristRotValBytes[1]); //Write Rotate High Byte
+      sPort.write(wristRotValBytes[0]); //Wrist Rotate Low Byte
+      
+      sPort.write(gripperValBytes[1]); //Gripper High Byte
+      sPort.write(gripperValBytes[0]); //Gripper Low Byte
+      
+      sPort.write(buttonByte); //Button byte
+      
+      sPort.write(extValByte); //Extended instruction
+
+      
+      sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+buttonByte+extValByte)%256));  //checksum
+      
+    }
+  }
+  
+  
   //image(, 0, 400, 220,43);//place the TR logo
    
   //check for hearbeat signal every 100ms. If it's been more than 100ms and the serial port is active, proceed
@@ -716,8 +1008,8 @@ byte[] intToBytes(int convertInt)
 {
   byte[] returnBytes = new byte[2]; // array that holds the returned data from the registers only 
   byte mask = byte(0xff);
-  returnBytes[0] =byte(convertInt & mask);
-  returnBytes[1] =byte((convertInt>>8) & mask);
+  returnBytes[0] =byte(convertInt & mask);//low byte
+  returnBytes[1] =byte((convertInt>>8) & mask);//high byte
   return(returnBytes);
   
 }
