@@ -66,7 +66,7 @@ Textarea successSet;          //text that displays info on a successful set afte
 Button connectButton;
 Button disconnectButton;
 Button autoSearchButton;
-Button update;
+Button updateButton;
 
 CheckBox autoUpdate;
 
@@ -80,10 +80,11 @@ Slider xSlider, ySlider, zSlider, wristRotSlider, wristAngleSlider, gripperSlide
 int cnt = 0;                  //count for listbox items
 int selectedPort;             //currently selected port from serialList drop down
 
-int debug = 0;                //change to '0' to disable bedbugginf messages from the console, '1' to enable TODO:log debugging to a file, add option to enable debugging
+int debug = 1;                //change to '0' to disable bedbugginf messages from the console, '1' to enable TODO:log debugging to a file, add option to enable debugging
 int running = 0;              //enabled on draw(), used to avoid controlp5 from running functions immidealty on startup
 
-int updateFlag = 1;
+int updateFlag = 0;
+int autoUpdateFlag = 0;
 
 int time = 0;                 //holds the time of the last time the servo and arbotix connections were checked.
 
@@ -91,6 +92,17 @@ PImage img;                   //image object for TR logo
 
 long prevMillis = 0;
 long currentMillis = 0;
+
+  //retreiving the field value from each field, casting it to an int, then converting it into 2 bytes
+  byte[] xValBytes = {0,0};
+  byte[] yValBytes = {0,0};
+  byte[] zValBytes = {0,0};
+  byte[] wristRotValBytes = {0,0};
+  byte[] wristAngleValBytes = {0,0};
+  byte[] gripperValBytes = {0,0};
+  
+  
+  
 void setup() 
 {
   size(220, 443);//size of application working area
@@ -103,7 +115,7 @@ void setup()
                 .setPosition(10,60)
                 .setBackgroundColor(color(0, 255))
                 .setWidth(200)
-                .setBackgroundHeight(350)
+                .setBackgroundHeight(400)
                 .disableCollapse()
                 .bringToFront()
                 .setCaptionLabel("Control Options")
@@ -113,9 +125,9 @@ void setup()
    
 /*********************CONTROL GROUP******************/
   //scan button
-  update = cp5.addButton("updateButton")
+  updateButton = cp5.addButton("updateButton")
    .setValue(1)
-   .setPosition(10,350)
+   .setPosition(10,320)
    .setSize(70,45)
    .setCaptionLabel("Update")  
    .moveTo(controGroup)   
@@ -129,7 +141,7 @@ void setup()
     
 
   autoUpdate = cp5.addCheckBox("autoUpdate")
-                .setPosition(100, 350)
+                .setPosition(100, 320)
                 .setColorForeground(color(120))
                 .setColorActive(color(255))
                 .setColorLabel(color(255))
@@ -144,14 +156,14 @@ void setup()
 
 
   buttonBox = cp5.addCheckBox("buttonBox")
-                .setPosition(10, 300)
+                .setPosition(5, 300)
                 .setColorForeground(color(120))
                 .setColorActive(color(255))
                 .setColorLabel(color(255))
                 .setSize(10, 10)
-                .setItemsPerRow(3)
-                .setSpacingColumn(30)
-                .setSpacingRow(20)
+                .setItemsPerRow(8)
+                .setSpacingColumn(14)
+                //.setSpacingRow(20)
                 .addItem("1", 0)
                 .addItem("2", 1)
                 .addItem("3", 2)
@@ -177,10 +189,11 @@ void setup()
 
   xSlider =   cp5.addSlider("xSlider")
                  .setPosition(50,10)
-                 .setRange(-512,512)
+                 .setRange(-300,300)
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
+                  .setValue(0);
                  ;
   
  
@@ -190,16 +203,17 @@ void setup()
 
                   .setCaptionLabel("Y Coord: [0:1023]") 
                   .setWidth(30)
-                  .setValue("512")
+                  .setValue("250")
                   .moveTo(controGroup)   
                   ;
 
   ySlider =   cp5.addSlider("ySlider")
                  .setPosition(50,50)
-                 .setRange(0,1023)
+                 .setRange(50,350)
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
+                  .setValue(250);
                  ;   
                   
   zField = cp5.addTextfield("zField")
@@ -208,16 +222,17 @@ void setup()
 
                   .setCaptionLabel("Z Coord: [0:1023]") 
                   .setWidth(30)
-                  .setValue("512")
+                  .setValue("250")
                   .moveTo(controGroup)   
                   ;  
 
   zSlider =   cp5.addSlider("zSlider")
                  .setPosition(50,90)
-                 .setRange(0,1023)
+                 .setRange(20,350)
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
+                  .setValue(250);
                  ;    
 
                   
@@ -227,17 +242,18 @@ void setup()
 
                   .setCaptionLabel("Wrist Angle: [0:1023]") 
                   .setWidth(30)
-                  .setValue("512")
+                  .setValue("0")
                   .moveTo(controGroup)   
                   ;   
 
 
   wristAngleSlider =   cp5.addSlider("wristAngleSlider")
                  .setPosition(50,130)
-                 .setRange(0,1023)
+                 .setRange(-90,90)
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
+                  .setValue(0);
                  ;   
                   
   wristRotField = cp5.addTextfield("wristRotField")
@@ -246,7 +262,7 @@ void setup()
 
                   .setCaptionLabel("Wrist Rotate: [0:1024]") 
                   .setWidth(30)
-                  .setValue("512")
+                  .setValue("700")
                   .moveTo(controGroup)   
                   ;   
 
@@ -257,6 +273,7 @@ void setup()
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
+                  .setValue(700);
                  ;   
                   
   gripperField = cp5.addTextfield("gripperField")
@@ -273,10 +290,11 @@ void setup()
 
   gripperSlider =   cp5.addSlider("gripperSlider")
                  .setPosition(50,210)
-                 .setRange(0,1023)
+                 .setRange(0,512)
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
+                  .setValue(512);
                  ;                     
   detlaField = cp5.addTextfield("detlaField")
                   .setPosition(10,250)
@@ -436,13 +454,18 @@ void controlEvent(ControlEvent theEvent)
 {
   if (theEvent.isFrom(autoUpdate)) 
   { 
-    if((int)update.getArrayValue()[0] ==1)
+//        println(autoUpdate.getArrayValue());
+
+       //(int)
+    if(autoUpdate.getArrayValue()[0] == 1)
     {
-     updateFlag = 1; 
+     autoUpdateFlag = 1; 
+     updateButton.lock();
     }
     else
     {
-      updateFlag = 0; 
+      autoUpdateFlag = 0; 
+     updateButton.unlock(); 
     }
   } 
 /*
@@ -519,7 +542,7 @@ public void connectSerial(int theValue)
     //try to connect to the port at 115200bps, otherwise show an error message
     try
     {
-      sPort = new Serial(this, Serial.list()[serialPortIndex], 115200);
+      sPort = new Serial(this, Serial.list()[serialPortIndex], 38400);
     }
     catch(Exception e)
     {
@@ -527,8 +550,12 @@ public void connectSerial(int theValue)
       errorGroup.setVisible(true);
       errorText.setVisible(true);        
       errorText.setText("Error Connecting to Port - try a different port or try closing other applications using the current port");    
-    }
-    
+    }     
+     connectButton.lock();
+      connectButton.setColorBackground(color(200));
+      disconnectButton.unlock();
+      disconnectButton.setColorBackground(color(2,52,77));
+    controGroup.setVisible(true);
     delayMs(100);//add delay for some systems
     
     //send a command to see if the ArbotiX is connected. 
@@ -545,10 +572,10 @@ public void connectSerial(int theValue)
       //lock connect button and change apperance, unlock disconnect button and change apperance
       connectButton.lock();
       connectButton.setColorBackground(color(200));
-      autoSearchButton.lock();
-      autoSearchButton.setColorBackground(color(200));
       disconnectButton.unlock();
       disconnectButton.setColorBackground(color(2,52,77));
+      autoSearchButton.lock();
+      autoSearchButton.setColorBackground(color(200));
     }
     else
     {
@@ -735,14 +762,7 @@ void draw()
   //int extValIn = (int)extField.value();
   int detlaValInt = (int)detlaField.value();
   */
-  //retreiving the field value from each field, casting it to an int, then converting it into 2 bytes
-  byte[] xValBytes = {0,0};
-  byte[] yValBytes = {0,0};
-  byte[] zValBytes = {0,0};
-  byte[] wristRotValBytes = {0,0};
-  byte[] wristAngleValBytes = {0,0};
-  byte[] gripperValBytes = {0,0};
-  
+
   
   //byte[] extValBytes = {0,0};
   
@@ -809,15 +829,37 @@ void draw()
   }
   
   
-  if(updateFlag ==1)
+  if(updateFlag ==1 | autoUpdateFlag ==1)
   {
-    xValBytes = intToBytes((int)xField.value() + 512);//the x value can be from -512 to 511, add 512 to offset it to 0 to 1023 for
-    yValBytes = intToBytes((int)yField.value());
-    zValBytes = intToBytes((int)zField.value());
-    wristRotValBytes = intToBytes((int)wristRotField.value());
-    wristAngleValBytes = intToBytes((int)wristAngleField.value());
-    gripperValBytes = intToBytes((int)gripperField.value()); 
+    println(Integer.parseInt(xField.getText()));
+    println(Integer.parseInt(yField.getText()));
+    println(Integer.parseInt(zField.getText()));
+    xValBytes = intToBytes(Integer.parseInt(xField.getText()) + 512);//the x value can be from -512 to 511, add 512 to offset it to 0 to 1023 for
+    yValBytes = intToBytes(Integer.parseInt(yField.getText()));
+    zValBytes = intToBytes(Integer.parseInt(zField.getText()));
+    wristRotValBytes = intToBytes(Integer.parseInt(wristRotField.getText()));
+    wristAngleValBytes = intToBytes( Integer.parseInt(wristAngleField.getText())+ 90);
+    gripperValBytes = intToBytes(Integer.parseInt(gripperField.getText())); 
     updateFlag =0 ; 
+    
+    println(xValBytes[0]);
+    println(xValBytes[1]);
+    
+   
+    
+  
+   for(int i=0;i<8;i++)
+  {
+    if(buttonBox.getArrayValue()[i] == 1)
+    {
+      buttonByte += pow(2,i);
+      println(buttonByte);
+      //buttonState[i] = 0;
+    }
+  }
+  
+    
+    
   }
   
   
@@ -853,13 +895,15 @@ void draw()
       sPort.write(gripperValBytes[1]); //Gripper High Byte
       sPort.write(gripperValBytes[0]); //Gripper Low Byte
       
-      sPort.write(buttonByte); //Button byte
+      sPort.write(0); //Button byte
       
-      sPort.write(extValByte); //Extended instruction
+      sPort.write(0); //Extended instruction
 
       
-      sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+buttonByte+extValByte)%256));  //checksum
-      
+      sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+0+0)%256));  //checksum
+      println("yh-"+yValBytes[1]+"yl-"+yValBytes[0]);
+            //println("wr-"+wristRotValBytes[1]+"wr-"+wristRotValBytes[0]);
+      //delayMs(33);
     }
   }
   
@@ -940,10 +984,8 @@ void keyPressed()
  ************************************/  
 void mouseClicked()
 {
-  if((mouseX >= 0) && (mouseX <= 220) && (mouseY >= 400) && (mouseY <= 443) == true)
-  {
-    link("http://www.trossenrobotics.com/");
-  }
+
+
   
 }
 
