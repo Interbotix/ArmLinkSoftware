@@ -104,7 +104,8 @@ String myString = null;
   byte[] wristAngleValBytes = {0,0};
   byte[] gripperValBytes = {0,0};
   byte[] deltaValBytes = {0,0};
-  
+  byte buttonByte = 0;
+  byte extValByte = 0;
   
   
 void setup() 
@@ -794,8 +795,7 @@ void draw()
   
 
  // byte[] deltaValBytes = intToBytes( (int)deltaField.value());
-  byte buttonByte = 0;
-  byte extValByte = 0;
+
   //xValInt = xValInt + 512; 
 
   
@@ -881,7 +881,7 @@ void draw()
     
    
     
-  
+  buttonByte = 0;
    for(int i=0;i<8;i++)
   {
     if(buttonBox.getArrayValue()[i] == 1)
@@ -933,7 +933,7 @@ void draw()
       
       sPort.write(deltaValBytes[0]); //Delta Low Byte
       
-      sPort.write(0); //Button byte
+      sPort.write(buttonByte); //Button byte
       
       sPort.write(0); //Extended instruction
 
@@ -943,6 +943,7 @@ void draw()
             //println("yh-"+yValBytes[1]+"yl-"+yValBytes[0]);
             //println("wr-"+wristRotValBytes[1]+"wr-"+wristRotValBytes[0]);
             //println("delta-"+deltaValBytes[0] + "delta-"+deltaValBytes[1]);
+            println("button-"+buttonByte);
       //delayMs(33);
     }
   }
