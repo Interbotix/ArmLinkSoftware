@@ -876,8 +876,8 @@ void draw()
     deltaValBytes = intToBytes(Integer.parseInt(deltaField.getText())); 
     updateFlag =0 ; 
     
-    println(xValBytes[0]);
-    println(xValBytes[1]);
+    //println(xValBytes[0]);
+    //println(xValBytes[1]);
     
    
     
@@ -938,12 +938,12 @@ void draw()
       sPort.write(0); //Extended instruction
 
       
-      sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+0+0)%256));  //checksum
+      sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValBytes[0] + buttonByte+0)%256));  //checksum
             //TODO:tie to debgug
             //println("yh-"+yValBytes[1]+"yl-"+yValBytes[0]);
             //println("wr-"+wristRotValBytes[1]+"wr-"+wristRotValBytes[0]);
-            //println("delta-"+deltaValBytes[0] + "delta-"+deltaValBytes[1]);
-            println("button-"+buttonByte);
+            println("delta-"+deltaValBytes[0] + "delta-"+deltaValBytes[1]);
+            //println("button-"+buttonByte);
       //delayMs(33);
     }
   }
