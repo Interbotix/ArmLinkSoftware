@@ -73,7 +73,7 @@ Group startupGroup;      //group for startup message
 Group errorGroup;        //group for error messages
 
 //text fields for users
-Textfield xField, yField, zField, wristRotField, wristAngleField, gripperField, extField, detlaField;  
+Textfield xField, yField, zField, wristRotField, wristAngleField, gripperField, extField, deltaField;  
 
 
 Textarea startupText;         //startup text that tells user to connect to the arbotix - also shows up after a disconnect
@@ -93,7 +93,7 @@ CheckBox buttonBox;
 
 
 
-Slider xSlider, ySlider, zSlider, wristRotSlider, wristAngleSlider, gripperSlider;
+Slider xSlider, ySlider, zSlider, wristRotSlider, wristAngleSlider, gripperSlider, deltaSlider;
 
 
 int cnt = 0;                  //count for listbox items
@@ -112,6 +112,9 @@ PImage img;                   //image object for TR logo
 long prevMillis = 0;
 long currentMillis = 0;
 
+int lf = 10;    // Linefeed in ASCII
+
+String myString = null;
   //retreiving the field value from each field, casting it to an int, then converting it into 2 bytes
   byte[] xValBytes = {0,0};
   byte[] yValBytes = {0,0};
@@ -119,6 +122,7 @@ long currentMillis = 0;
   byte[] wristRotValBytes = {0,0};
   byte[] wristAngleValBytes = {0,0};
   byte[] gripperValBytes = {0,0};
+  byte[] deltaValBytes = {0,0};
   
   
   
@@ -200,7 +204,7 @@ public void setup()
                   .setPosition(10,10)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("X Coord:[-512:511]") 
+                  .setCaptionLabel("X Coord:[-300:300]") 
                   .setWidth(30)
                   .setValue("0")
                   .moveTo(controGroup)   
@@ -220,7 +224,7 @@ public void setup()
                   .setPosition(10,50)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Y Coord: [0:1023]") 
+                  .setCaptionLabel("Y Coord: [50:350]") 
                   .setWidth(30)
                   .setValue("250")
                   .moveTo(controGroup)   
@@ -239,7 +243,7 @@ public void setup()
                   .setPosition(10,90)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Z Coord: [0:1023]") 
+                  .setCaptionLabel("Z Coord: [20:350]") 
                   .setWidth(30)
                   .setValue("250")
                   .moveTo(controGroup)   
@@ -259,7 +263,7 @@ public void setup()
                   .setPosition(10,130)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Wrist Angle: [0:1023]") 
+                  .setCaptionLabel("Wrist Angle: [-90:90]") 
                   .setWidth(30)
                   .setValue("0")
                   .moveTo(controGroup)   
@@ -279,7 +283,7 @@ public void setup()
                   .setPosition(10,170)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Wrist Rotate: [0:1024]") 
+                  .setCaptionLabel("Wrist Rotate: [0:1023]") 
                   .setWidth(30)
                   .setValue("700")
                   .moveTo(controGroup)   
@@ -299,7 +303,7 @@ public void setup()
                   .setPosition(10,210)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Gripper: [0:1024]") 
+                  .setCaptionLabel("Gripper: [0:512]") 
                   .setWidth(30)
                   .setValue("512")
                   .moveTo(controGroup)   
@@ -315,17 +319,26 @@ public void setup()
                   .setCaptionLabel("") 
                   .setValue(512);
                  ;                     
-  detlaField = cp5.addTextfield("detlaField")
+  deltaField = cp5.addTextfield("deltaField")
                   .setPosition(10,250)
                   .setAutoClear(false)
 
-                  .setCaptionLabel("Delta: [0:1024]") 
+                  .setCaptionLabel("Delta: [0:255]") 
                   .setWidth(30)
-                  .setValue("512")
+                  .setValue("0")
                   .moveTo(controGroup)   
                   ;   
 
 
+
+  deltaSlider =   cp5.addSlider("deltaSlider")
+                 .setPosition(50,250)
+                 .setRange(0,255)
+                 .setSize(100,20)
+                  .moveTo(controGroup)
+                  .setCaptionLabel("") 
+                  .setValue(0);
+                 ;  
 
 
 
@@ -779,15 +792,27 @@ public void draw()
   int wristAngleValInt = (int)wristAngleField.value();
   int gripperValIn = (int)gripperField.value();
   //int extValIn = (int)extField.value();
-  int detlaValInt = (int)detlaField.value();
+  int detlaValInt = (int)deltaField.value();
   */
-
+  
+    if(sPort != null)
+    {
+      while (sPort.available() > 0) 
+      {
+        myString = sPort.readStringUntil(lf);
+        if (myString != null)
+        {
+          println(myString);
+        }
+      }
+      
+    }
   
   //byte[] extValBytes = {0,0};
   
   
 
-  byte[] deltaValBytes = intToBytes( (int)detlaField.value());
+ // byte[] deltaValBytes = intToBytes( (int)deltaField.value());
   byte buttonByte = 0;
   byte extValByte = 0;
   //xValInt = xValInt + 512; 
@@ -846,6 +871,14 @@ public void draw()
   {
     gripperField.setValue(""+(PApplet.parseInt(gripperSlider.value())));//cast to int then to string what maddness is this
   }
+  if(deltaField.isActive())
+  {
+     deltaSlider.setValue(PApplet.parseInt(deltaField.getText()));
+  }
+  else
+  {
+    deltaField.setValue(""+(PApplet.parseInt(deltaSlider.value())));//cast to int then to string what maddness is this
+  }
   
   
   if(updateFlag ==1 | autoUpdateFlag ==1)
@@ -859,6 +892,7 @@ public void draw()
     wristRotValBytes = intToBytes(Integer.parseInt(wristRotField.getText()));
     wristAngleValBytes = intToBytes( Integer.parseInt(wristAngleField.getText())+ 90);
     gripperValBytes = intToBytes(Integer.parseInt(gripperField.getText())); 
+    deltaValBytes = intToBytes(Integer.parseInt(deltaField.getText())); 
     updateFlag =0 ; 
     
     println(xValBytes[0]);
@@ -905,14 +939,18 @@ public void draw()
       sPort.write(zValBytes[1]); //Z Coord High Byte
       sPort.write(zValBytes[0]); //Z Coord Low Byte
       
-      sPort.write(wristAngleValBytes[1]); //Write Angle High Byte
-      sPort.write(wristAngleValBytes[0]); //Writs Angle Low Byte
+      sPort.write(wristAngleValBytes[1]); //Wrist Angle High Byte
+      sPort.write(wristAngleValBytes[0]); //Wrist Angle Low Byte
       
-      sPort.write(wristRotValBytes[1]); //Write Rotate High Byte
+      sPort.write(wristRotValBytes[1]); //Wrist Rotate High Byte
       sPort.write(wristRotValBytes[0]); //Wrist Rotate Low Byte
       
       sPort.write(gripperValBytes[1]); //Gripper High Byte
       sPort.write(gripperValBytes[0]); //Gripper Low Byte
+      
+      
+      
+      sPort.write(deltaValBytes[0]); //Delta Low Byte
       
       sPort.write(0); //Button byte
       
@@ -920,8 +958,10 @@ public void draw()
 
       
       sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+0+0)%256));  //checksum
-      println("yh-"+yValBytes[1]+"yl-"+yValBytes[0]);
+            //TODO:tie to debgug
+            //println("yh-"+yValBytes[1]+"yl-"+yValBytes[0]);
             //println("wr-"+wristRotValBytes[1]+"wr-"+wristRotValBytes[0]);
+            //println("delta-"+deltaValBytes[0] + "delta-"+deltaValBytes[1]);
       //delayMs(33);
     }
   }
