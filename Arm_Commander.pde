@@ -267,7 +267,7 @@ void setup()
 
                   .setCaptionLabel("Wrist Rotate: [0:1023]") 
                   .setWidth(30)
-                  .setValue("700")
+                  .setValue("512")
                   .moveTo(controGroup)   
                   ;   
 
@@ -278,7 +278,7 @@ void setup()
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
-                  .setValue(700);
+                  .setValue(512);
                  ;   
                   
   gripperField = cp5.addTextfield("gripperField")
