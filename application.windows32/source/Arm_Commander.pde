@@ -307,7 +307,7 @@ void setup()
 
                   .setCaptionLabel("Delta: [0:255]") 
                   .setWidth(30)
-                  .setValue("0")
+                  .setValue("125")
                   .moveTo(controGroup)   
                   ;   
 
@@ -319,7 +319,7 @@ void setup()
                  .setSize(100,20)
                   .moveTo(controGroup)
                   .setCaptionLabel("") 
-                  .setValue(0);
+                  .setValue(125);
                  ;  
 
 
@@ -571,6 +571,8 @@ public void connectSerial(int theValue)
       disconnectButton.setColorBackground(color(2,52,77));
     controGroup.setVisible(true);
     delayMs(100);//add delay for some systems
+      startupGroup.setVisible(false);
+    
     
     //send a command to see if the ArbotiX is connected. 
  /*   if(pingArbotix()== 1)
