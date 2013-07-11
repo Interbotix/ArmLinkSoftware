@@ -104,13 +104,14 @@ String myString = null;
   byte[] wristAngleValBytes = {0,0};
   byte[] gripperValBytes = {0,0};
   byte[] deltaValBytes = {0,0};
+  byte[] extValBytes = {0,0};
   byte buttonByte = 0;
-  byte extValByte = 0;
+ // byte extValByte = 0;
   
   
 void setup() 
 {
-  size(220, 443);//size of application working area
+  size(220, 483);//size of application working area
  // img = loadImage("TRheaderLogo.png");  // Load the TR logo
   cp5 = new ControlP5(this);//intiaite controlp5 object   
   ControlFont cf1 = new ControlFont(createFont("Arial",15));//intitiate new font for buttons
@@ -120,7 +121,7 @@ void setup()
                 .setPosition(10,60)
                 .setBackgroundColor(color(0, 255))
                 .setWidth(200)
-                .setBackgroundHeight(400)
+                .setBackgroundHeight(440)
                 .disableCollapse()
                 .bringToFront()
                 .setCaptionLabel("Control Options")
@@ -132,7 +133,7 @@ void setup()
   //scan button
   updateButton = cp5.addButton("updateButton")
    .setValue(1)
-   .setPosition(10,320)
+   .setPosition(10,360)
    .setSize(70,45)
    .setCaptionLabel("Update")  
    .moveTo(controGroup)   
@@ -146,7 +147,7 @@ void setup()
     
 
   autoUpdate = cp5.addCheckBox("autoUpdate")
-                .setPosition(100, 320)
+                .setPosition(100, 360)
                 .setColorForeground(color(120))
                 .setColorActive(color(255))
                 .setColorLabel(color(255))
@@ -161,7 +162,7 @@ void setup()
 
 
   buttonBox = cp5.addCheckBox("buttonBox")
-                .setPosition(5, 300)
+                .setPosition(5, 340)
                 .setColorForeground(color(120))
                 .setColorActive(color(255))
                 .setColorLabel(color(255))
@@ -321,6 +322,16 @@ void setup()
                   .setCaptionLabel("") 
                   .setValue(125);
                  ;  
+ 
+  extField = cp5.addTextfield("extField")
+                  .setPosition(10,290)
+                  .setAutoClear(false)
+
+                  .setCaptionLabel("Extended (Int) 0-255") 
+                  .setWidth(30)
+                  .setValue("0")
+                  .moveTo(controGroup)   
+                  ;   
 
 
 
@@ -866,9 +877,9 @@ void draw()
   
   if(updateFlag ==1 | autoUpdateFlag ==1)
   {
-    println(Integer.parseInt(xField.getText()));
-    println(Integer.parseInt(yField.getText()));
-    println(Integer.parseInt(zField.getText()));
+    //println(Integer.parseInt(xField.getText()));
+    //println(Integer.parseInt(yField.getText()));
+    //println(Integer.parseInt(zField.getText()));
     xValBytes = intToBytes(Integer.parseInt(xField.getText()) + 512);//the x value can be from -512 to 511, add 512 to offset it to 0 to 1023 for
     yValBytes = intToBytes(Integer.parseInt(yField.getText()));
     zValBytes = intToBytes(Integer.parseInt(zField.getText()));
@@ -876,6 +887,7 @@ void draw()
     wristAngleValBytes = intToBytes( Integer.parseInt(wristAngleField.getText())+ 90);
     gripperValBytes = intToBytes(Integer.parseInt(gripperField.getText())); 
     deltaValBytes = intToBytes(Integer.parseInt(deltaField.getText())); 
+    extValBytes = intToBytes(Integer.parseInt(extField.getText())); 
     updateFlag =0 ; 
     
     //println(xValBytes[0]);
@@ -889,7 +901,7 @@ void draw()
     if(buttonBox.getArrayValue()[i] == 1)
     {
       buttonByte += pow(2,i);
-      println(buttonByte);
+      //println(buttonByte);
       //buttonState[i] = 0;
     }
   }
@@ -937,15 +949,16 @@ void draw()
       
       sPort.write(buttonByte); //Button byte
       
-      sPort.write(0); //Extended instruction
+      sPort.write(extValBytes[0]); //Extended instruction
 
       
-      sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValBytes[0] + buttonByte+0)%256));  //checksum
+      sPort.write((char)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValBytes[0] + buttonByte+extValBytes[0])%256));  //checksum
             //TODO:tie to debgug
             //println("yh-"+yValBytes[1]+"yl-"+yValBytes[0]);
             //println("wr-"+wristRotValBytes[1]+"wr-"+wristRotValBytes[0]);
-            println("delta-"+deltaValBytes[0] + "delta-"+deltaValBytes[1]);
+            //println("delta-"+deltaValBytes[0] + "delta-"+deltaValBytes[1]);
             //println("button-"+buttonByte);
+            //println("ext-"+extValBytes[0]);
       //delayMs(33);
     }
   }
