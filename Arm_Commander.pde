@@ -1,44 +1,12 @@
-/****************************************************
-* Trossen Robotics DYNAMIXEL Servo ID Program 
+ /****************************************************
+* Trossen Reactor ArmControl
+*
+*  This code requires the contorlp5 library
 *
 *
 *
-* This progam offers an interface to easily set and test the ID and Baud of various
-* DYNAMIXEL Robot Servos using the ArbotiX Robocontroller.
 *
-* With this program you can
-* -open a serial port comunication line with an ArbotiX running the ROS sketch
-* -scan for a DYNAMIXEL ID 0-252 on bauds 57600 or 1000000
-* -set the ID of a servo
-* -baud will always be set to 1000000
-* -send a value to the "Goal Position" register of the DYNAMIXEL, moving it
-*
-* Currently supported DYNAMIXELS include
-* AX-12+
-* AX-12A
-* AX-12W
-* AX-18A
-* MX-28T
-* MX-64T
-* MX-106T
-*
-* The Following servos should work, using an RX bridge, but have not been tested
-*  RX-24F
-*  RX-28
-*  RX-64
-*  EX-106
-*  MX-28R
-*  MX-64R
-*  MX-106R
-*  
-*
-*
-*
-*Protocol and DYNAMIXEL reference
-*  http://support.robotis.com/en/product/dynamixel/ax_series/dxl_ax_actuator.htm#Actuator_Address_18
-*  http://support.robotis.com/en/product/dynamixel/communication/dxl_instruction.htm
-*  http://support.robotis.com/en/product/dynamixel/dxl_communication.htm
-*  http://support.robotis.com/en/product/dynamixel/communication/dxl_packet.htm
+
 */
 
 import controlP5.*; //Import the P5 Library for GUI interface elements (drop list, button)
