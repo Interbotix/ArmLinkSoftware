@@ -1,0 +1,11 @@
+0 - No Action
+32 - Mode: 3d Cartesian
+40-Mode: 3d Cartesian 90°
+48-Mode: Cylindrical IK
+56-Mode: Cylindrical IK 90°
+64-Mode: Backhoe/Passthrough 
+80-Goto Home
+88-Goto 90° Home
+96-Goto Sleep
+112-ID Packet Request
+128-IK Status Request
