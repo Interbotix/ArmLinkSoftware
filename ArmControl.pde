@@ -1143,21 +1143,21 @@ void setPositionParameters()
   }
   
   
-  int xCurrent = xParameters[0]; //current x value in text field/slider
+  xCurrent = xParameters[0]; //current x value in text field/slider
   
   
-  int yCurrent = yParameters[0]; //current y value in text field/slider
+  yCurrent = yParameters[0]; //current y value in text field/slider
   
   
-  int zCurrent = zParameters[0]; //current z value in text field/slider
+  zCurrent = zParameters[0]; //current z value in text field/slider
   
-  int wristAngleCurrent = wristAngleParameters[0]; //current Wrist Angle value in text field/slider
+  wristAngleCurrent = wristAngleParameters[0]; //current Wrist Angle value in text field/slider
   
-  int wristRotateCurrent = wristRotateParameters[0]; //current  Wrist Rotate value in text field/slider
+  wristRotateCurrent = wristRotateParameters[0]; //current  Wrist Rotate value in text field/slider
   
-  int gripperCurrent = gripperParameters[0]; //current Gripper value in text field/slider
+  gripperCurrent = gripperParameters[0]; //current Gripper value in text field/slider
   
-  int deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
+  deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
   
   
 }
