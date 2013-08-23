@@ -347,7 +347,7 @@ boolean checkArmStartup()
 
   printlnDebug("Sending ID Request"); 
   sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);  
-  
+  delayMs(60);
   returnPacket = readFromArmFast(5);//read raw data from arm
   if(verifyPacket(returnPacket) == true)
   {
