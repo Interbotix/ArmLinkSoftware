@@ -500,12 +500,19 @@ public void updateButton_click(GButton source, GEvent event)
   
         printlnDebug("X:"+xCurrentCommander+" Y:"+yCurrentCommander+" Z:"+zCurrentCommander+" Wrist Angle:"+wristAngleCurrentCommander+" Wrist Rotate:"+wristRotateCurrentCommander+" Gripper:"+gripperCurrentCommander+" Delta:"+deltaCurrentCommander);
 
-  
-  
-  
-  
-  
 }
+
+
+public void autoUpdateCheckbox_change(GCheckbox source, GEvent event)
+{ 
+
+  printlnDebug("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000,3 );
+  
+  autoUpdateFlag = source.isSelected();
+  println(autoUpdateFlag);
+} 
+
+
 
 public void digitalCheckbox0_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
   println("digitalCheckbox0 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
@@ -544,9 +551,7 @@ public void digitalCheckbox7_change(GCheckbox source, GEvent event) { //_CODE_:d
   println("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
 } //_CODE_:digitalCheckbox1:676831:
 
-public void autoUpdateCheckbox_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+
 
 public void armStraightButton_click(GImageButton source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
   println("armstraught - GCheckbox event occured " + System.currentTimeMillis()%10000000 );

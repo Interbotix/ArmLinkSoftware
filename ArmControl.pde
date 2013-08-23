@@ -17,6 +17,7 @@ boolean debugGuiEvent = true;     //change to 'false' to disable GUI debuging me
 int lf = 10;    // Linefeed in ASCII
 
 boolean updateFlag = false; //trip flag, true when the program needs to send a serial packet at the next interval
+boolean autoUpdateFlag = false; //trip flag, true when the program needs to send a serial packet at the next interval
 int updatePeriod = 33; //period between packet in Milliseconds , 33ms = 30Hz
 
 long prevCommandTime = 0;    //timestamp for the last time that the program sent a serial packet
@@ -108,7 +109,47 @@ public void draw(){
   image(footerImg, 15, 740);
   
   currentTime = millis();
-  if(currentTime - prevCommandTime > 33 & updateFlag ==true)
+  
+  if(autoUpdateFlag == true)
+  {
+    switch(currentMode)
+    {
+       case 1:  
+       
+       
+         xCurrentCommander = xCurrent + 512;
+         yCurrentCommander = yCurrent;
+         zCurrentCommander = zCurrent;
+         wristAngleCurrentCommander =  wristAngleCurrent + 90;
+         wristRotateCurrentCommander = wristRotateCurrent + 512;
+         gripperCurrentCommander = gripperCurrent;
+         deltaCurrentCommander = deltaCurrent;
+         break;
+        
+       case 2:
+       
+         xCurrentCommander = xCurrent;
+         yCurrentCommander = yCurrent;
+         zCurrentCommander = zCurrent;
+         wristAngleCurrentCommander =  wristAngleCurrent + 90;
+         wristRotateCurrentCommander = wristRotateCurrent + 512;
+         gripperCurrentCommander = gripperCurrent;
+         deltaCurrentCommander = deltaCurrent;
+         break;
+        
+       case 3:
+       
+         xCurrentCommander = xCurrent;
+         yCurrentCommander = yCurrent;
+         zCurrentCommander = zCurrent;
+         wristAngleCurrentCommander =  wristAngleCurrent;
+         wristRotateCurrentCommander = wristRotateCurrent;
+         gripperCurrentCommander = gripperCurrent;
+         deltaCurrentCommander = deltaCurrent;
+        break; 
+    }
+  }
+  if(currentTime - prevCommandTime > 33 & (updateFlag ==true | autoUpdateFlag ==true))
   {
     prevCommandTime = currentTime;
     updateFlag = false;
@@ -1160,6 +1201,11 @@ void setPositionParameters()
   deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
   
   
+}
+
+void stop()
+{
+ putArmToSleep(); 
 }
 
 
