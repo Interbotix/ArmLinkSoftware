@@ -1,169 +1,160 @@
-// Need G4P library
-import g4p_controls.*;
+/***********************************************************************************
+ *  }--\     InterbotiX     /--{
+ *      |    ArmControl    |
+ *   __/                    \__
+ *  |__|                    |__|
+ *
+ *  The following software will allow you to control InterbotiX Robot Arms.
+ *  ArmControl will send serial packets to the ArbotiX Robocontroller that
+ *  specify coordinates for that arm to move to. TheArbotiX robocontroller
+ *  will then do the Inverse Kinematic calculations and send commands to the
+ *  DYNAMIXEL servos to move in such a way that the end effector ends up at
+ *  the specified coordinate.
+ *
+ *  Robot Arm Compatibilty:
+ *    The ArmControl Software is desiged to work with InterbotiX Robot Arms
+ *    running the ArmControl firmware. Currently supported arms are:
+ *      1)PhantomX Pincher Robot Arm
+ *      2)PhantomX Reactor Robot Arm
+ *      3)WidowX Robot Arm
+ *
+ *  Computer Compatibility:
+ *    ArmControl can be used on any system that supports
+ *      1)Java
+ *      2)Processing 2.0
+ *      3)Java serial library (Included for Mac/Windows/Linux with processing 2.0)
+ *    ArmControl has been tested on the following systems
+ *      1)Windows XP, Vista, 7, 8
+ *      2)Mac 10.6+
+ *      3)Linux?
+ *     Binaries for these systems are available
+ *
+ *  Building:
+ *    Once Java and Processing 2.0 have been installed, you will also need to download/install
+ *    the G4p GUI library for processing.
+ *    http://sourceforge.net/projects/g4p/files/?source=navbar
+ *    
+ *    (More information on G4P can be found at http://www.lagers.org.uk/g4p/download.html )
+ *    
+ *     Notice for Mac users:
+ *       To get the Serial library to work properly you will need to issue the following commands
+ *        sudo mkdir -p /var/lock
+ *        sudo chmod 777 /var/lock
+ *
+ *
+ *  External Resources
+ *  Arm Control Setup & Documentation
+ *    http://learn.trossenrobotics.com/arbotix/arbotix-communication-controllers/31-arm-control
+ *
+ *  PhantomX Pincher Robot Arm
+ *    http://learn.trossenrobotics.com/interbotix/robot-arms/pincher-arm
+ *  PhantomX Reactor Robot Arm
+ *    http://learn.trossenrobotics.com/interbotix/robot-arms/reactor-arm
+ *  WidowX Robot Arm
+ *    http://learn.trossenrobotics.com/interbotix/robot-arms/widowx-arm
+ *
+ **********************************/
+
+import g4p_controls.*;      //import g4p library for GUI elements
 import processing.serial.*; //import serial library to communicate with the ArbotiX
+import java.awt.Font;       //import font
 
-import java.awt.Font;
+Serial sPort;               //serial port object, used to connect to a serial port and send data to the ArbotiX
 
-
-Serial sPort;            //serial object 
-
-int numSerialPorts = Serial.list().length;                //Number of serial ports available at startup
+int numSerialPorts = Serial.list().length;                 //Number of serial ports available at startup
 String[] serialPortString = new String[numSerialPorts+1];  //string array to the name of each serial port - used for populating the drop down menu
-int selectedSerialPort;             //currently selected port from serialList drop down
+int selectedSerialPort;                                    //currently selected port from serialList drop down
 
-boolean debugConsole = true; //change to 'false' to disable debuging messages to the console, 'true' to enable 
-boolean debugFile = false;    //change to 'false' to disable debuging messages to a file, 'true' to enable
+boolean debugConsole = true;      //change to 'false' to disable debuging messages to the console, 'true' to enable 
+boolean debugFile = false;        //change to 'false' to disable debuging messages to a file, 'true' to enable
 boolean debugGuiEvent = true;     //change to 'false' to disable GUI debuging messages, 'true' to enable
-int lf = 10;    // Linefeed in ASCII
+//int lf = 10;    // Linefeed in ASCII
 
-boolean updateFlag = false; //trip flag, true when the program needs to send a serial packet at the next interval
-boolean autoUpdateFlag = false; //trip flag, true when the program needs to send a serial packet at the next interval
-int updatePeriod = 33; //period between packet in Milliseconds , 33ms = 30Hz
+boolean updateFlag = false;     //trip flag, true when the program needs to send a serial packet at the next interval, used by both 'update' and 'autoUpdate' controls
+int updatePeriod = 33;          //minimum period between packet in Milliseconds , 33ms = 30Hz which is the standard for the commander/arm control protocol
 
-long prevCommandTime = 0;    //timestamp for the last time that the program sent a serial packet
-long heartbeatTime = 0;      //timestamp for the last time that the program received a serial packet from the Arm
-long currentTime = 0;        //timestamp for currrent time
+long prevCommandTime = 0;       //timestamp for the last time that the program sent a serial packet
+long heartbeatTime = 0;         //timestamp for the last time that the program received a serial packet from the Arm
+long currentTime = 0;           //timestamp for currrent time
 
-int connectedArmId =0;
-int arbotixTimeout = 5000;  //time to wait for a response from the ArbotiX Robocontroller / Arm Control Protocol
+int packetRepsonseTimeout = 5000;      //time to wait for a response from the ArbotiX Robocontroller / Arm Control Protocol
 
-
-//defualt values for pincher in normal mode 
-
-int[] xParameters = {0,-200,200};
-int xCurrent = xParameters[0]; //current x value in text field/slider
-int xCurrentCommander = xParameters[0]; //current x value to be send to Commander
-
-int[] yParameters = {200,50,240};
-int yCurrent = yParameters[0]; //current y value in text field/slider
-int yCurrentCommander = yParameters[0]; //current y value to be send to Commander
-
-int[] zParameters = {200,20,250};
-int zCurrent = zParameters[0]; //current z value in text field/slider
-int zCurrentCommander = zParameters[0]; //current z value to be send to Commander
-
-int[] wristAngleParameters = {0,-90,90};
-int wristAngleCurrent = wristAngleParameters[0]; //current Wrist Angle value in text field/slider
-int wristAngleCurrentCommander = wristAngleParameters[0]; //current Wrist Angle value to be send to Commander
-
-int[] wristRotateParameters = {0,-512,511};
-int wristRotateCurrent = wristRotateParameters[0]; //current  Wrist Rotate value in text field/slider
-int wristRotateCurrentCommander = wristRotateParameters[0]; //current  Wrist Rotate value to be send to Commander
-
-int[] gripperParameters = {256,0,512};
-int gripperCurrent = gripperParameters[0]; //current Gripper value in text field/slider
-int gripperCurrentCommander = gripperParameters[0]; //current Gripper value to be send to Commander
-
-int[] deltaParameters = {125,0,256};
-int deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
-int deltaCurrentCommander = deltaParameters[0]; //current delta value to be send to Commander
-
-int currentArm = 1;
-int currentMode = 1;
-int currentOrientation = 1;
-
-
+int currentArm = 1;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX
+int currentMode = 1;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
+int currentOrientation = 1;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
 
 
 public void setup(){
-  size(250, 786, JAVA2D);
-
+  size(250, 786, JAVA2D);  //draw initial screen
   
-  
-  createGUI();
-  customGUI();
-  // Place your setup code here
+  createGUI();   //draw GUI components defined in gui.pde
+  //customGUI();
 
-  numSerialPorts = Serial.list().length;
-
-  serialPortString[0] = "Serial Port";
-    
+  //Build Serial Port List
+  serialPortString[0] = "Serial Port";   //first item in the list will be "Serial Port" to act as a label
+  //iterate through each avaialable serial port  
   for (int i=0;i<numSerialPorts;i++) 
   {
-    serialPortString[i+1] = Serial.list()[i];
+    serialPortString[i+1] = Serial.list()[i];  //add the current serial port to the list, add one to the index to account for the first item/label "Serial Port"
   }
-  
-    
   serialList.setItems(serialPortString, 0);
   
   
   
   
-  
+  //MOVE TO GUI
   wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
-  
   wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
-  updateButton.setFont(new Font("Dialog", Font.PLAIN, 20));
-  //dropList1.setText("Peter");
-  
-  serialList.setFont(new Font("Dialog", Font.PLAIN, 9));
-  
+  updateButton.setFont(new Font("Dialog", Font.PLAIN, 20));  
+  serialList.setFont(new Font("Dialog", Font.PLAIN, 9));  
   arm90Button.setAlpha(128);
   
 }
 
-public void draw(){
-  background(128);
+public void draw()
+{
+  background(128);//draw background color
+  image(logoImg, 5, 5, 230, 78);  //draw logo image
+  image(footerImg, 15, 740);      //draw footer image
   
-  image(logoImg, 5, 5, 230, 78);
-  image(footerImg, 15, 740);
+  currentTime = millis();  //get current timestamp
   
-  currentTime = millis();
-  
-  if(autoUpdateFlag == true)
+  //check if
+  //  -update flag is true, and a packet needs to be sent
+  //  --it has been more than 'updatePeriod' ms since the last packet was sent
+  if(updateFlag == true & currentTime - prevCommandTime > updatePeriod )
   {
-    switch(currentMode)
+    updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
+    prevCommandTime = currentTime; //update the prevCommandTime timestamp , used to calulcate the time the program can next send a command
+    
+    //in normal update mode, pressing the update button signals the program to send a packet. In this
+    //case the program must set the update flag to false in order to stop new packets from being sent
+    //until the update button is pressed again. 
+    //However in autoUpdate mode, the program should not change this flag (only unchecking the auto update flag should set the flag to false)
+    if(autoUpdateCheckbox.isSelected() == false)
     {
-       case 1:  
-       
-       
-         xCurrentCommander = xCurrent + 512;
-         yCurrentCommander = yCurrent;
-         zCurrentCommander = zCurrent;
-         wristAngleCurrentCommander =  wristAngleCurrent + 90;
-         wristRotateCurrentCommander = wristRotateCurrent + 512;
-         gripperCurrentCommander = gripperCurrent;
-         deltaCurrentCommander = deltaCurrent;
-         break;
-        
-       case 2:
-       
-         xCurrentCommander = xCurrent;
-         yCurrentCommander = yCurrent;
-         zCurrentCommander = zCurrent;
-         wristAngleCurrentCommander =  wristAngleCurrent + 90;
-         wristRotateCurrentCommander = wristRotateCurrent + 512;
-         gripperCurrentCommander = gripperCurrent;
-         deltaCurrentCommander = deltaCurrent;
-         break;
-        
-       case 3:
-       
-         xCurrentCommander = xCurrent;
-         yCurrentCommander = yCurrent;
-         zCurrentCommander = zCurrent;
-         wristAngleCurrentCommander =  wristAngleCurrent;
-         wristRotateCurrentCommander = wristRotateCurrent;
-         gripperCurrentCommander = gripperCurrent;
-         deltaCurrentCommander = deltaCurrent;
-        break; 
-    }
-  }
-  if(currentTime - prevCommandTime > 33 & (updateFlag ==true | autoUpdateFlag ==true))
-  {
-    prevCommandTime = currentTime;
-    updateFlag = false;
-    if(sPort != null)
-    {
-      
-      sendCommanderPacket(xCurrentCommander, yCurrentCommander, zCurrentCommander, wristAngleCurrentCommander, wristRotateCurrentCommander, gripperCurrentCommander, deltaCurrentCommander, 0, 0);  
-
+      updateFlag = false;//only set the updateFlag to false if the autoUpdate flag is false
     }
     
+    //check that the serial port is active
+    if(sPort != null)
+    {
+      //send commander packet with the current global currentOffset coordinatges
+      sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, 0, 0);  
+    }
   }
-  
-  
 }
+
+/******************************************************
+ *  stop()
+ *
+ *  Tasks to perform on end of program
+ ******************************************************/ 
+void stop()
+{
+ putArmToSleep(); 
+}
+
 
 // Use this methologod additional statements
 // to customise the GUI controls
@@ -172,10 +163,28 @@ public void customGUI(){
 }
 
 
-
-//debugg printing. 
-//type 0 = normal
-//type 1 = GUI event
+/******************************************************
+ *  printlnDebug()
+ *
+ *  function used to easily enable/disable degbugging
+ *  enables/disables debugging to the console
+ *  prints a line to the output
+ *  TODO: Enable file debugging
+ *
+ *  Parameters:
+ *    String message
+ *      string to be sent to the debugging method
+ *    int type
+ *        Type of event
+ *         type 0 = normal program message
+ *         type 1 = GUI event
+ *         type 2 = serial packet 
+ *  Globals Used:
+ *      boolean debugGuiEvent
+ *      boolean debugConsole
+ *  Returns: 
+ *    void
+ ******************************************************/ 
 void printlnDebug(String message, int type)
 {
    if(debugConsole == true)
@@ -184,39 +193,51 @@ void printlnDebug(String message, int type)
       {
         println(message); 
       }
- 
    }
-   
-   //if()
-  
 }
 
-//wrapper for debug printing, defualt behavior = 0
+//wrapper for printlnDebug(String, int)
+//assume normal behavior, message type = 0
 void printlnDebug(String message)
 {
   printlnDebug(message, 0);
-  
 }
 
-//debugg printing. 
-//type 0 = normal
-//type 1 = GUI event
+/******************************************************
+ *  printlnDebug()
+ *
+ *  function used to easily enable/disable degbugging
+ *  enables/disables debugging to the console
+ *  prints normally to the output
+ *  TODO: Enable file debugging
+ *
+ *  Parameters:
+ *    String message
+ *      string to be sent to the debugging method
+ *    int type
+ *        Type of event
+ *         type 0 = normal program message
+ *         type 1 = GUI event
+ *         type 2 = serial packet 
+ *  Globals Used:
+ *      boolean debugGuiEvent
+ *      boolean debugConsole
+ *  Returns: 
+ *    void
+ ******************************************************/ 
 void printDebug(String message, int type)
 {
    if(debugConsole == true)
    {
       if((type == 1 & debugGuiEvent == true) | type == 0)
       {
-        print(message); 
+        println(message); 
       }
- 
    }
-   
-   //if()
-  
 }
 
-//wrapper for debug printing, defualt behavior = 0
+//wrapper for printlnDebug(String, int)
+//assume normal behavior, message type = 0
 void printDebug(String message)
 {
   printDebug(message, 0);
@@ -224,102 +245,142 @@ void printDebug(String message)
 }
 
 
-//this version of readFromArm does not wait for a response - used form arm startup
-byte[] readFromArmFast(int bytesExpected)
+/******************************************************
+ *  readFromArm(int, boolean)
+ *
+ *  reads data back from the ArbotiX/Arm
+ *
+ *  Normally this is called from readFromArm(int) - 
+ *  this will block the program and make it wait 
+ * 'packetRepsonseTimeout' ms. Most of the time the program
+ *  will need to wait, as the arm is moving to a position
+ *  and will not send a response packet until it has 
+ *  finished moving to that position.
+ *  
+ *  However this will add a lot of time to the 'autoSearch' 
+ *  functionality. When the arm starts up it will immediatley send a
+ *  ID packet to identify itself so a non-waiting version is   
+ *  avaialble -  readFromArmFast(int) which is equivalent to
+ *  readFromArm(int, false)
+ *
+ *  Parameters:
+ *    int bytesExpected
+ *      # of bytes expected in the response packet
+ *    boolean wait
+ *        Whether or not to wait 'packetRepsonseTimeout' ms for a response
+ *         true = wait
+ *         false = do not wait
+ *  Globals Used:
+ *      Serial sPort
+ *      long packetRepsonseTimeout
+ *
+ *  Returns: 
+ *    byte[]  responseBytes
+ *      byte array with response data from ArbotiX/Arm
+ ******************************************************/ 
+byte[] readFromArm(int bytesExpected, boolean wait)
 {
-  return(readFromArmBase(bytesExpected,false));
-}
-
-
-//read a packet from the arm
-byte[] readFromArm(int bytesExpected)
-{
-  return(readFromArmBase(bytesExpected,true));
-}
-
-//private
-//read from arm code - will wait for 5 seconds or a serial data 
-byte[] readFromArmBase(int bytesExpected, boolean wait)
-{
-  byte[] responseBytes = new byte[bytesExpected];  
-  delayMs(100);//wait a period to ensure that the controller has responded 
+  byte[] responseBytes = new byte[bytesExpected];    //byte array to hold response data
+  delayMs(100);//wait a minimum 100ms to ensure that the controller has responded - this applies to both wait==true and wait==false conditions
   
-  byte inByte = 0;
+  byte bufferByte = 0;  //current byte that is being read
   long startReadingTime = millis();//time that the program started looking for data
-  long last = millis();
-  printDebug("Incoming Raw Packet from readDynaPacket():"); //debug
   
-  //this loop will wait until the serial port has data OR it has waited more than arbotixTimeout milliseconds.
-  //arbotixTimeout is a global variable
-  while(wait == true & sPort.available() < bytesExpected  & millis()-startReadingTime < arbotixTimeout)
+  printDebug("Incoming Raw Packet from readFromArm():"); //debug
+  
+  //if the 'wait' flag is TRUE this loop will wait until the serial port has data OR it has waited more than packetRepsonseTimeout milliseconds.
+  //packetRepsonseTimeout is a global variable
+  while(wait == true & sPort.available() < bytesExpected  & millis()-startReadingTime < packetRepsonseTimeout)
   {
+     //do nothing, just waiting for a response or timeout
   }
-
   
-
-  
-  
-  for(int i =0; i < bytesExpected;i++)    // If data is available in the serial port, continute
+  for(int i =0; i < bytesExpected;i++)    
   {
+    // If data is available in the serial port, continute
     if(sPort.available() > 0)
     {
-      inByte = byte(sPort.readChar());
-      responseBytes[i] = inByte;
-      printDebug(hex(inByte) + "-"); //debug 
+      bufferByte = byte(sPort.readChar());
+      responseBytes[i] = bufferByte;
+      printDebug(hex(bufferByte) + "-"); //debug 
     }
     else
     {
-      printDebug("NO BYTE-");
+      printDebug("NO BYTE-");//debug
     }
   }//end looking for bytes from packet
-  printlnDebug(" "); //debug  
+  printlnDebug(" "); //debug  finish line
   
-  sPort.clear();
+  sPort.clear();  //clear serial port for the next read
   
-  return(responseBytes);  
-  
-
-
+  return(responseBytes);  //return serial data
 }
 
 
-
-
-boolean getArmInfo()
+//wrapper for readFromArm(int, boolean)
+//assume normal behavior, wait = true
+byte[] readFromArm(int bytesExpected)
 {
-  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
-  returnPacket = readFromArm(5);//read raw data from arm
-  if(verifyPacket(returnPacket) == true)
-  {
-    connectedArmId = returnPacket[1];
-    return(true) ;
-  }
-  else
-  {
-    return(false); 
-  }
-  
+  return(readFromArm(bytesExpected,true));
 }
 
+
+//wrapper for readFromArm(int, boolean)
+//wait = false. Used for autosearch/startup
+byte[] readFromArmFast(int bytesExpected)
+{
+  return(readFromArm(bytesExpected,false));
+}
+
+
+
+
+/******************************************************
+ *  verifyPacket(int, boolean)
+ *
+ *  verifies a packet received from the ArbotiX/Arm
+ *
+ *  This function will do the following to verify a packet
+ *  -calculate a local checksum and compare it to the
+ *    transmitted checksum 
+ *  -check the error byte for any data 
+ *  -check that the armID is supported by this program
+ *
+ *  Parameters:
+ *    byte[]  returnPacket
+ *      byte array with response data from ArbotiX/Arm
+ *
+ *
+ *  Returns: 
+ *    boolean verifyPacket
+ *      true = packet is OK
+ *      false = problem with the packet
+ *
+ *  TODO: -Modify to return specific error messages
+ *        -Make the arm ID check modular to facilitate 
+ *         adding new arms.
+ ******************************************************/ 
 boolean verifyPacket(byte[] returnPacket)
 {
-  int packetLength = returnPacket.length;
-  int tempChecksum = 0; //int for temporary checlsum calculation
+  int packetLength = returnPacket.length;  //length of the packet
+  int tempChecksum = 0; //int for temporary checksum calculation
   byte localChecksum; //local checksum calculated by processing
-  //check header
+    
+  //check header, which should always be 255/0xff
   if(returnPacket[0] == byte(255))
-  {
+  {  
+      //iterate through bytes # 1 through packetLength-1 (do not include header(0) or checksum(packetLength)
       for(int i = 1; i<packetLength-1;i++)
       {
-        tempChecksum = int(returnPacket[i]) + tempChecksum;
+        tempChecksum = int(returnPacket[i]) + tempChecksum;//add byte value to checksum
       }
   
-      localChecksum = byte(~(tempChecksum % 256)); //calculate checksum locally
+      localChecksum = byte(~(tempChecksum % 256)); //calculate checksum locally - modulus 256 to islotate bottom byte, then invert(~)
       
       //check if calculated checksum matches the one in the packet
       if(localChecksum == returnPacket[packetLength-1])
       {
-        //if the error packet is empty return a '1' for a successful packet send
+        //check is the error packet is 0, which indicates no error
         if(returnPacket[3] == 0)
         {
           //check that the arm id packet is a valid arm
@@ -340,872 +401,435 @@ boolean verifyPacket(byte[] returnPacket)
 
 }
 
-//special function to check for the arm on startup - uses the first three bytes of the greeting message instead od the ID packer
+
+/******************************************************
+ *  checkArmStartup()
+ *
+ *  function used to check for the presense of a 
+ *  ArbotiX/Arm on a serial port. This function should
+ *  be called directly after a serial port has opened -
+ *  opening a serial port over a USB-FTDI device will
+ *  reset the ArbotiX, and the first thing the ArbotiX
+ *  will do is send a standard Arm ID packet. This function
+ *  looks specifically for that packet
+ *  This function also sets the initial Global 'currenArm'
+ *
+ *  Parameters:
+ *    None
+ *
+ *  Globals used:
+ *    int currentArm
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been detected on current serial port
+ *      false = no arm detected on current serial port
+ *
+ ******************************************************/ 
 boolean checkArmStartup()
 {
-  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
+  byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
 
-  printlnDebug("Sending ID Request"); 
-  sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);  
-  delayMs(60);
-  returnPacket = readFromArmFast(5);//read raw data from arm
+  printDebug("Checking for arm on startup - "); 
+  
+  delayMs(60);  //The ArbotiX has a delay of 50ms between starting the serial port and sending the ID packet, include an extra 10ms for other ArbotiX startup tasks
+  
+  returnPacket = readFromArmFast(5);//read raw data from arm. Do not wait for a response packet (to facilitate fast auto search)
+  //check if the return packet is a valid arm ID packet
   if(verifyPacket(returnPacket) == true)
   {
-    currentArm = returnPacket[1];
-    setPositionParameters();
-    return(true) ;
+    currentArm = returnPacket[1]; //set the current arm based on the return packet
+    printlnDebug("Startup Arm #" +currentArm+ "Found"); 
+    setPositionParameters();      //set the GUI default/min/maxes and field lables
+    return(true) ;                //Return a true signal to signal that an arm has been found
   }
   else
   {
-    return(false); 
+    printlnDebug("Startup No Arm Found"); 
+    return(false); //no arm found
   }
 }
 
+
+/******************************************************
+ *  isArmConnected()
+ *
+ *  generic function to check for the presence of an arm
+ *  during normal operation.
+ *
+ *  Parameters:
+ *    None
+ *
+ *  Globals used:
+ *    int currentArm
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been detected on current serial port
+ *      false = no arm detected on current serial port
+ *
+ ******************************************************/ 
 boolean isArmConnected()
 {  
   byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
  
- sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);  
-  returnPacket = readFromArm(5);//read raw data from arm
+  printDebug("Checking for arm - "); 
+  
+  sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+  
+  returnPacket = readFromArm(5);//read raw data from arm, complete with wait time
   if(verifyPacket(returnPacket) == true)
   {
+    printlnDebug("Arm Found"); 
     return(true) ;
   }
   else
   {
+    printlnDebug("No Arm Found"); 
     return(false); 
   }
-  
-  
 }
 
+/******************************************************
+ *  putArmToSleep()
+ *
+ *  function to put the arm to sleep. This will move 
+ *  the arm to a 'rest' position and then turn the 
+ * torque off for the servos
+ *
+ *  Parameters:
+ *    None
+ *
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been put to sleep
+ *      false = no return packet was detected from the arm.
+ *
+ ******************************************************/ 
 boolean putArmToSleep()
 {
-  sendCommanderPacket(0,0,0,0,0,0,0,0,96);
+  printDebug("Attempting to put arm in sleep mode - "); 
+  sendCommanderPacket(0,0,0,0,0,0,0,0,96);//only the last/extended byte matters - 96 signals the arm to go to sleep
   
   byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
   returnPacket = readFromArm(5);//read raw data from arm
   if(verifyPacket(returnPacket) == true)
   {
+    printlnDebug("Sleep mode success!"); 
     return(true) ;
   }
   else
   {
+    printlnDebug("Sleep mode-No return packet detected"); 
     return(false); 
   }
-  
-  //return(true);
 }
 
 
+/******************************************************
+ *  changeArmMode()
+ *
+ *  sends a packet to set the arms mode and orientation
+ *  based on the global mode and orientation values
+ *  This function will send a packet with the extended 
+ *  byte coresponding to the correct IK mode and wrist 
+ *  orientation. The arm will move from its current 
+ *  position to the 'home' position for the current 
+ *  mode.
+ *  Backhoe mode does not have different straight/
+ *  90 degree modes.
+ *  
+ *  Extended byte - Mode 
+ *  32 - cartesian, straight mode
+ *  40 - cartesian, 90 degree mode
+ *  48 - cylindrical, straight mode
+ *  56 - cylindrical, 90 degree mode
+ *  64 - backhoe
+ *  
+ *  Parameters:
+ *    None
+ *
+ *  Globals used:
+ *    currentMode
+ *    currentOrientation
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been put in the mode correctly
+ *      false = no return packet was detected from the arm.
+ *
+ ******************************************************/ 
 boolean changeArmMode()
 {
- switch(currentMode)
-  {
-    case 1:
-      switch(currentOrientation)
-      {
-        case 1:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,32);
-          break;
-        case 2:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,40);
-          break;
-      }
-      break;
-    case 2:
-      switch(currentOrientation)
-      {
-        case 1:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,48);
-          break;
-        case 2:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,56);
-          break;
-      }
-      break;
-
-    case 3:
-      sendCommanderPacket(0,0,0,0,0,0,0,0,64);
-      break;
-  } 
   
   byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
+  
+ //switch based on the current mode
+ switch(currentMode)
+  {
+    //cartesian mode case
+    case 1:
+      //switch based on the current orientation
+      switch(currentOrientation)
+      {
+        case 1:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,32);//only the last/extended byte matters, 32 = cartesian, straight mode
+          printDebug("Setting Arm to Cartesian IK mode, Gripper Angle Straight - "); 
+          break;
+        case 2:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,40);//only the last/extended byte matters, 40 = cartesian, 90 degree mode
+          printDebug("Setting Arm to Cartesian IK mode, Gripper Angle 90 degree - "); 
+          break;
+      }//end orientation switch
+      break;//end cartesian mode case
+      
+    //cylindrical mode case
+    case 2:
+      //switch based on the current orientation
+      switch(currentOrientation)
+      {
+        case 1:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,48);//only the last/extended byte matters, 48 = cylindrical, straight mode
+          printDebug("Setting Arm to Cylindrical IK mode, Gripper Angle Straight - "); 
+          break;
+        case 2:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,56);//only the last/extended byte matters, 56 = cylindrical, 90 degree mode
+          printDebug("Setting Arm to Cylindrical IK mode, Gripper Angle 90 degree - "); 
+          break;
+      }//end orientation switch
+      break;//end cylindrical mode case
+
+    //backhoe mode case
+    case 3:
+      sendCommanderPacket(0,0,0,0,0,0,0,0,64);//only the last/extended byte matters, 64 = backhoe
+          printDebug("Setting Arm to Backhoe IK mode - "); 
+      break;//end backhoe mode case
+  } 
+  
   returnPacket = readFromArm(5);//read raw data from arm
   if(verifyPacket(returnPacket) == true)
   {
+    printlnDebug("Response succesful!"); 
     return(true) ;
   }
   else
   {
+    printlnDebug("No Response - Failure?"); 
     return(false); 
   }
   
 }
 
-
-
-
-
-
-
+/******************************************************
+ *  delayMs(int)
+ *
+ *  function waits/blocks the program for 'ms' milliseconds
+ *  Used for very short delays where the program only needs
+ *  to wait and does not need to execute code
+ *  
+ *  Parameters:
+ *    int ms
+ *      time, in milliseconds to wait
+ *  Returns: 
+ *    void
+ ******************************************************/ 
 void delayMs(int ms)
 {
-  int time = millis();
-  while(millis()-time < ms);
+  int time = millis();  //time that the program starts the loop
+  while(millis()-time < ms);//loop/do nothing until the different between the current time and 'time'
 }
 
 
 
+/******************************************************
+ *  sendCommanderPacket(int, int, int, int, int, int, int, int, int)
+ *
+ *  This function will send a commander style packet 
+ *  the ArbotiX/Arm. This packet has 9 bytes and includes
+ *  positional data, button data, and extended instructions.
+ *  This function is often used with the function
+ *  readFromArm()    
+ *  to verify the packet was received correctly
+ *   
+ *  Parameters:
+ *    int x
+ *      offset X value (cartesian mode), or base value(Cylindrical and backhoe mode) - will be converted into 2 bytes
+ *    int y
+ *        Y Value (cartesian and cylindrical mode) or shoulder value(backhoe mode) - will be converted into 2 bytes
+ *    int z
+ *        Z Value (cartesian and cylindrical mode) or elbow value(backhoe mode) - will be converted into 2 bytes
+ *    int wristAngle
+ *      offset wristAngle value(cartesian and cylindrical mode) or wristAngle value (backhoe mode) - will be converted into 2 bytes
+ *    int wristRotate
+ *      offset wristRotate value(cartesian and cylindrical mode) or wristRotate value (backhoe mode) - will be converted into 2 bytes
+ *    int gripper
+ *      Gripper Value(All modes) - will be converted into 2 bytes
+ *    int delta
+ *      delta(speed) value (All modes) - will be converted into 1 byte
+ *    int button
+ *      digital button values (All modes) - will be converted into 1 byte
+ *    int extended
+ *       value for extended instruction / special instruction - will be converted into 1 byte
+ *
+ *  Global used: sPort
+ *
+ *  Return: 
+ *    Void
+ *
+ ******************************************************/ 
 void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, int gripper, int delta, int button, int extended)
 {
    sPort.clear();//clear the serial port for the next round of communications
-  
-  
-  //retreiving the field value from each field, casting it to an int, then converting it into 2 bytes
+   
+  //convert each positional integer into 2 bytes using intToBytes()
   byte[] xValBytes = intToBytes(x);
   byte[] yValBytes = intToBytes(y);
   byte[] zValBytes =  intToBytes(z);
-  byte[] wristRotValBytes =  intToBytes(wristRotate);
-  byte[] wristAngleValBytes =  intToBytes(wristAngle);
+  byte[] wristRotValBytes = intToBytes(wristRotate);
+  byte[] wristAngleValBytes = intToBytes(wristAngle);
   byte[] gripperValBytes = intToBytes(gripper);
-  //byte[] deltaValBytes =  intToBytes(delta);
-  //byte[] extValBytes =  intToBytes(x);
+  //cast int to bytes
   byte buttonByte = byte(button);
   byte extValByte = byte(extended);
-
   byte deltaValByte = byte(delta);
 
-  byte checksum = (byte)(255 - (xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValByte + buttonByte+extValByte)%256);
+  //calculate checksum - add all values, take lower byte (%256) and invert result (~). you can also invert results by (255-sum)
+  byte checksum = (byte)(~(xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValByte + buttonByte+extValByte)%256);
 
-
-  sPort.write(0xff);          //header
-   
+  //send commander style packet. Following labels are for cartesian mode, see function comments for clyindrical/backhoe mode
+  sPort.write(0xff);          //header   
   sPort.write(xValBytes[1]); //X Coord High Byte
   sPort.write(xValBytes[0]); //X Coord Low Byte
-  
   sPort.write(yValBytes[1]); //Y Coord High Byte
   sPort.write(yValBytes[0]); //Y Coord Low Byte
-  
   sPort.write(zValBytes[1]); //Z Coord High Byte
   sPort.write(zValBytes[0]); //Z Coord Low Byte
-  
   sPort.write(wristAngleValBytes[1]); //Wrist Angle High Byte
   sPort.write(wristAngleValBytes[0]); //Wrist Angle Low Byte
-  
   sPort.write(wristRotValBytes[1]); //Wrist Rotate High Byte
   sPort.write(wristRotValBytes[0]); //Wrist Rotate Low Byte
-  
   sPort.write(gripperValBytes[1]); //Gripper High Byte
   sPort.write(gripperValBytes[0]); //Gripper Low Byte
-  
-  
-  
-  sPort.write(deltaValByte); //Delta Low Byte
-  
-  sPort.write(buttonByte); //Button byte
-  
-  sPort.write(extValByte); //Extended instruction
-  
- // sPort.write(extValBytes[0]); //Extended instruction
-  
-  
+  sPort.write(deltaValByte); //Delta Low Byte  
+  sPort.write(buttonByte); //Button byte  
+  sPort.write(extValByte); //Extended instruction  
   sPort.write(checksum);  //checksum
-   
+  
   printlnDebug("Packet Sent: 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +""); 
          
 }
 
+/******************************************************
+ *  intToBytes(int)
+ *
+ *  This function will take an interger and convert it
+ *  into two bytes. These bytes can then be easily 
+ *  transmitted to the ArbotiX/Arm. Byte[0] is the low byte
+ *  and Byte[1] is the high byte
+ *   
+ *  Parameters:
+ *    int convertInt
+ *      integer to be converted to bytes
+ *  Return: 
+ *    byte[]
+ *      byte array with two bytes Byte[0] is the low byte and Byte[1] 
+ *      is the high byte
+ ******************************************************/ 
 byte[] intToBytes(int convertInt)
 {
-  byte[] returnBytes = new byte[2]; // array that holds the returned data from the registers only 
-  byte mask = byte(0xff);
-  returnBytes[0] =byte(convertInt & mask);//low byte
-  returnBytes[1] =byte((convertInt>>8) & mask);//high byte
-  return(returnBytes);
+  byte[] returnBytes = new byte[2]; // array that holds the two bytes to return
+  byte mask = byte(255);          //mask for the low byte (255/0xff)
+  returnBytes[0] =byte(convertInt & mask);//low byte - perform an '&' operation with the byte mask to remove the high byte
+  returnBytes[1] =byte((convertInt>>8) & mask);//high byte - shift the byte to the right 8 bits. perform an '&' operation with the byte mask to remove any additional data
+  return(returnBytes);  //return byte array
   
 }
 
-//0 -> low byte 1 -> high byte
+/******************************************************
+ *  bytesToInt(byte[])
+ *
+ *  Take two bytes and convert them into an integer
+ *   
+ *  Parameters:
+ *    byte[] convertBytes
+ *      bytes to be converted to integer
+ *  Return: 
+ *    int
+ *      integer value from 2 butes
+ ******************************************************/ 
 int bytesToInt(byte[] convertBytes)
 {
-  return((int(convertBytes[1]<<8))+int(convertBytes[0]));//cast to int to ensureprper signed/unsigned behavior
+  return((int(convertBytes[1]<<8))+int(convertBytes[0]));//shift high byte up 8 bytes, and add it to the low byte. cast to int to ensure proper signed/unsigned behavior
 }
 
+/****************
+ *  updateOffsetCoordinates()
+ *
+ *  modifies the current global coordinate
+ *  with an appropriate offset
+ *
+ *  As the armControl software communicates in
+ *  unsigned bytes, any value that has negative
+ *  values in the GUI must be offset. This function
+ *  will add the approprate offsets based on the 
+ *  current mode of operation( global variable 'currentMode')
+ *
+ *  Parameters:
+ *    None:
+ *  Globals used:
+ *    'Current' position vars
+ *    'CurrentOffset' position vars
+ *  Return: 
+ *    void
+ ***************/
 
-// Arm
-// Pincher - 1
-// Reactor - 2
-// WidowX -3
-//
-// Mode
-// 1 - straight
-// 2 - 90 degrees 
-// 3 - cyl straight
-// 4 - cyl 90
-// 5 - backhoe
-void setPositionParameters()
+void  updateOffsetCoordinates()
 {
-  //pincher, normal orinetation
-  
-  switch(currentArm)
-  {
-    case 1:
-      switch(currentMode)
-      {
-        case 1:
-          switch(currentOrientation)
-          {
-            case 1:        
-            xSlider.setLimits( pincherNormalX[0],pincherNormalX[1],pincherNormalX[2]);    
-            xTextField.setText(Integer.toString(pincherNormalX[0]));
-            xLabel.setText("X Coord");
-            arrayCopy(pincherNormalX,xParameters);
-            
-            ySlider.setLimits( pincherNormalY[0],pincherNormalY[1],pincherNormalY[2]) ; 
-            yTextField.setText(Integer.toString(pincherNormalY[0]));
-            xLabel.setText("Y Coord");
-            arrayCopy(pincherNormalY,yParameters);
-            
-            zSlider.setLimits( pincherNormalZ[0],pincherNormalZ[1],pincherNormalZ[2]) ;   
-            zTextField.setText(Integer.toString(pincherNormalZ[0]));
-            zLabel.setText("Z Coord");
-            arrayCopy(pincherNormalZ,zParameters);
-            
-            wristAngleSlider.setLimits(pincherNormalWristAngle[0],pincherNormalWristAngle[1],pincherNormalWristAngle[2]); 
-            wristAngleTextField.setText(Integer.toString(pincherNormalWristAngle[0]));
-            wristAngleLabel.setText("Wrist Angle");
-            arrayCopy(pincherNormalWristAngle,wristAngleParameters);
-            
-            wristRotateSlider.setLimits(pincherWristRotate[0],pincherWristRotate[1],pincherWristRotate[2]) ;   
-            wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-            wristRotateLabel.setText("Wrist Rotate");
-            arrayCopy(pincherWristRotate,wristRotateParameters);
-            wristRotateSlider.setVisible(false);
-            wristRotateTextField.setVisible(false);
-            wristRotateLabel.setVisible(false);
-            
-            gripperSlider.setLimits( pincherGripper[0],pincherGripper[1],pincherGripper[2]);    
-            gripperTextField.setText(Integer.toString(pincherGripper[0]));
-            gripperLabel.setText("Gripper");
-            arrayCopy(pincherGripper,gripperParameters);
-            break;
-            
-            case 2:
-            xSlider.setLimits( pincher90X[0],pincher90X[1],pincher90X[2]);    
-            xTextField.setText(Integer.toString(pincher90X[0]));
-            xLabel.setText("X Coord");
-            arrayCopy(pincher90X,xParameters);
-            
-            ySlider.setLimits( pincher90Y[0],pincher90Y[1],pincher90Y[2]) ; 
-            yTextField.setText(Integer.toString(pincher90Y[0]));
-            yLabel.setText("Y Coord");
-            arrayCopy(pincher90Y,yParameters);
-            
-            zSlider.setLimits( pincher90Z[0],pincher90Z[1],pincher90Z[2]) ;   
-            zTextField.setText(Integer.toString(pincher90Z[0]));
-            zLabel.setText("Z Coord");
-            arrayCopy(pincher90Z,zParameters);
-            
-            wristAngleSlider.setLimits(pincher90WristAngle[0],pincher90WristAngle[1],pincher90WristAngle[2]); 
-            wristAngleTextField.setText(Integer.toString(pincher90WristAngle[0]));
-            wristAngleLabel.setText("Wrist Angle");
-            arrayCopy(pincher90WristAngle,wristAngleParameters);
-            
-            wristRotateSlider.setLimits(pincherWristRotate[0],pincherWristRotate[1],pincherWristRotate[2]) ;   
-            wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-            wristRotateLabel.setText("Wrist Rotate");
-            arrayCopy(pincherWristRotate,wristRotateParameters);
-            wristRotateSlider.setVisible(false);
-            wristRotateTextField.setVisible(false);
-            wristRotateLabel.setVisible(false);
-            
-            gripperSlider.setLimits( pincherGripper[0],pincherGripper[1],pincherGripper[2]);    
-            gripperTextField.setText(Integer.toString(pincherGripper[0]));
-            gripperLabel.setText("Gripper");
-            arrayCopy(pincherGripper,gripperParameters);
+  //offsets are applied based on current mode
+  switch(currentMode)
+    {
+       case 1:        
+         //x, wrist angle, and wrist rotate must be offset, all others are normal
+         xCurrentOffset = xCurrent + 512;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent + 90;
+         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+         break;
         
-            break;
-            
-          }
-          break;
-          
-        case 2:
-          switch(currentOrientation)
-          {
-            case 1: 
-              xSlider.setLimits( pincherBase[0],pincherBase[1],pincherBase[2]);    
-              xTextField.setText(Integer.toString(pincherBase[0]));
-              xLabel.setText("Base");
-              arrayCopy(pincherBase,xParameters);
-              
-              ySlider.setLimits( pincherNormalY[0],pincherNormalY[1],pincherNormalY[2]) ; 
-              yTextField.setText(Integer.toString(pincherNormalY[0]));
-              yLabel.setText("Y Coord");
-              arrayCopy(pincherNormalY,yParameters);
-              
-              zSlider.setLimits( pincherNormalZ[0],pincherNormalZ[1],pincherNormalZ[2]) ;   
-              zTextField.setText(Integer.toString(pincherNormalZ[0]));
-              zLabel.setText("Z Coord");
-              arrayCopy(pincherNormalZ,zParameters);
-              
-              wristAngleSlider.setLimits(pincherNormalWristAngle[0],pincherNormalWristAngle[1],pincherNormalWristAngle[2]); 
-              wristAngleTextField.setText(Integer.toString(pincherNormalWristAngle[0]));
-              wristAngleLabel.setText("Wrist Angle");
-              arrayCopy(pincherNormalWristAngle,wristAngleParameters);
-              
-              wristRotateSlider.setLimits(pincherWristRotate[0],pincherWristRotate[1],pincherWristRotate[2]) ;   
-              wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-              wristRotateLabel.setText("Wrist Rotate");
-              arrayCopy(pincherWristRotate,wristRotateParameters);
-              wristRotateSlider.setVisible(false);
-              wristRotateTextField.setVisible(false);
-              wristRotateLabel.setVisible(false);
-              
-              
-              gripperSlider.setLimits( pincherGripper[0],pincherGripper[1],pincherGripper[2]);    
-              gripperTextField.setText(Integer.toString(pincherGripper[0]));
-              gripperLabel.setText("Gripper");
-              arrayCopy(pincherGripper,gripperParameters);
-           
-              break;
-              
-            case 2:  
-              xSlider.setLimits( pincherBase[0],pincherBase[1],pincherBase[2]);    
-              xTextField.setText(Integer.toString(pincherBase[0]));
-              xLabel.setText("Base");
-              arrayCopy(pincherBase,xParameters);
-              
-              ySlider.setLimits( pincher90Y[0],pincher90Y[1],pincher90Y[2]) ; 
-              yTextField.setText(Integer.toString(pincher90Y[0]));
-              yLabel.setText("Y Coord");
-              arrayCopy(pincher90Y,yParameters);
-              
-              zSlider.setLimits( pincher90Z[0],pincher90Z[1],pincher90Z[2]) ;   
-              zTextField.setText(Integer.toString(pincher90Z[0]));
-              zLabel.setText("Z Coord");
-              arrayCopy(pincher90Z,zParameters);
-              
-              wristAngleSlider.setLimits(pincher90WristAngle[0],pincher90WristAngle[1],pincher90WristAngle[2]); 
-              wristAngleTextField.setText(Integer.toString(pincher90WristAngle[0]));
-              wristAngleLabel.setText("Wrist Angle");
-              arrayCopy(pincher90WristAngle,wristAngleParameters);
-              
-              wristRotateSlider.setLimits(pincherWristRotate[0],pincherWristRotate[1],pincherWristRotate[2]) ;   
-              wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-              wristRotateLabel.setText("Wrist Rotate");
-              arrayCopy(pincherWristRotate,wristRotateParameters);
-              wristRotateSlider.setVisible(false);
-              wristRotateTextField.setVisible(false);
-              wristRotateLabel.setVisible(false);
-              
-              
-              gripperSlider.setLimits( pincherGripper[0],pincherGripper[1],pincherGripper[2]);    
-              gripperTextField.setText(Integer.toString(pincherGripper[0]));
-              gripperLabel.setText("Gripper");
-              arrayCopy(pincherGripper,gripperParameters);
-          
-           
-              break; 
-          }
-
-          break;
-
-        case 3: 
+       case 2:
+       
+         //wrist angle, and wrist rotate must be offset, all others are normal
+         xCurrentOffset = xCurrent;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent + 90;
+         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+         break;
         
-        
-          xSlider.setLimits( pincherBase[0],pincherBase[1],pincherBase[2]);    
-          xTextField.setText(Integer.toString(pincherBase[0]));
-          xLabel.setText("Base");
-          arrayCopy(pincherBase,xParameters);
-          
-          ySlider.setLimits( pincherBHShoulder[0],pincherBHShoulder[1],pincherBHShoulder[2]) ; 
-          yTextField.setText(Integer.toString(pincherBHShoulder[0]));
-          yLabel.setText("Shoulder");
-          arrayCopy(pincherBHShoulder,yParameters);
-          
-          zSlider.setLimits( pincherBHElbow[0],pincherBHElbow[1],pincherBHElbow[2]) ;   
-          zTextField.setText(Integer.toString(pincherBHElbow[0]));
-          zLabel.setText("Elbow");
-          arrayCopy(pincherBHElbow,zParameters);
-          
-          wristAngleSlider.setLimits(pincherBHWristAngle[0],pincherBHWristAngle[1],pincherBHWristAngle[2]); 
-          wristAngleTextField.setText(Integer.toString(pincherBHWristAngle[0]));
-          wristAngleLabel.setText("Wrist Angle");
-          arrayCopy(pincherBHWristAngle,wristAngleParameters);
-          
-          wristRotateSlider.setLimits(pincherBHWristRot[0],pincherBHWristRot[1],pincherBHWristRot[2]) ;   
-          wristRotateTextField.setText(Integer.toString(pincherBHWristRot[0]));
-          wristRotateLabel.setText("Wrist Rotate");
-          arrayCopy(pincherBHWristRot,wristRotateParameters);
-          wristRotateSlider.setVisible(false);
-          wristRotateTextField.setVisible(false);
-          wristRotateLabel.setVisible(false);
-          
-          
-          gripperSlider.setLimits( pincherGripper[0],pincherGripper[1],pincherGripper[2]);    
-          gripperTextField.setText(Integer.toString(pincherGripper[0]));
-          gripperLabel.setText("Gripper");
-          arrayCopy(pincherGripper,gripperParameters);
-      
-        break;
-     }
-    break;//end pincher arm 
-
-        
-    //reactor arm 
-    case 2:
-      switch(currentMode)
-      {
-        //cartesian mode reactor arm
-        case 1:
-          switch(currentOrientation)
-          {
-            //normal orientation reactor arm arm cartesian
-            case 1:        
-      
-        xSlider.setLimits( reactorNormalX[0],reactorNormalX[1],reactorNormalX[2]);    
-        xTextField.setText(Integer.toString(reactorNormalX[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(reactorNormalX,xParameters);
-        
-        ySlider.setLimits( reactorNormalY[0],reactorNormalY[1],reactorNormalY[2]) ; 
-        yTextField.setText(Integer.toString(reactorNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactorNormalY,yParameters);
-        
-        zSlider.setLimits( reactorNormalZ[0],reactorNormalZ[1],reactorNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(reactorNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactorNormalZ,zParameters);
-        
-        wristAngleSlider.setLimits(reactorNormalWristAngle[0],reactorNormalWristAngle[1],reactorNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactorNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactorNormalWristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(reactorWristRotate[0],reactorWristRotate[1],reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( reactorGripper[0],reactorGripper[1],reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(reactorGripper,gripperParameters);
-              break;//end  normal orientation reactor arm arm cartesian
-            
-            //90 degree mode reactor arm cartesian
-      case 2:
-        xSlider.setLimits( reactor90X[0],reactor90X[1],reactor90X[2]);    
-        xTextField.setText(Integer.toString(reactor90X[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(reactor90X,xParameters);
-        
-        ySlider.setLimits( reactor90Y[0],reactor90Y[1],reactor90Y[2]) ; 
-        yTextField.setText(Integer.toString(reactor90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactor90Y,yParameters);
-        
-        zSlider.setLimits( reactor90Z[0],reactor90Z[1],reactor90Z[2]) ;   
-        zTextField.setText(Integer.toString(reactor90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactor90Z,zParameters);
-        
-        wristAngleSlider.setLimits(reactor90WristAngle[0],reactor90WristAngle[1],reactor90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactor90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactor90WristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(reactorWristRotate[0],reactorWristRotate[1],reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( reactorGripper[0],reactorGripper[1],reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(reactorGripper,gripperParameters);
-        break;//end 90 degree mode reactor arm cartesian
-            
-          }
-          break;//end  reactor arm
-          
-        //cylcindrical reactor arm  
-        case 2:
-          switch(currentOrientation)
-          {
-            //normal orientation reactor arm cylcindrical
-            case 1: 
-        xSlider.setLimits( reactorBase[0],reactorBase[1],reactorBase[2]);    
-        xTextField.setText(Integer.toString(reactorBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(reactorBase,xParameters);
-        
-        ySlider.setLimits( reactorNormalY[0],reactorNormalY[1],reactorNormalY[2]) ; 
-        yTextField.setText(Integer.toString(reactorNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactorNormalY,yParameters);
-        
-        zSlider.setLimits( reactorNormalZ[0],reactorNormalZ[1],reactorNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(reactorNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactorNormalZ,zParameters);
-        
-        wristAngleSlider.setLimits(reactorNormalWristAngle[0],reactorNormalWristAngle[1],reactorNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactorNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactorNormalWristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(reactorWristRotate[0],reactorWristRotate[1],reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( reactorGripper[0],reactorGripper[1],reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(reactorGripper,gripperParameters);
-        break;//end  reactor arm
-              
-            //90 degree orientation reactor arm cylcindrical
-            case 2:  
-        xSlider.setLimits( reactorBase[0],reactorBase[1],reactorBase[2]);    
-        xTextField.setText(Integer.toString(reactorBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(reactorBase,xParameters);
-        
-        ySlider.setLimits( reactor90Y[0],reactor90Y[1],reactor90Y[2]) ; 
-        yTextField.setText(Integer.toString(reactor90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactor90Y,yParameters);
-        
-        zSlider.setLimits( reactor90Z[0],reactor90Z[1],reactor90Z[2]) ;   
-        zTextField.setText(Integer.toString(reactor90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactor90Z,zParameters);
-        
-        wristAngleSlider.setLimits(reactor90WristAngle[0],reactor90WristAngle[1],reactor90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactor90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactor90WristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(reactorWristRotate[0],reactorWristRotate[1],reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( reactorGripper[0],reactorGripper[1],reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(reactorGripper,gripperParameters);
-        break;//end  90 degree orientation reactor arm cylcindrical
-          
-          }
-
-          break;//end  cylcindrical reactor arm  
-
-          
-    //backhoe mode reactor arm
-        case 3: 
-        
-          xSlider.setLimits( reactorBase[0],reactorBase[1],reactorBase[2]);    
-          xTextField.setText(Integer.toString(reactorBase[0]));
-          xLabel.setText("Base");
-          arrayCopy(reactorBase,xParameters);
-          
-          ySlider.setLimits( reactorBHShoulder[0],reactorBHShoulder[1],reactorBHShoulder[2]) ; 
-          yTextField.setText(Integer.toString(reactorBHShoulder[0]));
-          yLabel.setText("Shoulder");
-          arrayCopy(reactorBHShoulder,yParameters);
-          
-          zSlider.setLimits( reactorBHElbow[0],reactorBHElbow[1],reactorBHElbow[2]) ;   
-          zTextField.setText(Integer.toString(reactorBHElbow[0]));
-          zLabel.setText("Elbow");
-          arrayCopy(reactorBHElbow,zParameters);
-          
-          wristAngleSlider.setLimits(reactorBHWristAngle[0],reactorBHWristAngle[1],reactorBHWristAngle[2]); 
-          wristAngleTextField.setText(Integer.toString(reactorBHWristAngle[0]));
-          wristAngleLabel.setText("Wrist Angle");
-          arrayCopy(reactorBHWristAngle,wristAngleParameters);
-          
-          wristRotateSlider.setLimits(reactorBHWristRot[0],reactorBHWristRot[1],reactorBHWristRot[2]) ;   
-          wristRotateTextField.setText(Integer.toString(reactorBHWristRot[0]));
-          wristRotateLabel.setText("Wrist Rotate");
-          arrayCopy(reactorBHWristRot,wristRotateParameters);
-          wristRotateSlider.setVisible(true);
-          wristRotateTextField.setVisible(true);
-          wristRotateLabel.setVisible(true);
-          
-          
-          gripperSlider.setLimits( reactorGripper[0],reactorGripper[1],reactorGripper[2]);    
-          gripperTextField.setText(Integer.toString(reactorGripper[0]));
-          gripperLabel.setText("Gripper");
-          arrayCopy(reactorGripper,gripperParameters);
-          break;//end backhoe mode reactor arm
-     }
-    break;//end reactor arm 
-    
-      
-      
-      
-        
-    //widow arm 
-    case 3:
-      switch(currentMode)
-      {
-        //cartesian mode widow arm
-        case 1:
-          switch(currentOrientation)
-          {
-            //normal orientation widow arm arm cartesian
-            case 1:        
-      
-        xSlider.setLimits( widowNormalX[0],widowNormalX[1],widowNormalX[2]);    
-        xTextField.setText(Integer.toString(widowNormalX[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(widowNormalX,xParameters);
-        
-        ySlider.setLimits( widowNormalY[0],widowNormalY[1],widowNormalY[2]) ; 
-        yTextField.setText(Integer.toString(widowNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widowNormalY,yParameters);
-        
-        zSlider.setLimits( widowNormalZ[0],widowNormalZ[1],widowNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(widowNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widowNormalZ,zParameters);
-        
-        wristAngleSlider.setLimits(widowNormalWristAngle[0],widowNormalWristAngle[1],widowNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widowNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widowNormalWristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(widowWristRotate[0],widowWristRotate[1],widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( widowGripper[0],widowGripper[1],widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper,gripperParameters);
-        break;
-        
-            
-            //90 degree mode widow arm cartesian
-      case 2:
-      
-        xSlider.setLimits( widow90X[0],widow90X[1],widow90X[2]);    
-        xTextField.setText(Integer.toString(widow90X[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(widow90X,xParameters);
-        
-        ySlider.setLimits( widow90Y[0],widow90Y[1],widow90Y[2]) ; 
-        yTextField.setText(Integer.toString(widow90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widow90Y,yParameters);
-        
-        zSlider.setLimits( widow90Z[0],widow90Z[1],widow90Z[2]) ;   
-        zTextField.setText(Integer.toString(widow90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widow90Z,zParameters);
-        
-        wristAngleSlider.setLimits(widow90WristAngle[0],widow90WristAngle[1],widow90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widow90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widow90WristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(widowWristRotate[0],widowWristRotate[1],widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( widowGripper[0],widowGripper[1],widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper,gripperParameters);
-        break;
-        
-          }
-          break;//end  widow arm
-          
-        //cylcindrical widow arm  
-        case 2:
-          switch(currentOrientation)
-          {
-            //normal orientation widow arm cylcindrical
-            case 1: 
-        
-      
-        xSlider.setLimits( widowBase[0],widowBase[1],widowBase[2]);    
-        xTextField.setText(Integer.toString(widowBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(widowBase,xParameters);
-        
-        ySlider.setLimits( widowNormalY[0],widowNormalY[1],widowNormalY[2]) ; 
-        yTextField.setText(Integer.toString(widowNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widowNormalY,yParameters);
-        
-        zSlider.setLimits( widowNormalZ[0],widowNormalZ[1],widowNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(widowNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widowNormalZ,zParameters);
-        
-        wristAngleSlider.setLimits(widowNormalWristAngle[0],widowNormalWristAngle[1],widowNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widowNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widowNormalWristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(widowWristRotate[0],widowWristRotate[1],widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( widowGripper[0],widowGripper[1],widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper,gripperParameters);
-        break;
-        //90 degree orientation widow arm cylcindrical
-
-            case 2:  
-      
-        xSlider.setLimits( widowBase[0],widowBase[1],widowBase[2]);    
-        xTextField.setText(Integer.toString(widowBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(widowBase,xParameters);
-        
-        ySlider.setLimits( widow90Y[0],widow90Y[1],widow90Y[2]) ; 
-        yTextField.setText(Integer.toString(widow90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widow90Y,yParameters);
-        
-        zSlider.setLimits( widow90Z[0],widow90Z[1],widow90Z[2]) ;   
-        zTextField.setText(Integer.toString(widow90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widow90Z,zParameters);
-        
-        wristAngleSlider.setLimits(widow90WristAngle[0],widow90WristAngle[1],widow90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widow90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widow90WristAngle,wristAngleParameters);
-        
-        wristRotateSlider.setLimits(widowWristRotate[0],widowWristRotate[1],widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate,wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-        
-        
-        gripperSlider.setLimits( widowGripper[0],widowGripper[1],widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper,gripperParameters);
-        break;
-          
-          }
-
-          break;//end  cylcindrical widow arm  
-
-          
-    //backhoe mode widow arm
-        case 3: 
-          xSlider.setLimits( widowBase[0],widowBase[1],widowBase[2]);    
-          xTextField.setText(Integer.toString(widowBase[0]));
-          xLabel.setText("Base");
-          arrayCopy(widowBase,xParameters);
-          
-          ySlider.setLimits( widowBHShoulder[0],widowBHShoulder[1],widowBHShoulder[2]) ; 
-          yTextField.setText(Integer.toString(widowBHShoulder[0]));
-          yLabel.setText("Shoulder");
-          arrayCopy(widowBHShoulder,yParameters);
-          
-          zSlider.setLimits( widowBHElbow[0],widowBHElbow[1],widowBHElbow[2]) ;   
-          zTextField.setText(Integer.toString(widowBHElbow[0]));
-          zLabel.setText("Elbow");
-          arrayCopy(widowBHElbow,zParameters);
-          
-          wristAngleSlider.setLimits(widowBHWristAngle[0],widowBHWristAngle[1],widowBHWristAngle[2]); 
-          wristAngleTextField.setText(Integer.toString(widowBHWristAngle[0]));
-          wristAngleLabel.setText("Wrist Angle");
-          arrayCopy(widowBHWristAngle,wristAngleParameters);
-          
-          wristRotateSlider.setLimits(widowBHWristRot[0],widowBHWristRot[1],widowBHWristRot[2]) ;   
-          wristRotateTextField.setText(Integer.toString(widowBHWristRot[0]));
-          wristRotateLabel.setText("Wrist Rotate");
-          arrayCopy(widowBHWristRot,wristRotateParameters);
-          wristRotateSlider.setVisible(true);
-          wristRotateTextField.setVisible(true);
-          wristRotateLabel.setVisible(true);
-          
-          
-          gripperSlider.setLimits( widowGripper[0],widowGripper[1],widowGripper[2]);    
-          gripperTextField.setText(Integer.toString(widowGripper[0]));
-          gripperLabel.setText("Gripper");
-          arrayCopy(widowGripper,gripperParameters);
-          break;
-     }
-    break;//end widow arm 
-    
- 
- 
-  }
-  
-  
-  xCurrent = xParameters[0]; //current x value in text field/slider
-  
-  
-  yCurrent = yParameters[0]; //current y value in text field/slider
-  
-  
-  zCurrent = zParameters[0]; //current z value in text field/slider
-  
-  wristAngleCurrent = wristAngleParameters[0]; //current Wrist Angle value in text field/slider
-  
-  wristRotateCurrent = wristRotateParameters[0]; //current  Wrist Rotate value in text field/slider
-  
-  gripperCurrent = gripperParameters[0]; //current Gripper value in text field/slider
-  
-  deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
-  
-  
+       case 3:
+       
+         //no offsets needed
+         xCurrentOffset = xCurrent;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent;
+         wristRotateCurrentOffset = wristRotateCurrent;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+        break; 
+    }  
 }
 
-void stop()
+
+//TODO//
+boolean getArmInfo()
 {
- putArmToSleep(); 
+  return(true);
+  
 }
-
-
