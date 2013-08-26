@@ -83,7 +83,6 @@ int currentArm = 1;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = 
 int currentMode = 1;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
 int currentOrientation = 1;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
 
-
 public void setup(){
   size(250, 786, JAVA2D);  //draw initial screen
   
@@ -125,6 +124,7 @@ public void draw()
   if(updateFlag == true & currentTime - prevCommandTime > updatePeriod )
   {
     updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
+    updateButtonByte();  //conver the current 'digital button' checkboxes into a value to be sent to the arbotix/arm
     prevCommandTime = currentTime; //update the prevCommandTime timestamp , used to calulcate the time the program can next send a command
     
     //in normal update mode, pressing the update button signals the program to send a packet. In this
@@ -140,7 +140,7 @@ public void draw()
     if(sPort != null)
     {
       //send commander packet with the current global currentOffset coordinatges
-      sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, 0, 0);  
+      sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
     }
   }
 }
@@ -824,6 +824,39 @@ void  updateOffsetCoordinates()
          deltaCurrentOffset = deltaCurrent;
         break; 
     }  
+}
+
+/****************
+ *  updateButtonByte()
+ *
+ *  modifies the current global coordinate
+ *  with an appropriate offset
+ *
+ *  As the armControl software communicates in
+ *  unsigned bytes, any value that has negative
+ *  values in the GUI must be offset. This function
+ *  will add the approprate offsets based on the 
+ *  current mode of operation( global variable 'currentMode')
+ *
+ *  Parameters:
+ *    None:
+ *  Globals used:
+ *    int[] digitalButtons
+ *    int digitalButtonByte
+ *  Return: 
+ *    void
+ ***************/
+
+void updateButtonByte()
+{
+  digitalButtonByte = 0;
+   for(int i=0;i<8;i++)
+  {
+    if(digitalButtons[i] == 1)
+    {
+      digitalButtonByte += pow(2,i);
+    }
+  }
 }
 
 

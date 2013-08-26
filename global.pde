@@ -45,6 +45,12 @@ int deltaCurrentOffset = deltaParameters[0]; //current delta value to be send to
 
 //End working position variables
 
+
+int digitalButtons[8] = {0,0,0,0,0,0,0,0};  //array of 8 ints to hold the current states of the checkboxes that correspond to the digital i/o
+int digitalButtonByte;//int will hold the button byte (will be cast to byte later)
+
+int extendedByte = 0;  //extended byte for special instructions
+
 //default values for the phantomX pincher. These will be loaded into the working position variables 
 //when the pincher is connected, and when modes are changed.
 int[] pincherNormalX = {0,-200,200};

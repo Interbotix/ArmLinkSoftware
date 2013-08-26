@@ -515,50 +515,74 @@ public void updateButton_click(GButton source, GEvent event)
 public void autoUpdateCheckbox_change(GCheckbox source, GEvent event)
 { 
 
-  printlnDebug("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000,3 );
+  printlnDebug("autoUpdateCheckbox_change - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
   
-  updateFlag = source.isSelected();
-  println(updateFlag);
+  updateFlag = source.isSelected();//set the updateFlag to the current state of the autoUpdate checkbox
 } 
 
 
 
-public void digitalCheckbox0_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox0 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+public void digitalCheckbox0_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("digitalCheckbox0 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  
+  digitalButton[0] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
-public void digitalCheckbox1_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox1 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
-
-public void digitalCheckbox2_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox2 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+} 
 
 
-public void digitalCheckbox3_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox3 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+public void digitalCheckbox1_change(GCheckbox source, GEvent event) 
+{ 
+  printlnDebug("digitalCheckbox1 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  digitalButton[1] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+
+} 
+public void digitalCheckbox2_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("digitalCheckbox2 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  digitalButton[2] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+
+} 
 
 
-public void digitalCheckbox4_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox4 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+public void digitalCheckbox3_change(GCheckbox source, GEvent event) 
+{ 
+  printlnDebug("digitalCheckbox3 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  digitalButton[3] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+
+}
 
 
-public void digitalCheckbox5_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox5 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+public void digitalCheckbox4_change(GCheckbox source, GEvent event) 
+{ 
+  printlnDebug("digitalCheckbox4 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  digitalButton[4] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+
+} 
 
 
-public void digitalCheckbox6_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox6 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+public void digitalCheckbox5_change(GCheckbox source, GEvent event) 
+{ 
+  printlnDebug("digitalCheckbox5 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  digitalButton[5] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+
+} 
 
 
-public void digitalCheckbox7_change(GCheckbox source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:digitalCheckbox1:676831:
+public void digitalCheckbox6_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("digitalCheckbox6 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  digitalButton[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+
+} 
+
+
+public void digitalCheckbox7_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  digitalButton[7] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+
+} 
 
 
 
