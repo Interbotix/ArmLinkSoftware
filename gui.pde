@@ -15,14 +15,16 @@ GTextField zTextField;
 GTextField gripperTextField; 
 GTextField yTextField; 
 GTextField deltaTextField; 
+GTextField extendedTextField; 
 GLabel xLabel; 
-GDropList extendedList; 
+//GDropList extendedList; 
 GLabel deltaLabel; 
 GLabel gripperLabel; 
 GLabel wristRotateLabel; 
 GLabel wristAngleLabel; 
 GLabel zLabel; 
 GLabel yLabel; 
+GLabel extendedLabel; 
 GSlider ySlider; 
 GSlider wristRotateSlider; 
 GSlider deltaSlider; 
@@ -47,6 +49,8 @@ GCheckbox digitalCheckbox7;
 GCheckbox autoUpdateCheckbox; 
 GImageButton armStraightButton;
 GImageButton arm90Button;
+GImageButton waitingButton;
+
 
 
 //Called when a new serial port is selected
@@ -89,15 +93,21 @@ public void connectButton_click(GButton source, GEvent event)
   //check to see if the serial port connection has been made
   if (sPort != null)
   {
-    //disable connect button and serial list
-     connectButton.setEnabled(false);
-     serialList.setEnabled(false);
-     //enable disconnect button
-     disconnectButton.setEnabled(true);
     
     //try to communicate with arm
     if(checkArmStartup() == true)
-    {
+    {       
+       //disable connect button and serial list
+       connectButton.setEnabled(false);
+       connectButton.setAlpha(128);
+       serialList.setEnabled(false);
+       serialList.setAlpha(128);
+       autoConnectButton.setEnabled(false);
+       autoConnectButton.setAlpha(128);
+       //enable disconnect button
+       disconnectButton.setEnabled(true);
+       disconnectButton.setAlpha(255);
+       
       //enable & set visible control and mode panel
       modePanel.setVisible(true);
       modePanel.setEnabled(true);
@@ -109,6 +119,8 @@ public void connectButton_click(GButton source, GEvent event)
     //if arm is not found return an error
     else  
     {
+      sPort.stop();
+      sPort = null;
        printlnDebug("No Arm Found on port "+serialList.getSelectedText()) ;
       /*******************
        *ERROR PANEL
@@ -136,16 +148,45 @@ public void disconnectButton_click(GButton source, GEvent event)
   
   //enable connect button and serial port 
    connectButton.setEnabled(true);
+   connectButton.setAlpha(255);
    serialList.setEnabled(true);
+   serialList.setAlpha(255); 
+   autoConnectButton.setEnabled(true);
+   autoConnectButton.setAlpha(255);
    
    //disable disconnect button
    disconnectButton.setEnabled(false);
-   
+   disconnectButton.setAlpha(128);
    //disable & set invisible control and mode panel
    controlPanel.setVisible(false);
    controlPanel.setEnabled(false);    
    modePanel.setVisible(false);
    modePanel.setEnabled(false);
+   
+   //uncheck all checkboxes to reset
+   autoUpdateCheckbox.setSelected(false);
+   digitalCheckbox0.setSelected(false);
+   digitalCheckbox1.setSelected(false);
+   digitalCheckbox2.setSelected(false);
+   digitalCheckbox3.setSelected(false);
+   digitalCheckbox4.setSelected(false);
+   digitalCheckbox5.setSelected(false);
+   digitalCheckbox6.setSelected(false);
+   digitalCheckbox7.setSelected(false);
+   
+   currentMode = 0;
+   currentArm = 0;
+   currentOrientation = 0;
+   
+   
+  cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  
+  armStraightButton.setAlpha(128);
+  arm90Button.setAlpha(128);
+   
+   
 } 
 
 
@@ -156,16 +197,24 @@ public void autoConnectButton_click(GButton source, GEvent event)
 {
     printlnDebug("autoConnectButton - GButton event occured " + System.currentTimeMillis()%10000000,1 );
   
-   //disable connect/disconnect buttons and serial list
-   connectButton.setEnabled(false);
-   serialList.setEnabled(false);
-   disconnectButton.setEnabled(false);
+
+     //disable connect button and serial list
+     connectButton.setEnabled(false);
+     connectButton.setAlpha(128);
+     serialList.setEnabled(false);
+     serialList.setAlpha(128);
+     autoConnectButton.setEnabled(false);
+     autoConnectButton.setAlpha(128);
+     //enable disconnect button
+     disconnectButton.setEnabled(true);
+     disconnectButton.setAlpha(255);
 
     //for (int i=0;i<Serial.list().length;i++) //scan from bottom to top
     //scan from the top of the list to the bottom, for most users the ArbotiX will be the most recently added ftdi device
     for (int i=Serial.list().length-1;i>=0;i--) 
     {
       serialList.setSelected(i+1);
+      selectedSerialPort = i;
       //try to connect to the current serial port
       try
       {
@@ -229,13 +278,18 @@ public void autoConnectButton_click(GButton source, GEvent event)
     //id sPort is null, not port was found. Set GUI elements appropriatley.
     if(sPort == null)
     {
-      printlnDebug("END AUTO SEARCH No Arm Found from auto search");
       //enable connect button and serial port 
-      connectButton.setEnabled(true);
-      serialList.setEnabled(true);
+       connectButton.setEnabled(true);
+       connectButton.setAlpha(255);
+       serialList.setEnabled(true);
+       serialList.setAlpha(255); 
+       autoConnectButton.setEnabled(true);
+       autoConnectButton.setAlpha(255);
        
-      //disable disconnect button
-      disconnectButton.setEnabled(false);
+       //disable disconnect button
+       disconnectButton.setEnabled(false);
+       disconnectButton.setAlpha(128);
+       //disable & set invisible control and mode panel
       
     }
  
@@ -260,7 +314,7 @@ public void helpButton_click(GButton source, GEvent event)
 //-
 public int armTextFieldChange(GTextField source, GEvent event, GSlider targetSlider, int minVal, int maxVal, int currentVal )
 {
-   String textFieldString = source.getText();//string value from textField
+  String textFieldString = source.getText();//string value from textField
   int textFieldValue;//converted integer from textField
 
   //parse through each character in the string to make sure that it is a digit
@@ -269,18 +323,22 @@ public int armTextFieldChange(GTextField source, GEvent event, GSlider targetSli
       //get single character and check if it is not a digit
       //in non digit character is found, return text field to previous value
       //otherwise continue
-      println(textFieldString.charAt(i));
+      printDebug(textFieldString.charAt(i) + " ",1 );
       if (!Character.isDigit(textFieldString.charAt(i)))
       {
         //'-' character is used for negative numbers, so check that the current character is not '-'
         //otherwise continue 
         if(textFieldString.charAt(i) != '-')
         {
+           printlnDebug("Non Numeric Character in Textfield, reverting value",1 );
           source.setText(Integer.toString(currentVal));//set string to global xCurrent Value, last known good value  
+           return(currentVal); 
           //TODO: alternativeley the program could remove the offending character and write the string back
         }
+        
       }
     }
+   printlnDebug("",1 );
     
   //only write value to slider/global if the enter key is pressed or focus is lost on the text field
   if(event == GEvent.ENTERED | event == GEvent.LOST_FOCUS)
@@ -302,13 +360,11 @@ public int armTextFieldChange(GTextField source, GEvent event, GSlider targetSli
     }
     
     targetSlider.setValue(textFieldValue);
-    return(textFieldValue);  
+  return(textFieldValue);  
   }
-  else
-  {
-   printlnDebug("Non Numeric Character in Textfield ",1 );
-   return(currentVal); 
-  }
+
+ return(currentVal); 
+  
 }
 
 public void xTextField_change(GTextField source, GEvent event) 
@@ -355,6 +411,60 @@ public void deltaTextField_change(GTextField source, GEvent event)
 }
 
 
+
+
+public void extendedTextField_change(GTextField source, GEvent event) 
+{
+  printlnDebug("extendedTextField_change - GDropList event occured " + System.currentTimeMillis()%10000000,1 );
+  String textFieldString = source.getText();//string value from textField
+  int textFieldValue = 0;//converted integer from textField
+
+  //parse through each character in the string to make sure that it is a digit
+  for(int i = 0; i < textFieldString.length(); i++)
+    {
+      //get single character and check if it is not a digit
+      //in non digit character is found, return text field to previous value
+      //otherwise continue
+      //printlnDebug(textFieldString.charAt(i));
+      if (!Character.isDigit(textFieldString.charAt(i)))
+      {
+        //'-' character is used for negative numbers, so check that the current character is not '-'
+        //otherwise continue 
+        if(textFieldString.charAt(i) != '-')
+        {
+          source.setText(Integer.toString(extendedByte));//set string to global xCurrent Value, last known good value  
+          //TODO: alternativeley the program could remove the offending character and write the string back
+        }
+      }
+    }
+    
+  //only write value to global if enter key is pressed or lose focus on fieles
+  if(event == GEvent.ENTERED | event == GEvent.LOST_FOCUS)
+  {
+    printlnDebug("Change Extended Byte");
+    extendedByte = int(textFieldString);//take String from text field and conver it to an int
+    
+    //check if the value is over the global max for this field - if so, set the textField value to the maximum value
+    if(extendedByte > 255)
+    {
+       source.setText(Integer.toString(255));//append a "" for easy string conversion 
+       extendedByte = 255;    
+    }
+    
+    //check if the value is under the global min for this field - if so, set the textField value to the minimum value
+    if(extendedByte < 0)
+    {
+       source.setText(Integer.toString(0));//append a "" for easy string conversion      
+       extendedByte = 0;    
+    }
+    
+    
+  }
+  
+  
+  
+    
+}
 
 
 
@@ -424,12 +534,12 @@ public void gripperSlider_change(GSlider source, GEvent event)
   
 }
 
-public void deltaSliderChange(GSlider source, GEvent event) 
+public void deltaSlider_change(GSlider source, GEvent event) 
 {
   printlnDebug("deltaSliderChange - GSlider event occured " + System.currentTimeMillis()%10000000,1 );
   if(event == GEvent.VALUE_STEADY)
   {
-    deltaTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+    deltaTextField.setText(Integer.toString(source.getValueI())); 
     deltaCurrent = source.getValueI();
   }
   
@@ -438,14 +548,30 @@ public void deltaSliderChange(GSlider source, GEvent event)
 
 
 
-public void extendedList_click(GDropList source, GEvent event) { //_CODE_:extendedList:893307:
-  println("dropList2 - GDropList event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:extendedList:893307:
-
-
-
 public void cartesianModeButton_click(GButton source, GEvent event) { //_CODE_:cartesianModeButton:383064:
   println("cartesianModeButton - GButton event occured " + System.currentTimeMillis()%10000000 );
+  
+  source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  
+  if(currentOrientation == 0)
+  {
+    currentOrientation =1;
+  }
+  
+  if(currentOrientation == 1)
+  {
+  armStraightButton.setAlpha(255);
+  arm90Button.setAlpha(128);
+  }
+  else  
+  {
+  armStraightButton.setAlpha(128);
+  arm90Button.setAlpha(255);
+  }
+  
+   
   currentMode = 1;
   setPositionParameters();
   changeArmMode();
@@ -453,6 +579,29 @@ public void cartesianModeButton_click(GButton source, GEvent event) { //_CODE_:c
 
 public void cylindricalModeButton_click(GButton source, GEvent event) { //_CODE_:cylindricalModeButton:547200:
   println("cylindricalModeButton - GButton event occured " + System.currentTimeMillis()%10000000 );
+  
+  source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  
+  if(currentOrientation == 0)
+  {
+    currentOrientation =1;
+  }
+  
+  if(currentOrientation == 1)
+  {
+  armStraightButton.setAlpha(255);
+  arm90Button.setAlpha(128);
+  }
+  else  
+  {
+  armStraightButton.setAlpha(128);
+  arm90Button.setAlpha(255);
+  }
+  
+  
+  
   currentMode = 2;
   setPositionParameters();
   changeArmMode();
@@ -460,6 +609,15 @@ public void cylindricalModeButton_click(GButton source, GEvent event) { //_CODE_
 
 public void backhoeModeButton_click(GButton source, GEvent event) { //_CODE_:backhoeModeButton:347353:
   println("backhoeModeButton - GButton event occured " + System.currentTimeMillis()%10000000 );
+  
+  source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  
+  
+  armStraightButton.setAlpha(128);
+  arm90Button.setAlpha(128);
+  
   currentMode = 3;
   setPositionParameters();
   changeArmMode();
@@ -469,43 +627,7 @@ public void updateButton_click(GButton source, GEvent event)
 {
   printlnDebug("backhoeModeButton - GButton event occured " + System.currentTimeMillis()%10000000,1 );
   updateFlag = true;
-  switch(currentMode)
-  {
-     case 1:  
-     
-       xCurrentOffset = xCurrent + 512;
-       yCurrentOffset = yCurrent;
-       zCurrentOffset = zCurrent;
-       wristAngleCurrentOffset =  wristAngleCurrent + 90;
-       wristRotateCurrentOffset = wristRotateCurrent + 512;
-       gripperCurrentOffset = gripperCurrent;
-       deltaCurrentOffset = deltaCurrent;
-       break;
-      
-     case 2:
-     
-       xCurrentOffset = xCurrent;
-       yCurrentOffset = yCurrent;
-       zCurrentOffset = zCurrent;
-       wristAngleCurrentOffset =  wristAngleCurrent + 90;
-       wristRotateCurrentOffset = wristRotateCurrent + 512;
-       gripperCurrentOffset = gripperCurrent;
-       deltaCurrentOffset = deltaCurrent;
-       break;
-      
-     case 3:
-     
-       xCurrentOffset = xCurrent;
-       yCurrentOffset = yCurrent;
-       zCurrentOffset = zCurrent;
-       wristAngleCurrentOffset =  wristAngleCurrent;
-       wristRotateCurrentOffset = wristRotateCurrent;
-       gripperCurrentOffset = gripperCurrent;
-       deltaCurrentOffset = deltaCurrent;
-      break; 
-      
-      
-  }
+updateOffsetCoordinates();
   
         printlnDebug("X:"+xCurrentOffset+" Y:"+yCurrentOffset+" Z:"+zCurrentOffset+" Wrist Angle:"+wristAngleCurrentOffset+" Wrist Rotate:"+wristRotateCurrentOffset+" Gripper:"+gripperCurrentOffset+" Delta:"+deltaCurrentOffset);
 
@@ -526,7 +648,7 @@ public void digitalCheckbox0_change(GCheckbox source, GEvent event)
 {
   printlnDebug("digitalCheckbox0 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
   
-  digitalButton[0] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[0] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 } 
 
@@ -534,13 +656,13 @@ public void digitalCheckbox0_change(GCheckbox source, GEvent event)
 public void digitalCheckbox1_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox1 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
-  digitalButton[1] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[1] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 } 
 public void digitalCheckbox2_change(GCheckbox source, GEvent event) 
 {
   printlnDebug("digitalCheckbox2 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
-  digitalButton[2] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[2] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 } 
 
@@ -548,7 +670,7 @@ public void digitalCheckbox2_change(GCheckbox source, GEvent event)
 public void digitalCheckbox3_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox3 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
-  digitalButton[3] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[3] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 }
 
@@ -556,7 +678,7 @@ public void digitalCheckbox3_change(GCheckbox source, GEvent event)
 public void digitalCheckbox4_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox4 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
-  digitalButton[4] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[4] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 } 
 
@@ -564,7 +686,7 @@ public void digitalCheckbox4_change(GCheckbox source, GEvent event)
 public void digitalCheckbox5_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox5 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
-  digitalButton[5] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[5] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 } 
 
@@ -572,7 +694,7 @@ public void digitalCheckbox5_change(GCheckbox source, GEvent event)
 public void digitalCheckbox6_change(GCheckbox source, GEvent event) 
 {
   printlnDebug("digitalCheckbox6 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
-  digitalButton[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 } 
 
@@ -580,7 +702,7 @@ public void digitalCheckbox6_change(GCheckbox source, GEvent event)
 public void digitalCheckbox7_change(GCheckbox source, GEvent event) 
 {
   printlnDebug("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
-  digitalButton[7] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[7] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 
 } 
 
@@ -589,6 +711,17 @@ public void digitalCheckbox7_change(GCheckbox source, GEvent event)
 public void armStraightButton_click(GImageButton source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
   println("armstraught - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
   
+  
+  if(currentMode == 0)
+  {
+    currentMode =1;
+    cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+   
+  }
+  
+  armStraightButton.setAlpha(255);
+   arm90Button.setAlpha(128);
+  
   currentOrientation = 1;
   setPositionParameters();
   changeArmMode();
@@ -596,6 +729,16 @@ public void armStraightButton_click(GImageButton source, GEvent event) { //_CODE
 
 public void arm90Button_click(GImageButton source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
   println("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  
+  if(currentMode == 0)
+  {
+    currentMode =1;
+    cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  }
+  
+  armStraightButton.setAlpha(128);
+   arm90Button.setAlpha(255);
+  
   currentOrientation = 2;
   setPositionParameters();
   changeArmMode();
@@ -847,7 +990,7 @@ public void createGUI(){
   deltaSlider.setNumberFormat(G4P.INTEGER, 0);
   deltaSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   deltaSlider.setOpaque(false);
-  deltaSlider.addEventHandler(this, "deltaSliderChange");
+  deltaSlider.addEventHandler(this, "deltaSlider_change");
   
   
   deltaLabel = new GLabel(this, 5, 308, 60, 14);
@@ -856,72 +999,79 @@ public void createGUI(){
   deltaLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   deltaLabel.setOpaque(false);
   
-  extendedList = new GDropList(this, 5, 333, 221, 100, 5);
-  extendedList.setItems(loadStrings("list_893307"), 0);
-  extendedList.addEventHandler(this, "extendedList_click");
-  extendedList.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  
+  
+  extendedTextField = new GTextField(this, 5, 328, 60, 20, G4P.SCROLLBARS_NONE);
+  extendedTextField.setText("0");
+  extendedTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  extendedTextField.setOpaque(true);
+  extendedTextField.addEventHandler(this, "extendedTextField_change");
+  
+  extendedLabel = new GLabel(this, 5, 348, 100, 14);
+  extendedLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  extendedLabel.setText("Extended Byte");
+  extendedLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  extendedLabel.setOpaque(false);
   
   
   
+  digitalCheckbox0 = new GCheckbox(this, 5, 368, 28, 20);
+  digitalCheckbox0.setOpaque(false);
+  digitalCheckbox0.addEventHandler(this, "digitalCheckbox0_change");
+  digitalCheckbox0.setText("0");
+  
+  digitalCheckbox1 = new GCheckbox(this, 32, 368, 28, 20);
+  digitalCheckbox1.setOpaque(false);
+  digitalCheckbox1.addEventHandler(this, "digitalCheckbox1_change");
+  digitalCheckbox1.setText("1");
+  
+  digitalCheckbox2 = new GCheckbox(this, 60, 368, 28, 20);
+  digitalCheckbox2.setOpaque(false);
+  digitalCheckbox2.addEventHandler(this, "digitalCheckbox2_change");
+  digitalCheckbox2.setText("2");
+  
+  digitalCheckbox3 = new GCheckbox(this, 88, 368, 28, 20);
+  digitalCheckbox3.setOpaque(false);
+  digitalCheckbox3.addEventHandler(this, "digitalCheckbox3_change");
+  digitalCheckbox3.setText("3");
+  
+  digitalCheckbox4 = new GCheckbox(this, 116, 368, 28, 20);
+  digitalCheckbox4.setOpaque(false);
+  digitalCheckbox4.addEventHandler(this, "digitalCheckbox4_change");
+  digitalCheckbox4.setText("4");
+  
+  digitalCheckbox5 = new GCheckbox(this, 144, 368, 28, 20);
+  digitalCheckbox5.setOpaque(false);
+  digitalCheckbox5.addEventHandler(this, "digitalCheckbox5_change");
+  digitalCheckbox5.setText("5");
+  
+  digitalCheckbox6 = new GCheckbox(this, 172, 368, 28, 20);
+  digitalCheckbox6.setOpaque(false);
+  digitalCheckbox6.addEventHandler(this, "digitalCheckbox6_change");
+  digitalCheckbox6.setText("6");
+  
+  digitalCheckbox7 = new GCheckbox(this, 200, 368, 28, 20);
+  digitalCheckbox7.setOpaque(false);
+  digitalCheckbox7.addEventHandler(this, "digitalCheckbox7_change");
+  digitalCheckbox7.setText("7");
   
   
 
    
-  digitalsLabel = new GLabel(this, 5, 355, 100, 14);
+  digitalsLabel = new GLabel(this, 5, 388, 100, 14);
   digitalsLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   digitalsLabel.setText("Digital Values");
   digitalsLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   digitalsLabel.setOpaque(false);
   
   
-  digitalCheckbox0 = new GCheckbox(this, 5, 370, 28, 20);
-  digitalCheckbox0.setOpaque(false);
-  digitalCheckbox0.addEventHandler(this, "digitalCheckbox0_change");
-  digitalCheckbox0.setText("0");
-  
-  digitalCheckbox1 = new GCheckbox(this, 32, 370, 28, 20);
-  digitalCheckbox1.setOpaque(false);
-  digitalCheckbox1.addEventHandler(this, "digitalCheckbox1_change");
-  digitalCheckbox1.setText("1");
-  
-  digitalCheckbox2 = new GCheckbox(this, 60, 370, 28, 20);
-  digitalCheckbox2.setOpaque(false);
-  digitalCheckbox2.addEventHandler(this, "digitalCheckbox2_change");
-  digitalCheckbox2.setText("2");
-  
-  digitalCheckbox3 = new GCheckbox(this, 88, 370, 28, 20);
-  digitalCheckbox3.setOpaque(false);
-  digitalCheckbox3.addEventHandler(this, "digitalCheckbox3_change");
-  digitalCheckbox3.setText("3");
-  
-  digitalCheckbox4 = new GCheckbox(this, 116, 370, 28, 20);
-  digitalCheckbox4.setOpaque(false);
-  digitalCheckbox4.addEventHandler(this, "digitalCheckbox4_change");
-  digitalCheckbox4.setText("4");
-  
-  digitalCheckbox5 = new GCheckbox(this, 144, 370, 28, 20);
-  digitalCheckbox5.setOpaque(false);
-  digitalCheckbox5.addEventHandler(this, "digitalCheckbox5_change");
-  digitalCheckbox5.setText("5");
-  
-  digitalCheckbox6 = new GCheckbox(this, 172, 370, 28, 20);
-  digitalCheckbox6.setOpaque(false);
-  digitalCheckbox6.addEventHandler(this, "digitalCheckbox6_change");
-  digitalCheckbox6.setText("6");
-  
-  digitalCheckbox7 = new GCheckbox(this, 200, 370, 28, 20);
-  digitalCheckbox7.setOpaque(false);
-  digitalCheckbox7.addEventHandler(this, "digitalCheckbox7_change");
-  digitalCheckbox7.setText("7");
-  
-  
-  updateButton = new GButton(this, 5, 395, 100, 50);
+  updateButton = new GButton(this, 5, 408, 100, 50);
   updateButton.setText("Update");
   updateButton.addEventHandler(this, "updateButton_click");
   updateButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   
   
-  autoUpdateCheckbox = new GCheckbox(this, 105, 429, 100, 20);
+  autoUpdateCheckbox = new GCheckbox(this, 105, 442, 100, 20);
   autoUpdateCheckbox.setOpaque(false);
   autoUpdateCheckbox.addEventHandler(this, "autoUpdateCheckbox_change");
   autoUpdateCheckbox.setText("Auto Update");
@@ -929,11 +1079,18 @@ public void createGUI(){
   
   armStraightButton = new GImageButton(this, 5, 40, 100, 65, new String[] { "armStraightm.png", "armStraightm.png", "armStraightm.png" } );
   armStraightButton.addEventHandler(this, "armStraightButton_click");
+  armStraightButton.setAlpha(128);
+  
+  
   
   
   arm90Button = new GImageButton(this, 130, 40, 100, 65, new String[] { "arm90m.png", "arm90m.png", "arm90m.png" } );
   arm90Button.addEventHandler(this, "arm90Button_click");
+  arm90Button.setAlpha(128);
   
+  
+  waitingButton = new GImageButton(this, 115, 408, 100, 30, new String[] { "moving.jpg", "moving.jpg", "moving.jpg" } );
+  waitingButton.setAlpha(0);
   
   
   setupPanel.addControl(serialList);
@@ -971,7 +1128,8 @@ public void createGUI(){
   controlPanel.addControl(deltaTextField);
   controlPanel.addControl(deltaSlider);
   controlPanel.addControl(deltaLabel);
-  controlPanel.addControl(extendedList);
+  controlPanel.addControl(extendedTextField);
+  controlPanel.addControl(extendedLabel);
   controlPanel.addControl(digitalsLabel);
   controlPanel.addControl(digitalCheckbox0);
   controlPanel.addControl(digitalCheckbox1);
@@ -983,6 +1141,7 @@ public void createGUI(){
   controlPanel.addControl(digitalCheckbox7);
   controlPanel.addControl(autoUpdateCheckbox);
   controlPanel.addControl(updateButton);
+  controlPanel.addControl(waitingButton);
   
   
   
@@ -998,6 +1157,7 @@ public void createGUI(){
   modePanel.setEnabled(false);
   
   disconnectButton.setEnabled(false);
+  disconnectButton.setAlpha(128);
   
 }
 
@@ -1669,6 +1829,8 @@ void setPositionParameters()
   gripperCurrent = gripperParameters[0]; //current Gripper value in text field/slider
   
   deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
+  
+  extendedTextField.setText("0");
   
   
 }//end set postiion parameters

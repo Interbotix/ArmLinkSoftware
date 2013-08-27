@@ -61,6 +61,8 @@ import java.awt.Font;       //import font
 
 Serial sPort;               //serial port object, used to connect to a serial port and send data to the ArbotiX
 
+
+
 int numSerialPorts = Serial.list().length;                 //Number of serial ports available at startup
 String[] serialPortString = new String[numSerialPorts+1];  //string array to the name of each serial port - used for populating the drop down menu
 int selectedSerialPort;                                    //currently selected port from serialList drop down
@@ -79,9 +81,9 @@ long currentTime = 0;           //timestamp for currrent time
 
 int packetRepsonseTimeout = 5000;      //time to wait for a response from the ArbotiX Robocontroller / Arm Control Protocol
 
-int currentArm = 1;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX
-int currentMode = 1;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
-int currentOrientation = 1;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
+int currentArm = 0;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX
+int currentMode = 0;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
+int currentOrientation = 0;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
 
 public void setup(){
   size(250, 786, JAVA2D);  //draw initial screen
@@ -104,9 +106,13 @@ public void setup(){
   //MOVE TO GUI
   wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
   wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
+  extendedLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
   updateButton.setFont(new Font("Dialog", Font.PLAIN, 20));  
   serialList.setFont(new Font("Dialog", Font.PLAIN, 9));  
   arm90Button.setAlpha(128);
+  
+  
+  
   
 }
 
@@ -115,7 +121,7 @@ public void draw()
   background(128);//draw background color
   image(logoImg, 5, 5, 230, 78);  //draw logo image
   image(footerImg, 15, 740);      //draw footer image
-  
+
   currentTime = millis();  //get current timestamp
   
   //check if
@@ -126,7 +132,27 @@ public void draw()
     updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
     updateButtonByte();  //conver the current 'digital button' checkboxes into a value to be sent to the arbotix/arm
     prevCommandTime = currentTime; //update the prevCommandTime timestamp , used to calulcate the time the program can next send a command
+
     
+    //check that the serial port is active
+    if(sPort != null)
+    {
+      //send commander packet with the current global currentOffset coordinatges
+      sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+   
+    /*  byte[] responseBytes = new byte[5];    //byte array to hold response data
+      responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
+
+      if(verifyPacket(responseBytes) == true)
+      {
+        printlnDebug("Moved!"); 
+      }
+      else
+      {
+        printlnDebug("No Arm Found"); 
+      }*/
+        
+    }
     //in normal update mode, pressing the update button signals the program to send a packet. In this
     //case the program must set the update flag to false in order to stop new packets from being sent
     //until the update button is pressed again. 
@@ -135,13 +161,16 @@ public void draw()
     {
       updateFlag = false;//only set the updateFlag to false if the autoUpdate flag is false
     }
-    
-    //check that the serial port is active
-    if(sPort != null)
+    //use this oppurtunity to set the extended byte to 0 if autoupdate is enabled - this way the extended packet only gets sent once
+    else
     {
-      //send commander packet with the current global currentOffset coordinatges
-      sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+      if(extendedByte != 0)
+      {
+        extendedByte = 0;
+        extendedTextField.setText("0");
+      }
     }
+    
   }
 }
 
@@ -231,7 +260,7 @@ void printDebug(String message, int type)
    {
       if((type == 1 & debugGuiEvent == true) | type == 0)
       {
-        println(message); 
+        print(message); 
       }
    }
 }
@@ -290,6 +319,7 @@ byte[] readFromArm(int bytesExpected, boolean wait)
   
   //if the 'wait' flag is TRUE this loop will wait until the serial port has data OR it has waited more than packetRepsonseTimeout milliseconds.
   //packetRepsonseTimeout is a global variable
+  
   while(wait == true & sPort.available() < bytesExpected  & millis()-startReadingTime < packetRepsonseTimeout)
   {
      //do nothing, just waiting for a response or timeout
@@ -478,6 +508,7 @@ boolean isArmConnected()
   sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
   
   returnPacket = readFromArm(5);//read raw data from arm, complete with wait time
+
   if(verifyPacket(returnPacket) == true)
   {
     printlnDebug("Arm Found"); 
@@ -636,8 +667,14 @@ boolean changeArmMode()
  ******************************************************/ 
 void delayMs(int ms)
 {
+  
   int time = millis();  //time that the program starts the loop
-  while(millis()-time < ms);//loop/do nothing until the different between the current time and 'time'
+  while(millis()-time < ms)
+  {
+   
+  
+//  ;//loop/do nothing until the different between the current time and 'time'
+  }
 }
 
 
@@ -829,14 +866,7 @@ void  updateOffsetCoordinates()
 /****************
  *  updateButtonByte()
  *
- *  modifies the current global coordinate
- *  with an appropriate offset
- *
- *  As the armControl software communicates in
- *  unsigned bytes, any value that has negative
- *  values in the GUI must be offset. This function
- *  will add the approprate offsets based on the 
- *  current mode of operation( global variable 'currentMode')
+ *  
  *
  *  Parameters:
  *    None:
@@ -852,7 +882,7 @@ void updateButtonByte()
   digitalButtonByte = 0;
    for(int i=0;i<8;i++)
   {
-    if(digitalButtons[i] == 1)
+    if(digitalButtons[i] == true)
     {
       digitalButtonByte += pow(2,i);
     }
@@ -864,5 +894,165 @@ void updateButtonByte()
 boolean getArmInfo()
 {
   return(true);
+  
+}
+
+
+
+boolean keyup = false;
+boolean keydown = false;
+boolean xkey = false;
+boolean ykey = false;
+boolean zkey = false;
+boolean wangkey = false;
+boolean wrotkey = false;
+boolean gkey = false;
+
+
+void keyPressed()
+{
+  if(key =='1')
+  {
+   xkey=true; 
+  }
+  if(key =='2')
+  {
+   ykey=true; 
+  }
+  if(key =='3')
+  {
+   zkey=true; 
+  }
+  if(key =='4')
+  {
+   wangkey=true; 
+  }
+  if(key =='5')
+  {
+   wrotkey=true; 
+  }
+  if(key =='6')
+  {
+   gkey=true; 
+  }
+  
+  if(key ==ENTER)
+  {
+  updateFlag = true;
+updateOffsetCoordinates();
+  }
+  
+  if (key==CODED)
+  {
+   if (keyCode == UP)
+   {
+     if(xkey==true)
+     {
+       xCurrent = xCurrent + 1;
+       xTextField.setText(Integer.toString(xCurrent));
+       xSlider.setValue(xCurrent);
+     }
+     if(ykey==true)
+     {
+       yCurrent = yCurrent + 1;
+       yTextField.setText(Integer.toString(yCurrent));
+       ySlider.setValue(yCurrent);
+     }
+     if(zkey==true)
+     {
+       zCurrent = zCurrent + 1;
+       zTextField.setText(Integer.toString(zCurrent));
+       zSlider.setValue(zCurrent);
+     }
+     if(wangkey==true)
+     {
+       wristAngleCurrent = wristAngleCurrent + 1;
+       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+       wristAngleSlider.setValue(wristAngleCurrent);
+     }
+     if(wrotkey==true)
+     {
+       wristRotateCurrent = wristRotateCurrent + 1;
+       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+       wristRotateSlider.setValue(wristRotateCurrent);
+     }
+     if(gkey==true)
+     {
+       gripperCurrent = gripperCurrent + 1;
+       gripperTextField.setText(Integer.toString(gripperCurrent));
+        gripperSlider.setValue(gripperCurrent);
+     }
+   }
+     
+   if (keyCode == DOWN)
+   {
+     if(xkey==true)
+     {
+       xCurrent = xCurrent - 1;
+       xTextField.setText(Integer.toString(xCurrent));
+       xSlider.setValue(xCurrent);
+     }
+     if(ykey==true)
+     {
+       yCurrent = yCurrent - 1;
+       yTextField.setText(Integer.toString(yCurrent));
+       ySlider.setValue(yCurrent);
+     }
+     if(zkey==true)
+     {
+       zCurrent = zCurrent - 1;
+       zTextField.setText(Integer.toString(zCurrent));
+       zSlider.setValue(zCurrent);
+     }
+     if(wangkey==true)
+     {
+       wristAngleCurrent = wristAngleCurrent - 1;
+       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+       wristAngleSlider.setValue(wristAngleCurrent);
+     }
+     if(wrotkey==true)
+     {
+       wristRotateCurrent = wristRotateCurrent - 1;
+       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+       wristRotateSlider.setValue(wristRotateCurrent);
+     }
+     if(gkey==true)
+     {
+       gripperCurrent = gripperCurrent - 1;
+       gripperTextField.setText(Integer.toString(gripperCurrent));
+        gripperSlider.setValue(gripperCurrent);
+     }
+   }
+   
+     
+  } 
+}
+void keyReleased()
+{
+  if(key =='1')
+  {
+   xkey=false; 
+  }
+  if(key =='2')
+  {
+   ykey=false; 
+  }
+  if(key =='3')
+  {
+   zkey=false; 
+  }
+  if(key =='4')
+  {
+   wangkey=false; 
+  }
+  if(key =='5')
+  {
+   wrotkey=false; 
+  }
+  if(key =='6')
+  {
+   gkey=false; 
+  }
+  
   
 }
