@@ -7,6 +7,8 @@ GButton autoConnectButton;
 GPanel setupPanel; 
 GPanel controlPanel; 
 GPanel modePanel; 
+GPanel errorPanel; 
+GPanel settingsPanel; 
 GTextField xTextField; 
 GSlider xSlider; 
 GTextField wristRotateTextField; 
@@ -35,6 +37,8 @@ GButton cartesianModeButton;
 GButton cylindricalModeButton; 
 GButton backhoeModeButton; 
 GButton updateButton; 
+GButton errorOkButton; 
+GButton errorLinkButton; 
 PImage logoImg;
 PImage footerImg;
 GLabel digitalsLabel;
@@ -50,6 +54,59 @@ GCheckbox autoUpdateCheckbox;
 GImageButton armStraightButton;
 GImageButton arm90Button;
 GImageButton waitingButton;
+GLabel errorLabel;
+GButton settingsDismissButton;
+
+GCheckbox fileDebugCheckbox; 
+
+GCheckbox debugFileCheckbox0; 
+
+void displayError(String message, String link)
+{
+  //grey out other panels
+   setupPanel.setAlpha(128);
+   controlPanel.setAlpha(128);
+   modePanel.setAlpha(128);
+   setupPanel.setEnabled(false);
+   controlPanel.setEnabled(false);
+   modePanel.setEnabled(false);
+   
+  //show error panel
+  errorPanel.setVisible(true); 
+
+  //set text
+  errorLabel.setText(message);
+  
+  //set help link
+  if(helpLink != "")
+  {
+    helpLink = link;
+    errorLinkButton.setVisible(true);
+    errorLinkButton.setEnabled(true);
+  }
+  else
+  {
+    errorLinkButton.setVisible(false);
+    errorLinkButton.setEnabled(false);
+  }
+}
+
+
+void hideError()
+{
+  //grey out other panels
+   setupPanel.setAlpha(255);
+   controlPanel.setAlpha(255);
+   modePanel.setAlpha(255);
+   setupPanel.setEnabled(true);
+   controlPanel.setEnabled(true);
+   modePanel.setEnabled(true);
+   
+  //show error panel
+  errorPanel.setVisible(false); 
+
+
+}
 
 
 
@@ -63,6 +120,18 @@ public void serialList_click(GDropList source, GEvent event)
   printlnDebug("Serial port at position " +selectedSerialPort+ " chosen");
 } 
 
+
+
+
+public void settingsDismissButton_click(GButton source, GEvent event) 
+{
+  printlnDebug("settingsDismissButton_click - GButton event occured " + System.currentTimeMillis()%10000000,1);
+  settingsPanel.setVisible(false);
+  
+}
+  
+
+
 //called when the connect button is pressed
 public void connectButton_click(GButton source, GEvent event) 
 {
@@ -71,7 +140,7 @@ public void connectButton_click(GButton source, GEvent event)
   //check to make sure serialPortSelected is not -1, -1 means no serial port was selected. Valid port indexes are 0+
   if(selectedSerialPort > -1)
   {    
-    println("test");
+    
     //try to connect to the port at 38400bps, otherwise show an error message
     try
     {
@@ -81,12 +150,11 @@ public void connectButton_click(GButton source, GEvent event)
     {
       printlnDebug("Error Opening Serial Port"+serialList.getSelectedText());
       sPort = null;
-      /*******************
-       *ERROR PANEL
-       * Please see webpage here for info 
-       *
-      errorText.setText("Error Connecting to Port - try a different port or try closing other applications using the current port");    
-       ***********************/  
+      
+      displayError("Unable to open selected serial port" + serialList.getSelectedText() +". See link for possible solutions.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
+      
+
+
     }     
   }
   
@@ -122,12 +190,8 @@ public void connectButton_click(GButton source, GEvent event)
       sPort.stop();
       sPort = null;
        printlnDebug("No Arm Found on port "+serialList.getSelectedText()) ;
-      /*******************
-       *ERROR PANEL
-       *
-       *
-      errorText.setText("Error Connecting to Port - try a different port or try closing other applications using the current port");    
-       ***********************/  
+       
+      displayError("No Arm found on serial port" + serialList.getSelectedText() +". Make sure power is on and the arm is connected to the computer.","http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
     }
 
   }  
@@ -224,13 +288,7 @@ public void autoConnectButton_click(GButton source, GEvent event)
       {
          printlnDebug("Error Opening Serial Port for Auto Search");
          sPort = null;
-           
-        /*******************
-         *ERROR PANEL
-         *
-         *
-        errorText.setText("Error Connecting to Port - try a different port or try closing other applications using the current port");    
-         ***********************/  
+           //no GUI error 
       }
       
       //delayMs(100);//delay for some systems
@@ -263,12 +321,6 @@ public void autoConnectButton_click(GButton source, GEvent event)
            sPort.stop();
            sPort = null;
             
-          /*******************
-           *ERROR PANEL
-           *
-           *
-          errorText.setText("Error Connecting to Port - try a different port or try closing other applications using the current port");    
-           ***********************/  
         }
 
 
@@ -290,6 +342,9 @@ public void autoConnectButton_click(GButton source, GEvent event)
        disconnectButton.setEnabled(false);
        disconnectButton.setAlpha(128);
        //disable & set invisible control and mode panel
+       
+       
+         displayError("No Arm found using auto seach. Please check power and connections", "");
       
     }
  
@@ -304,7 +359,8 @@ public void autoConnectButton_click(GButton source, GEvent event)
 //TODO: Help panel with links and debug option
 public void helpButton_click(GButton source, GEvent event) 
 { 
-  link("http://learn.trossenrobotics.com/");
+  settingsPanel.setVisible(true);
+  //link("http://learn.trossenrobotics.com/");
 }
 
 //generic function that  will handle text field changes. This function will
@@ -545,11 +601,24 @@ public void deltaSlider_change(GSlider source, GEvent event)
   
 }
 
+public void errorLinkButton_click(GButton source, GEvent event) { 
 
+  printlnDebug("errorLinkButton_click - GButton event occured " + System.currentTimeMillis()%10000000,1 );
+  
+  link(helpLink);
+  
+}
+
+public void errorOkButton_click(GButton source, GEvent event) { 
+
+  printlnDebug("errorOkButton_click - GButton event occured " + System.currentTimeMillis()%10000000 ,1);
+  hideError();
+  
+}
 
 
 public void cartesianModeButton_click(GButton source, GEvent event) { //_CODE_:cartesianModeButton:383064:
-  println("cartesianModeButton - GButton event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("cartesianModeButton - GButton event occured " + System.currentTimeMillis()%10000000,1 );
   
   source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
@@ -578,7 +647,7 @@ public void cartesianModeButton_click(GButton source, GEvent event) { //_CODE_:c
 } //_CODE_:cartesianModeButton:383064:
 
 public void cylindricalModeButton_click(GButton source, GEvent event) { //_CODE_:cylindricalModeButton:547200:
-  println("cylindricalModeButton - GButton event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("cylindricalModeButton - GButton event occured " + System.currentTimeMillis()%10000000,1 );
   
   source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
@@ -608,7 +677,7 @@ public void cylindricalModeButton_click(GButton source, GEvent event) { //_CODE_
 } //_CODE_:cylindricalModeButton:547200:
 
 public void backhoeModeButton_click(GButton source, GEvent event) { //_CODE_:backhoeModeButton:347353:
-  println("backhoeModeButton - GButton event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("backhoeModeButton - GButton event occured " + System.currentTimeMillis()%10000000,1 );
   
   source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
@@ -632,6 +701,16 @@ updateOffsetCoordinates();
         printlnDebug("X:"+xCurrentOffset+" Y:"+yCurrentOffset+" Z:"+zCurrentOffset+" Wrist Angle:"+wristAngleCurrentOffset+" Wrist Rotate:"+wristRotateCurrentOffset+" Gripper:"+gripperCurrentOffset+" Delta:"+deltaCurrentOffset);
 
 }
+
+
+public void fileDebugCheckbox_change(GCheckbox source, GEvent event)
+{ 
+
+  printlnDebug("autoUpdateCheckbox_change - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
+  
+  debugFile = source.isSelected();//set the updateFlag to the current state of the autoUpdate checkbox
+} 
+
 
 
 public void autoUpdateCheckbox_change(GCheckbox source, GEvent event)
@@ -709,7 +788,7 @@ public void digitalCheckbox7_change(GCheckbox source, GEvent event)
 
 
 public void armStraightButton_click(GImageButton source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("armstraught - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("armstraught - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
   
   
   if(currentMode == 0)
@@ -728,7 +807,7 @@ public void armStraightButton_click(GImageButton source, GEvent event) { //_CODE
 } //_CODE_:digitalCheckbox1:676831:
 
 public void arm90Button_click(GImageButton source, GEvent event) { //_CODE_:digitalCheckbox1:676831:
-  println("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000,1 );
   
   if(currentMode == 0)
   {
@@ -747,16 +826,23 @@ public void arm90Button_click(GImageButton source, GEvent event) { //_CODE_:digi
 
 
 public void controlPanel_click(GPanel source, GEvent event) { //_CODE_:controlPanel:613752:
-  println("controlPanel - GPanel event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("controlPanel - GPanel event occured " + System.currentTimeMillis()%10000000,1 );
 } //_CODE_:controlPanel:613752:
 
 
 public void setupPanel_click(GPanel source, GEvent event) { 
-  println("setupPanel - GPanel event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("setupPanel - GPanel event occured " + System.currentTimeMillis()%10000000,1 );
 } 
 
 public void modePanel_click(GPanel source, GEvent event) { 
-  println("modePanel - GPanel event occured " + System.currentTimeMillis()%10000000 );
+  printlnDebug("modePanel - GPanel event occured " + System.currentTimeMillis()%10000000 );
+} 
+public void errorPanel_Click(GPanel source, GEvent event) { 
+  printlnDebug("errorPanel_Click - GPanel event occured " + System.currentTimeMillis()%10000000,1 );
+} 
+
+public void settingsPanel_Click(GPanel source, GEvent event) { 
+  printlnDebug("settingsPanel_Click - GPanel event occured " + System.currentTimeMillis()%10000000,1 );
 } 
 
 // Create all the GUI controls. 
@@ -785,8 +871,8 @@ public void createGUI(){
   disconnectButton.setText("Disconnect");
   disconnectButton.addEventHandler(this, "disconnectButton_click");
   
-  helpButton = new GButton(this, 10, 750, 40, 20);
-  helpButton.setText("Help");
+  helpButton = new GButton(this, 10, 800, 40, 20);
+  helpButton.setText("More");
   helpButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   helpButton.addEventHandler(this, "helpButton_click");
   
@@ -800,6 +886,8 @@ public void createGUI(){
   setupPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   setupPanel.setOpaque(true);
   setupPanel.addEventHandler(this, "setupPanel_click");
+  setupPanel.setDraggable(false);
+  setupPanel.setCollapsible(false);
   
   
   modePanel = new GPanel(this, 5, 163, 240, 110, "Mode Panel");
@@ -807,6 +895,8 @@ public void createGUI(){
   modePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   modePanel.setOpaque(true);
   modePanel.addEventHandler(this, "modePanel_click");
+  modePanel.setDraggable(false);
+  modePanel.setCollapsible(false);
   
   
   controlPanel = new GPanel(this, 5, 280, 240, 480, "Control Panel");
@@ -814,10 +904,53 @@ public void createGUI(){
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
   controlPanel.addEventHandler(this, "controlPanel_click");
+  controlPanel.setDraggable(false);
+  controlPanel.setCollapsible(false);
   
   
+  errorPanel = new GPanel(this, 50, 280, 150, 150, "Error Panel");
+  errorPanel.setText("Error Panel");
+  errorPanel.setLocalColorScheme(GCScheme.RED_SCHEME);
+  errorPanel.setOpaque(true);
+  errorPanel.setVisible(false);
+  errorPanel.addEventHandler(this, "errorPanel_Click");
+  errorPanel.setDraggable(false);
+  errorPanel.setCollapsible(false);
+  
+  settingsPanel = new GPanel(this, 10, 280, 230, 230, "Settings Panel");
+  settingsPanel.setText("Error Panel");
+  settingsPanel.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  settingsPanel.setOpaque(true);
+  settingsPanel.setVisible(false);
+  settingsPanel.addEventHandler(this, "settingsPanel_Click");
+  settingsPanel.setDraggable(false);
+  settingsPanel.setCollapsible(false);
   
   
+  fileDebugCheckbox = new GCheckbox(this, 5, 5, 100, 20);
+  fileDebugCheckbox.setOpaque(false);
+  fileDebugCheckbox.addEventHandler(this, "fileDebugCheckbox_change");
+  fileDebugCheckbox.setText("Debug to File");
+  
+  settingsDismissButton = new GButton(this, 15, 120, 50, 20);
+  settingsDismissButton.setText("Done");
+  settingsDismissButton.addEventHandler(this, "settingsDismissButton_click");
+  settingsDismissButton.setLocalColorScheme(GCScheme.RED_SCHEME);
+  
+  errorLinkButton = new GButton(this, 15, 120, 50, 20);
+  errorLinkButton.setText("Link");
+  errorLinkButton.addEventHandler(this, "errorLinkButton_click");
+  errorLinkButton.setLocalColorScheme(GCScheme.RED_SCHEME);
+  
+  errorOkButton = new GButton(this, 80, 120, 50, 20);
+  errorOkButton.setText("OK");
+  errorOkButton.addEventHandler(this, "errorOkButton_click");
+  errorOkButton.setLocalColorScheme(GCScheme.RED_SCHEME);
+  
+  errorLabel = new GLabel(this, 10, 25, 130, 80);
+  errorLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  errorLabel.setText("Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: ");
+  errorLabel.setOpaque(false);
   
   
   cartesianModeButton = new GButton(this, 0, 18, 80, 20);
@@ -1151,6 +1284,14 @@ public void createGUI(){
   controlPanel.addControl(autoUpdateCheckbox);
   controlPanel.addControl(updateButton);
   controlPanel.addControl(waitingButton);
+  
+  
+  errorPanel.addControl(errorLinkButton);
+  errorPanel.addControl(errorOkButton);
+  errorPanel.addControl(errorLabel);
+  
+  settingsPanel.addControl(settingsDismissButton);
+  settingsPanel.addControl(fileDebugCheckbox);
   
   
   

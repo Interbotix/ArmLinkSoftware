@@ -53,7 +53,7 @@
  *  WidowX Robot Arm
  *    http://learn.trossenrobotics.com/interbotix/robot-arms/widowx-arm
  *
- **********************************/
+ ***********************************************************************************/
 
 import g4p_controls.*;      //import g4p library for GUI elements
 import processing.serial.*; //import serial library to communicate with the ArbotiX
@@ -61,7 +61,7 @@ import java.awt.Font;       //import font
 
 Serial sPort;               //serial port object, used to connect to a serial port and send data to the ArbotiX
 
-
+PrintWriter debugOutput;        //output object to write to a file
 
 int numSerialPorts = Serial.list().length;                 //Number of serial ports available at startup
 String[] serialPortString = new String[numSerialPorts+1];  //string array to the name of each serial port - used for populating the drop down menu
@@ -69,8 +69,12 @@ int selectedSerialPort;                                    //currently selected 
 
 boolean debugConsole = true;      //change to 'false' to disable debuging messages to the console, 'true' to enable 
 boolean debugFile = false;        //change to 'false' to disable debuging messages to a file, 'true' to enable
+
 boolean debugGuiEvent = true;     //change to 'false' to disable GUI debuging messages, 'true' to enable
+boolean debugSerialEvent = true;     //change to 'false' to disable GUI debuging messages, 'true' to enable
 //int lf = 10;    // Linefeed in ASCII
+
+boolean debugFileCreated  = false;  //flag to see if the debug file has been created yet or not
 
 boolean updateFlag = false;     //trip flag, true when the program needs to send a serial packet at the next interval, used by both 'update' and 'autoUpdate' controls
 int updatePeriod = 33;          //minimum period between packet in Milliseconds , 33ms = 30Hz which is the standard for the commander/arm control protocol
@@ -84,6 +88,8 @@ int packetRepsonseTimeout = 5000;      //time to wait for a response from the Ar
 int currentArm = 0;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX
 int currentMode = 0;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
 int currentOrientation = 0;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
+
+String helpLink = "http://learn.trossenrobotics.com";
 
 public void setup(){
   size(250, 816, JAVA2D);  //draw initial screen
@@ -109,11 +115,11 @@ public void setup(){
   extendedLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
   updateButton.setFont(new Font("Dialog", Font.PLAIN, 20));  
   serialList.setFont(new Font("Dialog", Font.PLAIN, 9));  
+  errorLabel.setFont(new Font("Dialog", Font.PLAIN, 10));  
   arm90Button.setAlpha(128);
   
   
-  
-  
+  prepareExitHandler();//exit handler for clearing/stopping file handler
 }
 
 public void draw()
@@ -181,8 +187,38 @@ public void draw()
  ******************************************************/ 
 void stop()
 {
+  
  putArmToSleep(); 
+ debugOutput.flush(); // Writes the remaining data to the file
+ debugOutput.close(); // Finishes the file 
+        
 }
+
+
+
+
+
+
+
+
+
+
+
+
+private void prepareExitHandler () {
+  Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+    public void run () 
+    {
+      if(debugFileCreated == true)
+      {
+        debugOutput.flush(); // Writes the remaining data to the file
+        debugOutput.close(); // Finishes the file         
+      }  
+  }
+  }));
+}
+
+
 
 
 // Use this methologod additional statements
@@ -218,11 +254,35 @@ void printlnDebug(String message, int type)
 {
    if(debugConsole == true)
    {
-      if((type == 1 & debugGuiEvent == true) | type == 0)
+      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
       {
         println(message); 
       }
    }
+
+  if(debugFile == true)
+  {
+    
+      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      {
+        
+        if(debugFileCreated == false)
+        {
+          debugOutput = createWriter("debugArmControl.txt");
+          debugOutput.println("Started at "+ day() +"-"+ month() +"-"+ year() +" "+ hour() +":"+ minute() +"-"+ second() +"-"); 
+          debugFileCreated = true;
+        }
+
+    
+        debugOutput.println(message); 
+       
+      }
+      
+    
+  }
+  
+
+
 }
 
 //wrapper for printlnDebug(String, int)
@@ -258,11 +318,35 @@ void printDebug(String message, int type)
 {
    if(debugConsole == true)
    {
-      if((type == 1 & debugGuiEvent == true) | type == 0)
+      if((type == 1 & debugGuiEvent == true)  | type == 2)
       {
         print(message); 
       }
    }
+   
+  if(debugFile == true)
+  {
+    
+      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      {
+        
+        if(debugFileCreated == false)
+        {
+          debugOutput = createWriter("debugArmControl.txt");
+          
+          debugOutput.println("Started at "+ day() +"-"+ month() +"-"+ year() +" "+ hour() +":"+ minute() +"-"+ second() ); 
+        
+          debugFileCreated = true;
+        }
+
+    
+        debugOutput.print(message); 
+       
+      }
+      
+    
+  }
+  
 }
 
 //wrapper for printlnDebug(String, int)
@@ -272,6 +356,10 @@ void printDebug(String message)
   printDebug(message, 0);
   
 }
+
+
+
+
 
 
 /******************************************************
@@ -315,7 +403,7 @@ byte[] readFromArm(int bytesExpected, boolean wait)
   byte bufferByte = 0;  //current byte that is being read
   long startReadingTime = millis();//time that the program started looking for data
   
-  printDebug("Incoming Raw Packet from readFromArm():"); //debug
+  printDebug("Incoming Raw Packet from readFromArm():",2); //debug
   
   //if the 'wait' flag is TRUE this loop will wait until the serial port has data OR it has waited more than packetRepsonseTimeout milliseconds.
   //packetRepsonseTimeout is a global variable
@@ -332,14 +420,14 @@ byte[] readFromArm(int bytesExpected, boolean wait)
     {
       bufferByte = byte(sPort.readChar());
       responseBytes[i] = bufferByte;
-      printDebug(hex(bufferByte) + "-"); //debug 
+      printDebug(hex(bufferByte) + "-",2); //debug 
     }
     else
     {
       printDebug("NO BYTE-");//debug
     }
   }//end looking for bytes from packet
-  printlnDebug(" "); //debug  finish line
+  printlnDebug(" ",2); //debug  finish line
   
   sPort.clear();  //clear serial port for the next read
   
@@ -395,7 +483,12 @@ boolean verifyPacket(byte[] returnPacket)
   int packetLength = returnPacket.length;  //length of the packet
   int tempChecksum = 0; //int for temporary checksum calculation
   byte localChecksum; //local checksum calculated by processing
-    
+  
+  printDebug("Begin Packet Verification of :");
+  for(int i = 0; i < packetLength;i++)
+  {
+    printDebug(returnPacket[i]+":");
+  }
   //check header, which should always be 255/0xff
   if(returnPacket[0] == byte(255))
   {  
@@ -430,7 +523,6 @@ boolean verifyPacket(byte[] returnPacket)
   return(false);
 
 }
-
 
 /******************************************************
  *  checkArmStartup()
@@ -553,6 +645,7 @@ boolean putArmToSleep()
   else
   {
     printlnDebug("Sleep mode-No return packet detected"); 
+    displayError("There was a problem putting the arm in sleep mode","");
     return(false); 
   }
 }
@@ -641,12 +734,15 @@ boolean changeArmMode()
   returnPacket = readFromArm(5);//read raw data from arm
   if(verifyPacket(returnPacket) == true)
   {
-    printlnDebug("Response succesful!"); 
+    printlnDebug("Response succesful! Arm mode changed"); 
     return(true) ;
   }
   else
   {
     printlnDebug("No Response - Failure?"); 
+    
+    displayError("There was a problem setting the arm mode","");
+    
     return(false); 
   }
   
@@ -730,30 +826,43 @@ void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, i
   byte buttonByte = byte(button);
   byte extValByte = byte(extended);
   byte deltaValByte = byte(delta);
-
+  boolean flag = true;
   //calculate checksum - add all values, take lower byte (%256) and invert result (~). you can also invert results by (255-sum)
   byte checksum = (byte)(~(xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValByte + buttonByte+extValByte)%256);
 
   //send commander style packet. Following labels are for cartesian mode, see function comments for clyindrical/backhoe mode
-  sPort.write(0xff);          //header   
-  sPort.write(xValBytes[1]); //X Coord High Byte
-  sPort.write(xValBytes[0]); //X Coord Low Byte
-  sPort.write(yValBytes[1]); //Y Coord High Byte
-  sPort.write(yValBytes[0]); //Y Coord Low Byte
-  sPort.write(zValBytes[1]); //Z Coord High Byte
-  sPort.write(zValBytes[0]); //Z Coord Low Byte
-  sPort.write(wristAngleValBytes[1]); //Wrist Angle High Byte
-  sPort.write(wristAngleValBytes[0]); //Wrist Angle Low Byte
-  sPort.write(wristRotValBytes[1]); //Wrist Rotate High Byte
-  sPort.write(wristRotValBytes[0]); //Wrist Rotate Low Byte
-  sPort.write(gripperValBytes[1]); //Gripper High Byte
-  sPort.write(gripperValBytes[0]); //Gripper Low Byte
-  sPort.write(deltaValByte); //Delta Low Byte  
-  sPort.write(buttonByte); //Button byte  
-  sPort.write(extValByte); //Extended instruction  
-  sPort.write(checksum);  //checksum
-  
-  printlnDebug("Packet Sent: 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +""); 
+    //try to write the first header byte
+    try
+    {
+      sPort.write(0xff);//header        
+    }
+    //catch an exception in case of serial port problems
+    catch(Exception e)
+    {
+       printlnDebug("Error: packet not sent: " + e + ": 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
+       flag = false;
+    }   
+    if(flag == true)
+    {
+      sPort.write(xValBytes[1]); //X Coord High Byte
+      sPort.write(xValBytes[0]); //X Coord Low Byte
+      sPort.write(yValBytes[1]); //Y Coord High Byte
+      sPort.write(yValBytes[0]); //Y Coord Low Byte
+      sPort.write(zValBytes[1]); //Z Coord High Byte
+      sPort.write(zValBytes[0]); //Z Coord Low Byte
+      sPort.write(wristAngleValBytes[1]); //Wrist Angle High Byte
+      sPort.write(wristAngleValBytes[0]); //Wrist Angle Low Byte
+      sPort.write(wristRotValBytes[1]); //Wrist Rotate High Byte
+      sPort.write(wristRotValBytes[0]); //Wrist Rotate Low Byte
+      sPort.write(gripperValBytes[1]); //Gripper High Byte
+      sPort.write(gripperValBytes[0]); //Gripper Low Byte
+      sPort.write(deltaValByte); //Delta Low Byte  
+      sPort.write(buttonByte); //Button byte  
+      sPort.write(extValByte); //Extended instruction  
+      sPort.write(checksum);  //checksum
+      printlnDebug("Packet Sent: 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
+    }
+    
          
 }
 
