@@ -86,7 +86,7 @@ int currentMode = 0;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3=
 int currentOrientation = 0;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
 
 public void setup(){
-  size(250, 786, JAVA2D);  //draw initial screen
+  size(250, 816, JAVA2D);  //draw initial screen
   
   createGUI();   //draw GUI components defined in gui.pde
   //customGUI();
@@ -120,7 +120,7 @@ public void draw()
 {
   background(128);//draw background color
   image(logoImg, 5, 5, 230, 78);  //draw logo image
-  image(footerImg, 15, 740);      //draw footer image
+  image(footerImg, 15, 770);      //draw footer image
 
   currentTime = millis();  //get current timestamp
   

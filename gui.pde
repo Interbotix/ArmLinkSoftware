@@ -809,7 +809,7 @@ public void createGUI(){
   modePanel.addEventHandler(this, "modePanel_click");
   
   
-  controlPanel = new GPanel(this, 5, 280, 240, 450, "Control Panel");
+  controlPanel = new GPanel(this, 5, 280, 240, 480, "Control Panel");
   controlPanel.setText("Control Panel");
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
@@ -838,14 +838,14 @@ public void createGUI(){
   
   
   
-  xTextField = new GTextField(this, 5, 48, 60, 20, G4P.SCROLLBARS_NONE);
+  xTextField = new GTextField(this, 5, 30, 60, 20, G4P.SCROLLBARS_NONE);
   //xTextField.setText("0");
   xTextField.setText(Integer.toString(xParameters[0]));
   xTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   xTextField.setOpaque(true);
   xTextField.addEventHandler(this, "xTextField_change");
   
-  xSlider = new GSlider(this, 75, 38, 145, 40, 10.0);
+  xSlider = new GSlider(this, 75, 20, 145, 40, 10.0);
   xSlider.setShowLimits(true);
   xSlider.setLimits(0.0, -200.0, 200.0);
   xSlider.setNbrTicks(50);
@@ -854,22 +854,23 @@ public void createGUI(){
   xSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   xSlider.setOpaque(false);
   xSlider.addEventHandler(this, "xSlider_change");
+  xSlider.setShowValue(true);
   
   
-  xLabel = new GLabel(this, 5, 68, 60, 14);
+  xLabel = new GLabel(this, 5, 50, 60, 14);
   xLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   xLabel.setText("X Coord");
   xLabel.setOpaque(false);
   
   
-  yTextField = new GTextField(this, 5, 88, 60, 20, G4P.SCROLLBARS_NONE);
+  yTextField = new GTextField(this, 5, 75, 60, 20, G4P.SCROLLBARS_NONE);
   yTextField.setText(Integer.toString(yParameters[0]));
   yTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   yTextField.setOpaque(true);
   yTextField.addEventHandler(this, "yTextField_change");
   
   
-  ySlider = new GSlider(this, 75, 78, 145, 40, 10.0);
+  ySlider = new GSlider(this, 75, 65, 145, 40, 10.0);
   ySlider.setShowLimits(true);
   ySlider.setLimits(200.0, 50.0, 240.0);
   ySlider.setEasing(0.0);
@@ -877,22 +878,23 @@ public void createGUI(){
   ySlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   ySlider.setOpaque(false);
   ySlider.addEventHandler(this, "ySlider_change");
+  ySlider.setShowValue(true);
     
-  yLabel = new GLabel(this, 5, 108, 60, 14);
+  yLabel = new GLabel(this, 5, 95, 60, 14);
   yLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   yLabel.setText("Y Coord");
   yLabel.setOpaque(false);
   
   
   
-  zTextField = new GTextField(this, 5, 128, 60, 20, G4P.SCROLLBARS_NONE);
+  zTextField = new GTextField(this, 5, 120, 60, 20, G4P.SCROLLBARS_NONE);
   zTextField.setText(Integer.toString(zParameters[0]));
   zTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   zTextField.setOpaque(true);
   zTextField.addEventHandler(this, "zTextField_change");
   
  
-  zSlider = new GSlider(this, 75, 118, 145, 40, 10.0);
+  zSlider = new GSlider(this, 75, 110, 145, 40, 10.0);
   zSlider.setShowLimits(true);
   zSlider.setLimits(200.0, 20.0, 250.0);
   zSlider.setEasing(0.0);
@@ -900,21 +902,23 @@ public void createGUI(){
   zSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   zSlider.setOpaque(false);
   zSlider.addEventHandler(this, "zSlider_change"); 
+  zSlider.setShowValue(true);
+    
   
-  zLabel = new GLabel(this, 5, 148, 60, 14);
+  zLabel = new GLabel(this, 5, 140, 60, 14);
   zLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   zLabel.setText("Z Coord");
   zLabel.setOpaque(false);
   
  
-  wristAngleTextField = new GTextField(this, 5, 168, 60, 20, G4P.SCROLLBARS_NONE);
+  wristAngleTextField = new GTextField(this, 5, 165, 60, 20, G4P.SCROLLBARS_NONE);
   wristAngleTextField.setText(Integer.toString(wristAngleParameters[0]));
   wristAngleTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristAngleTextField.setOpaque(true);
   wristAngleTextField.addEventHandler(this, "wristAngleTextField_change");
   
   
-  wristAngleSlider = new GSlider(this, 75, 158, 145, 40, 10.0);
+  wristAngleSlider = new GSlider(this, 75, 155, 145, 40, 10.0);
   wristAngleSlider.setShowLimits(true);
   wristAngleSlider.setLimits(0.0, -90.0, 90.0);
   wristAngleSlider.setEasing(0.0);
@@ -922,8 +926,9 @@ public void createGUI(){
   wristAngleSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristAngleSlider.setOpaque(false);
   wristAngleSlider.addEventHandler(this, "wristAngleSlider_change");
+  wristAngleSlider.setShowValue(true);
   
-  wristAngleLabel = new GLabel(this, 5, 188, 70, 14);
+  wristAngleLabel = new GLabel(this, 5, 185, 70, 14);
   wristAngleLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   wristAngleLabel.setText("Wrist Angle");
   wristAngleLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -933,13 +938,13 @@ public void createGUI(){
   
   
   
-  wristRotateTextField = new GTextField(this, 5, 208, 60, 20, G4P.SCROLLBARS_NONE);
-   wristRotateTextField.setText(Integer.toString( wristRotateParameters[0]));
+  wristRotateTextField = new GTextField(this, 5, 210, 60, 20, G4P.SCROLLBARS_NONE);
+  wristRotateTextField.setText(Integer.toString( wristRotateParameters[0]));
   wristRotateTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateTextField.setOpaque(true);
   wristRotateTextField.addEventHandler(this, "wristRotateTextField_change");
   
-  wristRotateSlider = new GSlider(this, 75, 198, 145, 40, 10.0);
+  wristRotateSlider = new GSlider(this, 75, 200, 145, 40, 10.0);
   wristRotateSlider.setShowLimits(true);
   wristRotateSlider.setLimits(0.0, -512.0, 512.0);
   wristRotateSlider.setEasing(0.0);
@@ -947,20 +952,22 @@ public void createGUI(){
   wristRotateSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateSlider.setOpaque(false);
   wristRotateSlider.addEventHandler(this, "wristRotateSlider_change");
+  wristRotateSlider.setShowValue(true);
   
-  wristRotateLabel = new GLabel(this, 5, 228, 70, 14);
+  
+  wristRotateLabel = new GLabel(this, 5, 230, 70, 14);
   wristRotateLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   wristRotateLabel.setText("Wrist Rotate");
   wristRotateLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateLabel.setOpaque(false);
   
-  gripperTextField = new GTextField(this, 5, 248, 60, 20, G4P.SCROLLBARS_NONE);
+  gripperTextField = new GTextField(this, 5, 255, 60, 20, G4P.SCROLLBARS_NONE);
   gripperTextField.setText(Integer.toString(gripperParameters[0]));
   gripperTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   gripperTextField.setOpaque(true);
   gripperTextField.addEventHandler(this, "gripperTextField_change");
   
-  gripperSlider = new GSlider(this, 75, 238, 145, 40, 10.0);
+  gripperSlider = new GSlider(this, 75, 245, 145, 40, 10.0);
   gripperSlider.setShowLimits(true);
   gripperSlider.setLimits(256.0, 0.0, 512.0);
   gripperSlider.setEasing(0.0);
@@ -968,21 +975,23 @@ public void createGUI(){
   gripperSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   gripperSlider.setOpaque(false);
   gripperSlider.addEventHandler(this, "gripperSlider_change");
+  gripperSlider.setShowValue(true);
   
-  gripperLabel = new GLabel(this, 5, 268, 60, 14);
+  
+  gripperLabel = new GLabel(this, 5, 275, 60, 14);
   gripperLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   gripperLabel.setText("Gripper");
   gripperLabel.setOpaque(false);
   
   
-  deltaTextField = new GTextField(this, 5, 288, 60, 20, G4P.SCROLLBARS_NONE);
+  deltaTextField = new GTextField(this, 5, 300, 60, 20, G4P.SCROLLBARS_NONE);
   deltaTextField.setText("125");
   deltaTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   deltaTextField.setOpaque(true);
   deltaTextField.addEventHandler(this, "deltaTextField_change");
   
   
-  deltaSlider = new GSlider(this, 75, 278, 145, 40, 10.0);
+  deltaSlider = new GSlider(this, 75, 290, 145, 40, 10.0);
   deltaSlider.setShowValue(true);
   deltaSlider.setShowLimits(true);
   deltaSlider.setLimits(125.0, 0.0, 255.0);
@@ -993,7 +1002,7 @@ public void createGUI(){
   deltaSlider.addEventHandler(this, "deltaSlider_change");
   
   
-  deltaLabel = new GLabel(this, 5, 308, 60, 14);
+  deltaLabel = new GLabel(this, 5, 320, 60, 14);
   deltaLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   deltaLabel.setText("Delta");
   deltaLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -1001,13 +1010,13 @@ public void createGUI(){
   
   
   
-  extendedTextField = new GTextField(this, 5, 328, 60, 20, G4P.SCROLLBARS_NONE);
+  extendedTextField = new GTextField(this, 5, 345, 60, 20, G4P.SCROLLBARS_NONE);
   extendedTextField.setText("0");
   extendedTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   extendedTextField.setOpaque(true);
   extendedTextField.addEventHandler(this, "extendedTextField_change");
   
-  extendedLabel = new GLabel(this, 5, 348, 100, 14);
+  extendedLabel = new GLabel(this, 5, 365, 100, 14);
   extendedLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   extendedLabel.setText("Extended Byte");
   extendedLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -1015,42 +1024,42 @@ public void createGUI(){
   
   
   
-  digitalCheckbox0 = new GCheckbox(this, 5, 368, 28, 20);
+  digitalCheckbox0 = new GCheckbox(this, 5, 385, 28, 20);
   digitalCheckbox0.setOpaque(false);
   digitalCheckbox0.addEventHandler(this, "digitalCheckbox0_change");
   digitalCheckbox0.setText("0");
   
-  digitalCheckbox1 = new GCheckbox(this, 32, 368, 28, 20);
+  digitalCheckbox1 = new GCheckbox(this, 32, 385, 28, 20);
   digitalCheckbox1.setOpaque(false);
   digitalCheckbox1.addEventHandler(this, "digitalCheckbox1_change");
   digitalCheckbox1.setText("1");
   
-  digitalCheckbox2 = new GCheckbox(this, 60, 368, 28, 20);
+  digitalCheckbox2 = new GCheckbox(this, 60, 385, 28, 20);
   digitalCheckbox2.setOpaque(false);
   digitalCheckbox2.addEventHandler(this, "digitalCheckbox2_change");
   digitalCheckbox2.setText("2");
   
-  digitalCheckbox3 = new GCheckbox(this, 88, 368, 28, 20);
+  digitalCheckbox3 = new GCheckbox(this, 88, 385, 28, 20);
   digitalCheckbox3.setOpaque(false);
   digitalCheckbox3.addEventHandler(this, "digitalCheckbox3_change");
   digitalCheckbox3.setText("3");
   
-  digitalCheckbox4 = new GCheckbox(this, 116, 368, 28, 20);
+  digitalCheckbox4 = new GCheckbox(this, 116, 385, 28, 20);
   digitalCheckbox4.setOpaque(false);
   digitalCheckbox4.addEventHandler(this, "digitalCheckbox4_change");
   digitalCheckbox4.setText("4");
   
-  digitalCheckbox5 = new GCheckbox(this, 144, 368, 28, 20);
+  digitalCheckbox5 = new GCheckbox(this, 144, 385, 28, 20);
   digitalCheckbox5.setOpaque(false);
   digitalCheckbox5.addEventHandler(this, "digitalCheckbox5_change");
   digitalCheckbox5.setText("5");
   
-  digitalCheckbox6 = new GCheckbox(this, 172, 368, 28, 20);
+  digitalCheckbox6 = new GCheckbox(this, 172, 385, 28, 20);
   digitalCheckbox6.setOpaque(false);
   digitalCheckbox6.addEventHandler(this, "digitalCheckbox6_change");
   digitalCheckbox6.setText("6");
   
-  digitalCheckbox7 = new GCheckbox(this, 200, 368, 28, 20);
+  digitalCheckbox7 = new GCheckbox(this, 200, 385, 28, 20);
   digitalCheckbox7.setOpaque(false);
   digitalCheckbox7.addEventHandler(this, "digitalCheckbox7_change");
   digitalCheckbox7.setText("7");
@@ -1058,20 +1067,20 @@ public void createGUI(){
   
 
    
-  digitalsLabel = new GLabel(this, 5, 388, 100, 14);
+  digitalsLabel = new GLabel(this,5, 400, 100, 14);
   digitalsLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   digitalsLabel.setText("Digital Values");
   digitalsLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   digitalsLabel.setOpaque(false);
   
   
-  updateButton = new GButton(this, 5, 408, 100, 50);
+  updateButton = new GButton(this, 5, 425, 100, 50);
   updateButton.setText("Update");
   updateButton.addEventHandler(this, "updateButton_click");
   updateButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   
   
-  autoUpdateCheckbox = new GCheckbox(this, 105, 442, 100, 20);
+  autoUpdateCheckbox = new GCheckbox(this, 105, 459, 100, 20);
   autoUpdateCheckbox.setOpaque(false);
   autoUpdateCheckbox.addEventHandler(this, "autoUpdateCheckbox_change");
   autoUpdateCheckbox.setText("Auto Update");
