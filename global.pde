@@ -1,21 +1,36 @@
-/*******************************************************************************
- * Start working position variables
+
+/***********************************************************************************
+ *  }--\     InterbotiX     /--{
+ *      |    ArmControl    |
+ *   __/                    \__
+ *  |__|                    |__|
+ *
+ *  arbotix.pde
+ *  
+ *  This file has several global variables relating to the positional data for the arms.
+ *  See 'ArmControl.pde' for building this application.
+ *
+ *
  * The following variables are named for Cartesian mode -
- * the data that will be sent will vary based on the current IK mode
- *******************************************************************************
- * Variable name | Cartesian Mode | Cylindrcal Mode | Backhoe Mode
- * x             |      x         |      base       |   base joint
- * y             |      y         |      y          |   shoulder joint
- * z             |      z         |      z          |   elbow joint 
- * wristAngle    |  wristAngle    |  wristAngle     |   wrist angle joint
- * wristRotate   |  wristeRotate  |  wristeRotate   |   wrist rotate jount
- * gripper       |  gripper       |  gripper        |   gripper joint
- * delta         |  delta         |  delta          |   n/a
+ * however the data that will be held/sent will vary based on the current IK mode
+ ****************************************************************************
+ * Variable name | Cartesian Mode | Cylindrcal Mode | Backhoe Mode          |
+ *_______________|________________|_________________|_______________________|
+ *   x           |   x            |   base          |   base joint          |
+ *   y           |   y            |   y             |   shoulder joint      |
+ *   z           |   z            |   z             |   elbow joint         |
+ *   wristAngle  |  wristAngle    |  wristAngle     |   wrist angle joint   |
+ *   wristRotate |  wristeRotate  |  wristeRotate   |   wrist rotate jount  |
+ *   gripper     |  gripper       |  gripper        |   gripper joint       |
+ *   delta       |  delta         |  delta          |   n/a                 |
 ********************************************************************************/
 
+
+//WORKING POSITION VARIABLES
+
 //default values and min/max , {default, min, max}
-//initially set to values for pincher in normal mode which should be safe for most arms
-//this shouldn't matter, as these values will get changed when an arm is connected
+//initially set to values for pincher in normal mode which should be safe for most arms (this shouldn't matter, as these values will get changed when an arm is connected)
+//these parameters will be loaded based on the 1)Arm type 2)IK mode 3)Wrist Angle Orientation
 int[] xParameters = {0,-200,200};//
 int[] yParameters = {200,50,240};
 int[] zParameters = {200,20,250};
@@ -35,6 +50,7 @@ int deltaCurrent = deltaParameters[0]; //current delta value in text field/slide
 
 //offset values to be send to the ArbotiX/Arm. whether or not these values get offsets depends on the current mode
 //it will be possible for the 'Current' value to be the same as the 'currentOffset' value.
+// see updateOffsetCoordinates()
 int xCurrentOffset = xParameters[0]; //current x value to be send to ArbotiX/Arm
 int yCurrentOffset = yParameters[0]; //current y value to be send to ArbotiX/Arm
 int zCurrentOffset = zParameters[0]; //current z value to be send to ArbotiX/Arm
@@ -43,13 +59,15 @@ int wristRotateCurrentOffset = wristRotateParameters[0]; //current  Wrist Rotate
 int gripperCurrentOffset = gripperParameters[0]; //current Gripper value to be send to ArbotiX/Arm
 int deltaCurrentOffset = deltaParameters[0]; //current delta value to be send to ArbotiX/Arm
 
-//End working position variables
-
-
 boolean[] digitalButtons = {false,false,false,false,false,false,false,false};  //array of 8 boolean to hold the current states of the checkboxes that correspond to the digital i/o
 int digitalButtonByte;//int will hold the button byte (will be cast to byte later)
 
 int extendedByte = 0;  //extended byte for special instructions
+
+
+//END WORKING POSITION VARIABLES
+
+//DEFAULT ARM PARAMETERS 
 
 //default values for the phantomX pincher. These will be loaded into the working position variables 
 //when the pincher is connected, and when modes are changed.
@@ -108,4 +126,5 @@ int[] widowBHWristRot = {512,0,1023};
 
 
 
+//END DEFAULT ARM PARAMETERS 
 

@@ -89,13 +89,26 @@ int currentArm = 0;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = 
 int currentMode = 0;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
 int currentOrientation = 0;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
 
-String helpLink = "http://learn.trossenrobotics.com";
+String helpLink = "http://learn.trossenrobotics.com";  //link for error panel to display
+
+
+PImage logoImg;
+PImage footerImg;
+
+//booleans for key tracking
+boolean xkey = false;
+boolean ykey = false;
+boolean zkey = false;
+boolean wangkey = false;
+boolean wrotkey = false;
+boolean gkey = false;
+
+
 
 public void setup(){
   size(250, 816, JAVA2D);  //draw initial screen
   
   createGUI();   //draw GUI components defined in gui.pde
-  //customGUI();
 
   //Build Serial Port List
   serialPortString[0] = "Serial Port";   //first item in the list will be "Serial Port" to act as a label
@@ -104,24 +117,12 @@ public void setup(){
   {
     serialPortString[i+1] = Serial.list()[i];  //add the current serial port to the list, add one to the index to account for the first item/label "Serial Port"
   }
-  serialList.setItems(serialPortString, 0);
-  
-  
-  
-  
-  //MOVE TO GUI
-  wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
-  wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
-  extendedLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
-  updateButton.setFont(new Font("Dialog", Font.PLAIN, 20));  
-  serialList.setFont(new Font("Dialog", Font.PLAIN, 9));  
-  errorLabel.setFont(new Font("Dialog", Font.PLAIN, 10));  
-  arm90Button.setAlpha(128);
-  
+  serialList.setItems(serialPortString, 0);  //add contents of srialPortString[] to the serialList GUI    
   
   prepareExitHandler();//exit handler for clearing/stopping file handler
 }
 
+//Main Loop
 public void draw()
 {
   background(128);//draw background color
@@ -146,7 +147,8 @@ public void draw()
       //send commander packet with the current global currentOffset coordinatges
       sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
    
-    /*  byte[] responseBytes = new byte[5];    //byte array to hold response data
+    /*//use this code to enable return packet checking for positional commands
+      byte[] responseBytes = new byte[5];    //byte array to hold response data
       responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
 
       if(verifyPacket(responseBytes) == true)
@@ -159,6 +161,7 @@ public void draw()
       }*/
         
     }
+    
     //in normal update mode, pressing the update button signals the program to send a packet. In this
     //case the program must set the update flag to false in order to stop new packets from being sent
     //until the update button is pressed again. 
@@ -188,23 +191,18 @@ public void draw()
 void stop()
 {
   
- putArmToSleep(); 
  debugOutput.flush(); // Writes the remaining data to the file
  debugOutput.close(); // Finishes the file 
         
 }
 
 
-
-
-
-
-
-
-
-
-
-
+/******************************************************
+ *  prepareExitHandler()
+ *
+ *  Tasks to perform on end of program
+ * https://forum.processing.org/topic/run-code-on-exit
+ ******************************************************/ 
 private void prepareExitHandler () {
   Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
     public void run () 
@@ -218,23 +216,12 @@ private void prepareExitHandler () {
   }));
 }
 
-
-
-
-// Use this methologod additional statements
-// to customise the GUI controls
-public void customGUI(){
-
-}
-
-
 /******************************************************
  *  printlnDebug()
  *
  *  function used to easily enable/disable degbugging
  *  enables/disables debugging to the console
  *  prints a line to the output
- *  TODO: Enable file debugging
  *
  *  Parameters:
  *    String message
@@ -247,6 +234,9 @@ public void customGUI(){
  *  Globals Used:
  *      boolean debugGuiEvent
  *      boolean debugConsole
+ *      boolean debugFile
+ *      PrintWriter debugOutput
+ *      boolean debugFileCreated
  *  Returns: 
  *    void
  ******************************************************/ 
@@ -298,7 +288,6 @@ void printlnDebug(String message)
  *  function used to easily enable/disable degbugging
  *  enables/disables debugging to the console
  *  prints normally to the output
- *  TODO: Enable file debugging
  *
  *  Parameters:
  *    String message
@@ -311,6 +300,9 @@ void printlnDebug(String message)
  *  Globals Used:
  *      boolean debugGuiEvent
  *      boolean debugConsole
+ *      boolean debugFile
+ *      PrintWriter debugOutput
+ *      boolean debugFileCreated
  *  Returns: 
  *    void
  ******************************************************/ 
@@ -357,669 +349,34 @@ void printDebug(String message)
   
 }
 
-
-
-
-
-
 /******************************************************
- *  readFromArm(int, boolean)
+ * Key combinations
+ * holding a number ket and pressing up/down will
+ * increment/decrement the corresponding field
  *
- *  reads data back from the ArbotiX/Arm
+ * The program will use keyPressed() to log whenever a
+ * number key is being held. If later 'Up' or 'Down'
+ * is also logged, they value will be changed
+ *  keyReleased() will be used to un-log the number values
+ *  once they are released.
  *
- *  Normally this is called from readFromArm(int) - 
- *  this will block the program and make it wait 
- * 'packetRepsonseTimeout' ms. Most of the time the program
- *  will need to wait, as the arm is moving to a position
- *  and will not send a response packet until it has 
- *  finished moving to that position.
- *  
- *  However this will add a lot of time to the 'autoSearch' 
- *  functionality. When the arm starts up it will immediatley send a
- *  ID packet to identify itself so a non-waiting version is   
- *  avaialble -  readFromArmFast(int) which is equivalent to
- *  readFromArm(int, false)
- *
- *  Parameters:
- *    int bytesExpected
- *      # of bytes expected in the response packet
- *    boolean wait
- *        Whether or not to wait 'packetRepsonseTimeout' ms for a response
- *         true = wait
- *         false = do not wait
- *  Globals Used:
- *      Serial sPort
- *      long packetRepsonseTimeout
- *
- *  Returns: 
- *    byte[]  responseBytes
- *      byte array with response data from ArbotiX/Arm
- ******************************************************/ 
-byte[] readFromArm(int bytesExpected, boolean wait)
-{
-  byte[] responseBytes = new byte[bytesExpected];    //byte array to hold response data
-  delayMs(100);//wait a minimum 100ms to ensure that the controller has responded - this applies to both wait==true and wait==false conditions
-  
-  byte bufferByte = 0;  //current byte that is being read
-  long startReadingTime = millis();//time that the program started looking for data
-  
-  printDebug("Incoming Raw Packet from readFromArm():",2); //debug
-  
-  //if the 'wait' flag is TRUE this loop will wait until the serial port has data OR it has waited more than packetRepsonseTimeout milliseconds.
-  //packetRepsonseTimeout is a global variable
-  
-  while(wait == true & sPort.available() < bytesExpected  & millis()-startReadingTime < packetRepsonseTimeout)
-  {
-     //do nothing, just waiting for a response or timeout
-  }
-  
-  for(int i =0; i < bytesExpected;i++)    
-  {
-    // If data is available in the serial port, continute
-    if(sPort.available() > 0)
-    {
-      bufferByte = byte(sPort.readChar());
-      responseBytes[i] = bufferByte;
-      printDebug(hex(bufferByte) + "-",2); //debug 
-    }
-    else
-    {
-      printDebug("NO BYTE-");//debug
-    }
-  }//end looking for bytes from packet
-  printlnDebug(" ",2); //debug  finish line
-  
-  sPort.clear();  //clear serial port for the next read
-  
-  return(responseBytes);  //return serial data
-}
-
-
-//wrapper for readFromArm(int, boolean)
-//assume normal behavior, wait = true
-byte[] readFromArm(int bytesExpected)
-{
-  return(readFromArm(bytesExpected,true));
-}
-
-
-//wrapper for readFromArm(int, boolean)
-//wait = false. Used for autosearch/startup
-byte[] readFromArmFast(int bytesExpected)
-{
-  return(readFromArm(bytesExpected,false));
-}
-
-
-
-
-/******************************************************
- *  verifyPacket(int, boolean)
- *
- *  verifies a packet received from the ArbotiX/Arm
- *
- *  This function will do the following to verify a packet
- *  -calculate a local checksum and compare it to the
- *    transmitted checksum 
- *  -check the error byte for any data 
- *  -check that the armID is supported by this program
- *
- *  Parameters:
- *    byte[]  returnPacket
- *      byte array with response data from ArbotiX/Arm
- *
- *
- *  Returns: 
- *    boolean verifyPacket
- *      true = packet is OK
- *      false = problem with the packet
- *
- *  TODO: -Modify to return specific error messages
- *        -Make the arm ID check modular to facilitate 
- *         adding new arms.
- ******************************************************/ 
-boolean verifyPacket(byte[] returnPacket)
-{
-  int packetLength = returnPacket.length;  //length of the packet
-  int tempChecksum = 0; //int for temporary checksum calculation
-  byte localChecksum; //local checksum calculated by processing
-  
-  printDebug("Begin Packet Verification of :");
-  for(int i = 0; i < packetLength;i++)
-  {
-    printDebug(returnPacket[i]+":");
-  }
-  //check header, which should always be 255/0xff
-  if(returnPacket[0] == byte(255))
-  {  
-      //iterate through bytes # 1 through packetLength-1 (do not include header(0) or checksum(packetLength)
-      for(int i = 1; i<packetLength-1;i++)
-      {
-        tempChecksum = int(returnPacket[i]) + tempChecksum;//add byte value to checksum
-      }
-  
-      localChecksum = byte(~(tempChecksum % 256)); //calculate checksum locally - modulus 256 to islotate bottom byte, then invert(~)
-      
-      //check if calculated checksum matches the one in the packet
-      if(localChecksum == returnPacket[packetLength-1])
-      {
-        //check is the error packet is 0, which indicates no error
-        if(returnPacket[3] == 0)
-        {
-          //check that the arm id packet is a valid arm
-          if(returnPacket[1] == 1 | returnPacket[1] == 2 |returnPacket[1] == 3)
-          {
-            printlnDebug("verifyPacket Success!");
-            return(true);
-          }
-          else {printlnDebug("verifyPacket Error: Invalid Arm Detected! Arm ID:"+returnPacket[1]);}
-        }
-        else {printlnDebug("verifyPacket Error: Error Packet Reports:"+returnPacket[3]);}
-      }
-      else {printlnDebug("verifyPacket Error: Checksum does not match: Returned:"+ returnPacket[packetLength-1] +" Calculated:"+localChecksum );}
-  }
-  else {printlnDebug("verifyPacket Error: No Header!");}
-
-  return(false);
-
-}
-
-/******************************************************
- *  checkArmStartup()
- *
- *  function used to check for the presense of a 
- *  ArbotiX/Arm on a serial port. This function should
- *  be called directly after a serial port has opened -
- *  opening a serial port over a USB-FTDI device will
- *  reset the ArbotiX, and the first thing the ArbotiX
- *  will do is send a standard Arm ID packet. This function
- *  looks specifically for that packet
- *  This function also sets the initial Global 'currenArm'
- *
- *  Parameters:
- *    None
- *
- *  Globals used:
- *    int currentArm
- *
- *  Returns: 
- *    boolean 
- *      true = arm has been detected on current serial port
- *      false = no arm detected on current serial port
- *
- ******************************************************/ 
-boolean checkArmStartup()
-{
-  byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
-
-  printDebug("Checking for arm on startup - "); 
-  
-  delayMs(60);  //The ArbotiX has a delay of 50ms between starting the serial port and sending the ID packet, include an extra 10ms for other ArbotiX startup tasks
-  
-  returnPacket = readFromArmFast(5);//read raw data from arm. Do not wait for a response packet (to facilitate fast auto search)
-  //check if the return packet is a valid arm ID packet
-  if(verifyPacket(returnPacket) == true)
-  {
-    currentArm = returnPacket[1]; //set the current arm based on the return packet
-    printlnDebug("Startup Arm #" +currentArm+ "Found"); 
-    setPositionParameters();      //set the GUI default/min/maxes and field lables
-    return(true) ;                //Return a true signal to signal that an arm has been found
-  }
-  else
-  {
-    printlnDebug("Startup No Arm Found"); 
-    return(false); //no arm found
-  }
-}
-
-
-/******************************************************
- *  isArmConnected()
- *
- *  generic function to check for the presence of an arm
- *  during normal operation.
- *
- *  Parameters:
- *    None
- *
- *  Globals used:
- *    int currentArm
- *
- *  Returns: 
- *    boolean 
- *      true = arm has been detected on current serial port
- *      false = no arm detected on current serial port
- *
- ******************************************************/ 
-boolean isArmConnected()
-{  
-  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
- 
-  printDebug("Checking for arm - "); 
-  
-  sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
-  
-  returnPacket = readFromArm(5);//read raw data from arm, complete with wait time
-
-  if(verifyPacket(returnPacket) == true)
-  {
-    printlnDebug("Arm Found"); 
-    return(true) ;
-  }
-  else
-  {
-    printlnDebug("No Arm Found"); 
-    return(false); 
-  }
-}
-
-/******************************************************
- *  putArmToSleep()
- *
- *  function to put the arm to sleep. This will move 
- *  the arm to a 'rest' position and then turn the 
- * torque off for the servos
- *
- *  Parameters:
- *    None
- *
- *
- *  Returns: 
- *    boolean 
- *      true = arm has been put to sleep
- *      false = no return packet was detected from the arm.
- *
- ******************************************************/ 
-boolean putArmToSleep()
-{
-  printDebug("Attempting to put arm in sleep mode - "); 
-  sendCommanderPacket(0,0,0,0,0,0,0,0,96);//only the last/extended byte matters - 96 signals the arm to go to sleep
-  
-  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
-  returnPacket = readFromArm(5);//read raw data from arm
-  if(verifyPacket(returnPacket) == true)
-  {
-    printlnDebug("Sleep mode success!"); 
-    return(true) ;
-  }
-  else
-  {
-    printlnDebug("Sleep mode-No return packet detected"); 
-    displayError("There was a problem putting the arm in sleep mode","");
-    return(false); 
-  }
-}
-
-
-/******************************************************
- *  changeArmMode()
- *
- *  sends a packet to set the arms mode and orientation
- *  based on the global mode and orientation values
- *  This function will send a packet with the extended 
- *  byte coresponding to the correct IK mode and wrist 
- *  orientation. The arm will move from its current 
- *  position to the 'home' position for the current 
- *  mode.
- *  Backhoe mode does not have different straight/
- *  90 degree modes.
- *  
- *  Extended byte - Mode 
- *  32 - cartesian, straight mode
- *  40 - cartesian, 90 degree mode
- *  48 - cylindrical, straight mode
- *  56 - cylindrical, 90 degree mode
- *  64 - backhoe
- *  
- *  Parameters:
- *    None
- *
- *  Globals used:
- *    currentMode
- *    currentOrientation
- *
- *  Returns: 
- *    boolean 
- *      true = arm has been put in the mode correctly
- *      false = no return packet was detected from the arm.
- *
- ******************************************************/ 
-boolean changeArmMode()
-{
-  
-  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
-  
- //switch based on the current mode
- switch(currentMode)
-  {
-    //cartesian mode case
-    case 1:
-      //switch based on the current orientation
-      switch(currentOrientation)
-      {
-        case 1:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,32);//only the last/extended byte matters, 32 = cartesian, straight mode
-          printDebug("Setting Arm to Cartesian IK mode, Gripper Angle Straight - "); 
-          break;
-        case 2:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,40);//only the last/extended byte matters, 40 = cartesian, 90 degree mode
-          printDebug("Setting Arm to Cartesian IK mode, Gripper Angle 90 degree - "); 
-          break;
-      }//end orientation switch
-      break;//end cartesian mode case
-      
-    //cylindrical mode case
-    case 2:
-      //switch based on the current orientation
-      switch(currentOrientation)
-      {
-        case 1:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,48);//only the last/extended byte matters, 48 = cylindrical, straight mode
-          printDebug("Setting Arm to Cylindrical IK mode, Gripper Angle Straight - "); 
-          break;
-        case 2:
-          sendCommanderPacket(0,0,0,0,0,0,0,0,56);//only the last/extended byte matters, 56 = cylindrical, 90 degree mode
-          printDebug("Setting Arm to Cylindrical IK mode, Gripper Angle 90 degree - "); 
-          break;
-      }//end orientation switch
-      break;//end cylindrical mode case
-
-    //backhoe mode case
-    case 3:
-      sendCommanderPacket(0,0,0,0,0,0,0,0,64);//only the last/extended byte matters, 64 = backhoe
-          printDebug("Setting Arm to Backhoe IK mode - "); 
-      break;//end backhoe mode case
-  } 
-  
-  returnPacket = readFromArm(5);//read raw data from arm
-  if(verifyPacket(returnPacket) == true)
-  {
-    printlnDebug("Response succesful! Arm mode changed"); 
-    return(true) ;
-  }
-  else
-  {
-    printlnDebug("No Response - Failure?"); 
-    
-    displayError("There was a problem setting the arm mode","");
-    
-    return(false); 
-  }
-  
-}
-
-/******************************************************
- *  delayMs(int)
- *
- *  function waits/blocks the program for 'ms' milliseconds
- *  Used for very short delays where the program only needs
- *  to wait and does not need to execute code
- *  
- *  Parameters:
- *    int ms
- *      time, in milliseconds to wait
- *  Returns: 
- *    void
- ******************************************************/ 
-void delayMs(int ms)
-{
-  
-  int time = millis();  //time that the program starts the loop
-  while(millis()-time < ms)
-  {
-   
-  
-//  ;//loop/do nothing until the different between the current time and 'time'
-  }
-}
-
-
-
-/******************************************************
- *  sendCommanderPacket(int, int, int, int, int, int, int, int, int)
- *
- *  This function will send a commander style packet 
- *  the ArbotiX/Arm. This packet has 9 bytes and includes
- *  positional data, button data, and extended instructions.
- *  This function is often used with the function
- *  readFromArm()    
- *  to verify the packet was received correctly
- *   
- *  Parameters:
- *    int x
- *      offset X value (cartesian mode), or base value(Cylindrical and backhoe mode) - will be converted into 2 bytes
- *    int y
- *        Y Value (cartesian and cylindrical mode) or shoulder value(backhoe mode) - will be converted into 2 bytes
- *    int z
- *        Z Value (cartesian and cylindrical mode) or elbow value(backhoe mode) - will be converted into 2 bytes
- *    int wristAngle
- *      offset wristAngle value(cartesian and cylindrical mode) or wristAngle value (backhoe mode) - will be converted into 2 bytes
- *    int wristRotate
- *      offset wristRotate value(cartesian and cylindrical mode) or wristRotate value (backhoe mode) - will be converted into 2 bytes
- *    int gripper
- *      Gripper Value(All modes) - will be converted into 2 bytes
- *    int delta
- *      delta(speed) value (All modes) - will be converted into 1 byte
- *    int button
- *      digital button values (All modes) - will be converted into 1 byte
- *    int extended
- *       value for extended instruction / special instruction - will be converted into 1 byte
- *
- *  Global used: sPort
- *
- *  Return: 
- *    Void
- *
- ******************************************************/ 
-void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, int gripper, int delta, int button, int extended)
-{
-   sPort.clear();//clear the serial port for the next round of communications
-   
-  //convert each positional integer into 2 bytes using intToBytes()
-  byte[] xValBytes = intToBytes(x);
-  byte[] yValBytes = intToBytes(y);
-  byte[] zValBytes =  intToBytes(z);
-  byte[] wristRotValBytes = intToBytes(wristRotate);
-  byte[] wristAngleValBytes = intToBytes(wristAngle);
-  byte[] gripperValBytes = intToBytes(gripper);
-  //cast int to bytes
-  byte buttonByte = byte(button);
-  byte extValByte = byte(extended);
-  byte deltaValByte = byte(delta);
-  boolean flag = true;
-  //calculate checksum - add all values, take lower byte (%256) and invert result (~). you can also invert results by (255-sum)
-  byte checksum = (byte)(~(xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValByte + buttonByte+extValByte)%256);
-
-  //send commander style packet. Following labels are for cartesian mode, see function comments for clyindrical/backhoe mode
-    //try to write the first header byte
-    try
-    {
-      sPort.write(0xff);//header        
-    }
-    //catch an exception in case of serial port problems
-    catch(Exception e)
-    {
-       printlnDebug("Error: packet not sent: " + e + ": 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
-       flag = false;
-    }   
-    if(flag == true)
-    {
-      sPort.write(xValBytes[1]); //X Coord High Byte
-      sPort.write(xValBytes[0]); //X Coord Low Byte
-      sPort.write(yValBytes[1]); //Y Coord High Byte
-      sPort.write(yValBytes[0]); //Y Coord Low Byte
-      sPort.write(zValBytes[1]); //Z Coord High Byte
-      sPort.write(zValBytes[0]); //Z Coord Low Byte
-      sPort.write(wristAngleValBytes[1]); //Wrist Angle High Byte
-      sPort.write(wristAngleValBytes[0]); //Wrist Angle Low Byte
-      sPort.write(wristRotValBytes[1]); //Wrist Rotate High Byte
-      sPort.write(wristRotValBytes[0]); //Wrist Rotate Low Byte
-      sPort.write(gripperValBytes[1]); //Gripper High Byte
-      sPort.write(gripperValBytes[0]); //Gripper Low Byte
-      sPort.write(deltaValByte); //Delta Low Byte  
-      sPort.write(buttonByte); //Button byte  
-      sPort.write(extValByte); //Extended instruction  
-      sPort.write(checksum);  //checksum
-      printlnDebug("Packet Sent: 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
-    }
-    
-         
-}
-
-/******************************************************
- *  intToBytes(int)
- *
- *  This function will take an interger and convert it
- *  into two bytes. These bytes can then be easily 
- *  transmitted to the ArbotiX/Arm. Byte[0] is the low byte
- *  and Byte[1] is the high byte
- *   
- *  Parameters:
- *    int convertInt
- *      integer to be converted to bytes
- *  Return: 
- *    byte[]
- *      byte array with two bytes Byte[0] is the low byte and Byte[1] 
- *      is the high byte
- ******************************************************/ 
-byte[] intToBytes(int convertInt)
-{
-  byte[] returnBytes = new byte[2]; // array that holds the two bytes to return
-  byte mask = byte(255);          //mask for the low byte (255/0xff)
-  returnBytes[0] =byte(convertInt & mask);//low byte - perform an '&' operation with the byte mask to remove the high byte
-  returnBytes[1] =byte((convertInt>>8) & mask);//high byte - shift the byte to the right 8 bits. perform an '&' operation with the byte mask to remove any additional data
-  return(returnBytes);  //return byte array
-  
-}
-
-/******************************************************
- *  bytesToInt(byte[])
- *
- *  Take two bytes and convert them into an integer
- *   
- *  Parameters:
- *    byte[] convertBytes
- *      bytes to be converted to integer
- *  Return: 
- *    int
- *      integer value from 2 butes
- ******************************************************/ 
-int bytesToInt(byte[] convertBytes)
-{
-  return((int(convertBytes[1]<<8))+int(convertBytes[0]));//shift high byte up 8 bytes, and add it to the low byte. cast to int to ensure proper signed/unsigned behavior
-}
-
-/****************
- *  updateOffsetCoordinates()
- *
- *  modifies the current global coordinate
- *  with an appropriate offset
- *
- *  As the armControl software communicates in
- *  unsigned bytes, any value that has negative
- *  values in the GUI must be offset. This function
- *  will add the approprate offsets based on the 
- *  current mode of operation( global variable 'currentMode')
- *
- *  Parameters:
- *    None:
- *  Globals used:
- *    'Current' position vars
- *    'CurrentOffset' position vars
- *  Return: 
- *    void
- ***************/
-
-void  updateOffsetCoordinates()
-{
-  //offsets are applied based on current mode
-  switch(currentMode)
-    {
-       case 1:        
-         //x, wrist angle, and wrist rotate must be offset, all others are normal
-         xCurrentOffset = xCurrent + 512;
-         yCurrentOffset = yCurrent;
-         zCurrentOffset = zCurrent;
-         wristAngleCurrentOffset =  wristAngleCurrent + 90;
-         wristRotateCurrentOffset = wristRotateCurrent + 512;
-         gripperCurrentOffset = gripperCurrent;
-         deltaCurrentOffset = deltaCurrent;
-         break;
-        
-       case 2:
-       
-         //wrist angle, and wrist rotate must be offset, all others are normal
-         xCurrentOffset = xCurrent;
-         yCurrentOffset = yCurrent;
-         zCurrentOffset = zCurrent;
-         wristAngleCurrentOffset =  wristAngleCurrent + 90;
-         wristRotateCurrentOffset = wristRotateCurrent + 512;
-         gripperCurrentOffset = gripperCurrent;
-         deltaCurrentOffset = deltaCurrent;
-         break;
-        
-       case 3:
-       
-         //no offsets needed
-         xCurrentOffset = xCurrent;
-         yCurrentOffset = yCurrent;
-         zCurrentOffset = zCurrent;
-         wristAngleCurrentOffset =  wristAngleCurrent;
-         wristRotateCurrentOffset = wristRotateCurrent;
-         gripperCurrentOffset = gripperCurrent;
-         deltaCurrentOffset = deltaCurrent;
-        break; 
-    }  
-}
-
-/****************
- *  updateButtonByte()
- *
- *  
- *
- *  Parameters:
- *    None:
- *  Globals used:
- *    int[] digitalButtons
- *    int digitalButtonByte
- *  Return: 
- *    void
- ***************/
-
-void updateButtonByte()
-{
-  digitalButtonByte = 0;
-   for(int i=0;i<8;i++)
-  {
-    if(digitalButtons[i] == true)
-    {
-      digitalButtonByte += pow(2,i);
-    }
-  }
-}
-
-
-//TODO//
-boolean getArmInfo()
-{
-  return(true);
-  
-}
-
-
-
-boolean keyup = false;
-boolean keydown = false;
-boolean xkey = false;
-boolean ykey = false;
-boolean zkey = false;
-boolean wangkey = false;
-boolean wrotkey = false;
-boolean gkey = false;
-
-
+ * 1-x/base
+ * 2-y/shoulder
+ * 3-z/elbow
+ * 4-wrist angle
+ * 5-wrist rotate
+ * 6-gripper
+ ******************************************************/
 void keyPressed()
 {
+  //change 'updageFlag' variable if 'enter' is pressed
+  if(key ==ENTER)
+  {
+    updateFlag = true;
+    updateOffsetCoordinates();
+  }
+  
+  //if any of the numbers 1-6 are currently being pressed, change the state of the variable
   if(key =='1')
   {
    xkey=true; 
@@ -1045,14 +402,10 @@ void keyPressed()
    gkey=true; 
   }
   
-  if(key ==ENTER)
-  {
-  updateFlag = true;
-updateOffsetCoordinates();
-  }
-  
+  //check for up/down keys
   if (key==CODED)
   {
+   //if up AND a number 1-6 are being pressed, increment the appropriate field
    if (keyCode == UP)
    {
      if(xkey==true)
@@ -1093,6 +446,7 @@ updateOffsetCoordinates();
      }
    }
      
+   //if down AND a number 1-6 are being pressed, increment the appropriate field
    if (keyCode == DOWN)
    {
      if(xkey==true)
@@ -1138,6 +492,9 @@ updateOffsetCoordinates();
 }
 void keyReleased()
 {
+  
+  //change variable state when number1-6 is released
+  
   if(key =='1')
   {
    xkey=false; 
