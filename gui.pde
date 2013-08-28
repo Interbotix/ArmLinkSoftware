@@ -6,7 +6,7 @@
  *
  *  gui.pde
  *  
- *  This file has several global variables relating to the positional data for the arms.
+ *  This file has all of the variables and functions regarding the gui.
  *  See 'ArmControl.pde' for building this application.
  *
  *
