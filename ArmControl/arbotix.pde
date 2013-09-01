@@ -203,9 +203,11 @@ boolean checkArmStartup()
 {
   byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
 
+    
   printDebug("Checking for arm on startup - "); 
-  
-  delayMs(60);  //The ArbotiX has a delay of 50ms between starting the serial port and sending the ID packet, include an extra 10ms for other ArbotiX startup tasks
+  sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+    
+  delayMs(100);  //The ArbotiX has a delay of 50ms between starting the serial continueing the program, include an extra 10ms for other ArbotiX startup tasks
   
   returnPacket = readFromArmFast(5);//read raw data from arm. Do not wait for a response packet (to facilitate fast auto search)
   //check if the return packet is a valid arm ID packet

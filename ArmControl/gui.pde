@@ -880,7 +880,7 @@ public void createGUI() {
 
 
   serialList = new GDropList(this, 5, 24, 160, 132, 6);
-  serialList.setItems(loadStrings("list_700876"), 0);
+  //serialList.setItems(loadStrings("list_700876"), 0);
   serialList.addEventHandler(this, "serialList_click");
   serialList.setFont(new Font("Dialog", Font.PLAIN, 9));  
   serialList.setLocalColorScheme(GCScheme.CYAN_SCHEME);
