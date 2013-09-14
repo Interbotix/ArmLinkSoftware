@@ -51,6 +51,8 @@ GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3
 GCheckbox autoUpdateCheckbox;   //checkbox to enable auto-update mode
 GButton updateButton;           //button to manually update
 GImageButton waitingButton;    //waiting button, unused
+GKnob baseKnob, shoulderKnob,elbowKnob ,wristAngleKnob ,wristRotateKnob; //knob to turn the base
+GCustomSlider gripperLeftSlider, gripperRightSlider;
 
 //error panel
 GPanel errorPanel;//panel to warn users of errros
@@ -63,8 +65,6 @@ GPanel settingsPanel;//various settings for the program
 GButton settingsDismissButton;//dismiss the settings panel
 GCheckbox fileDebugCheckbox; //checkbox to enable debugging to file
 GCheckbox debugFileCheckbox0; //???
-
-
 
 //**********************Setup GUI functions
 
@@ -596,6 +596,61 @@ public void extendedTextField_change(GTextField source, GEvent event)
   }
 }
 
+public void baseKnob_change(GKnob source, GEvent event) 
+{
+  printlnDebug("baseKnob_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+  if (event == GEvent.VALUE_STEADY)
+  {
+    xTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion
+    xCurrent = source.getValueI();
+  }
+}
+
+public void shoulderKnob_change(GKnob source, GEvent event) 
+{
+  printlnDebug("shoulderKnob_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+  if (event == GEvent.VALUE_STEADY)
+  {
+    yTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion
+    yCurrent = source.getValueI();
+  }
+}
+
+public void elbowKnob_change(GKnob source, GEvent event) 
+{
+  printlnDebug("elbowKnob_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+  if (event == GEvent.VALUE_STEADY)
+  {
+    zTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion
+    zCurrent = source.getValueI();
+  }
+}
+
+public void wristAngleKnob_change(GKnob source, GEvent event) 
+{
+  printlnDebug("xSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+  if (event == GEvent.VALUE_STEADY)
+  {
+    wristAngleTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+    wristAngleCurrent = source.getValueI();
+  }
+}
+
+public void wristRotateKnob_change(GKnob source, GEvent event) 
+{
+  printlnDebug("xSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+  if (event == GEvent.VALUE_STEADY)
+  {
+    wristRotateTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+    wristRotateCurrent = source.getValueI();
+  }
+}
+
+
+
+
+
+
 
 //update text field and working var based on slider change 
 public void xSlider_change(GSlider source, GEvent event) 
@@ -662,6 +717,36 @@ public void gripperSlider_change(GSlider source, GEvent event)
     gripperCurrent = source.getValueI();
   }
 }
+
+
+
+
+//update text field and working var based on slider change 
+public void gripperLeftSlider_change(GCustomSlider source, GEvent event) 
+{
+  printlnDebug("gripperSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+  if (event == GEvent.VALUE_STEADY)
+  {
+    gripperTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+    gripperCurrent = source.getValueI();
+    gripperRightSlider.setValue(source.getValueI());
+  }
+}
+
+//update text field and working var based on slider change 
+public void gripperRightSlider_change(GCustomSlider source, GEvent event) 
+{
+  printlnDebug("gripperSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+  if (event == GEvent.VALUE_STEADY)
+  {
+    gripperTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+    gripperCurrent = source.getValueI();
+    gripperLeftSlider.setValue(source.getValueI());
+  }
+}
+
+
+
 
 //update text field and working var based on slider change 
 //update text field and working var based on slider change 
@@ -852,7 +937,7 @@ public void helpButton_click(GButton source, GEvent event)
 // Create all the GUI controls. 
 public void createGUI() {
   G4P.messagesEnabled(false);
-  G4P.setGlobalColorScheme(GCScheme.BLUE_SCHEME);
+  G4P.setGlobalColorScheme(8);
   G4P.setCursor(ARROW);
 
 
@@ -875,7 +960,7 @@ public void createGUI() {
   setupPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   setupPanel.setOpaque(true);
   setupPanel.addEventHandler(this, "setupPanel_click");
-  setupPanel.setDraggable(false);
+  //setupPanel.setDraggable(false);
   setupPanel.setCollapsible(false);
 
 
@@ -908,16 +993,16 @@ public void createGUI() {
 
 
 //mode
-  modePanel = new GPanel(this, 5, 163, 240, 110, "Mode Panel");
+  modePanel = new GPanel(this, 300, 50, 240, 110, "Mode Panel");
   modePanel.setText("Mode Panel");
   modePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   modePanel.setOpaque(true);
   modePanel.addEventHandler(this, "modePanel_click");
-  modePanel.setDraggable(false);
+  //modePanel.setDraggable(false);
   modePanel.setCollapsible(false);
 
-  modePanel.setVisible(false);
-  modePanel.setEnabled(false);
+  //modePanel.setVisible(false);
+  //modePanel.setEnabled(false);
 
   
   cartesianModeButton = new GButton(this, 0, 18, 80, 20);
@@ -959,26 +1044,79 @@ public void createGUI() {
 
 
 //control
-  controlPanel = new GPanel(this, 5, 280, 240, 480, "Control Panel");
+  controlPanel = new GPanel(this, 5, 200, 680, 480, "Control Panel");
   controlPanel.setText("Control Panel");
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
   controlPanel.addEventHandler(this, "controlPanel_click");
-  controlPanel.setDraggable(false);
+  //controlPanel.setDraggable(false);
   controlPanel.setCollapsible(false);
-  controlPanel.setVisible(false);
-  controlPanel.setEnabled(false);
+  
+  //controlPanel.setVisible(false);
+  //controlPanel.setEnabled(false);
 
 
 
-  xTextField = new GTextField(this, 5, 30, 60, 20, G4P.SCROLLBARS_NONE);
+  baseKnob = new GKnob(this, 100, 30, 50, 50, 1); 
+  baseKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
+  baseKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  baseKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
+  baseKnob.setStickToTicks(false);   //no need to stick to ticks
+  baseKnob.setTurnMode(1281); //???
+  baseKnob.addEventHandler(this, "baseKnob_change");//set event listener
+  baseKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
+  //baseKnob.setVisible(false); //???
+
+  shoulderKnob = new GKnob(this, 13, 161, 50, 50, 1); 
+  shoulderKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
+  shoulderKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  shoulderKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
+  shoulderKnob.setStickToTicks(false);   //no need to stick to ticks
+  shoulderKnob.setTurnMode(1281); //???
+  shoulderKnob.addEventHandler(this, "shoulderKnob_change");//set event listener
+  shoulderKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
+
+  elbowKnob = new GKnob(this, 113, 161, 50, 50, 1); 
+  elbowKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
+  elbowKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  elbowKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
+  elbowKnob.setStickToTicks(false);   //no need to stick to ticks
+  elbowKnob.setTurnMode(1281); //???
+  elbowKnob.addEventHandler(this, "elbowKnob_change");//set event listener
+  elbowKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
+
+  wristAngleKnob = new GKnob(this, 25, 30, 50, 50, 1); 
+  wristAngleKnob.setTurnRange(270.0, 90.0); //set angle limits start/finish
+  wristAngleKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  wristAngleKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
+  wristAngleKnob.setStickToTicks(false);   //no need to stick to ticks
+  wristAngleKnob.setTurnMode(1281); //???
+  wristAngleKnob.addEventHandler(this, "wristAngleKnob_change");//set event listener
+  wristAngleKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
+
+  wristRotateKnob = new GKnob(this, 350, 30, 50, 50, 1); 
+  wristRotateKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
+  wristRotateKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  wristRotateKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
+  wristRotateKnob.setStickToTicks(false);   //no need to stick to ticks
+  wristRotateKnob.setTurnMode(1281); //???
+  wristRotateKnob.addEventHandler(this, "wristRotateKnob_change");//set event listener
+  wristRotateKnob.setLocalColorScheme(10);//set color scheme just for knobs, custom color in /data
+
+
+  xTextField = new GTextField(this, 5, 40, 60, 20, G4P.SCROLLBARS_NONE);
   //xTextField.setText("0");
   xTextField.setText(Integer.toString(xParameters[0]));
   xTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   xTextField.setOpaque(true);
   xTextField.addEventHandler(this, "xTextField_change");
+  
+  xLabel = new GLabel(this, 5, 60, 60, 14);
+  xLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  xLabel.setText("X Coord");
+  xLabel.setOpaque(false);
 
-  xSlider = new GSlider(this, 75, 20, 145, 40, 10.0);
+  xSlider = new GSlider(this, 75, 30, 100, 40, 10.0);
   xSlider.setShowLimits(true);
   xSlider.setLimits(0.0, -200.0, 200.0);
   xSlider.setNbrTicks(50);
@@ -990,20 +1128,21 @@ public void createGUI() {
   xSlider.setShowValue(true);
 
 
-  xLabel = new GLabel(this, 5, 50, 60, 14);
-  xLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  xLabel.setText("X Coord");
-  xLabel.setOpaque(false);
 
-
-  yTextField = new GTextField(this, 5, 75, 60, 20, G4P.SCROLLBARS_NONE);
+  yTextField = new GTextField(this, 5, 80, 65, 20, G4P.SCROLLBARS_NONE);
   yTextField.setText(Integer.toString(yParameters[0]));
   yTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   yTextField.setOpaque(true);
   yTextField.addEventHandler(this, "yTextField_change");
 
+  yLabel = new GLabel(this, 5, 100, 65, 14);
+  yLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  yLabel.setText("Y Coord");
+  yLabel.setOpaque(false);
 
-  ySlider = new GSlider(this, 75, 65, 145, 40, 10.0);
+
+
+  ySlider = new GSlider(this, -35, 155, 145, 65, 10.0);
   ySlider.setShowLimits(true);
   ySlider.setLimits(200.0, 50.0, 240.0);
   ySlider.setEasing(0.0);
@@ -1012,22 +1151,25 @@ public void createGUI() {
   ySlider.setOpaque(false);
   ySlider.addEventHandler(this, "ySlider_change");
   ySlider.setShowValue(true);
-
-  yLabel = new GLabel(this, 5, 95, 60, 14);
-  yLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  yLabel.setText("Y Coord");
-  yLabel.setOpaque(false);
-
+  ySlider.setTextOrientation(G4P.ORIENT_RIGHT);
+  
+  
+  ySlider.setRotation(3.1415927*1.5, GControlMode.CENTER); 
 
 
-  zTextField = new GTextField(this, 5, 120, 60, 20, G4P.SCROLLBARS_NONE);
+  zTextField = new GTextField(this, 105, 80, 65, 20, G4P.SCROLLBARS_NONE);
   zTextField.setText(Integer.toString(zParameters[0]));
   zTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   zTextField.setOpaque(true);
   zTextField.addEventHandler(this, "zTextField_change");
 
+  zLabel = new GLabel(this, 105, 100, 65, 14);
+  zLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  zLabel.setText("Z Coord");
+  zLabel.setOpaque(false);
 
-  zSlider = new GSlider(this, 75, 110, 145, 40, 10.0);
+
+  zSlider = new GSlider(this, 65, 155, 145, 65, 10.0);
   zSlider.setShowLimits(true);
   zSlider.setLimits(200.0, 20.0, 250.0);
   zSlider.setEasing(0.0);
@@ -1035,21 +1177,25 @@ public void createGUI() {
   zSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   zSlider.setOpaque(false);
   zSlider.addEventHandler(this, "zSlider_change"); 
-  zSlider.setShowValue(true);
+  zSlider.setShowValue(true); 
+  zSlider.setRotation(3.1415927*1.5, GControlMode.CENTER); 
+  zSlider.setTextOrientation(G4P.ORIENT_RIGHT);
+  
 
 
-  zLabel = new GLabel(this, 5, 140, 60, 14);
-  zLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  zLabel.setText("Z Coord");
-  zLabel.setOpaque(false);
 
-
-  wristAngleTextField = new GTextField(this, 5, 165, 60, 20, G4P.SCROLLBARS_NONE);
+  wristAngleTextField = new GTextField(this, 185, 40, 60, 20, G4P.SCROLLBARS_NONE);
   wristAngleTextField.setText(Integer.toString(wristAngleParameters[0]));
   wristAngleTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristAngleTextField.setOpaque(true);
   wristAngleTextField.addEventHandler(this, "wristAngleTextField_change");
 
+  wristAngleLabel = new GLabel(this, 185, 65, 70, 14);
+  wristAngleLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  wristAngleLabel.setText("Wrist Angle");
+  wristAngleLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  wristAngleLabel.setOpaque(false);
+  wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
   wristAngleSlider = new GSlider(this, 75, 155, 145, 40, 10.0);
   wristAngleSlider.setShowLimits(true);
@@ -1060,23 +1206,25 @@ public void createGUI() {
   wristAngleSlider.setOpaque(false);
   wristAngleSlider.addEventHandler(this, "wristAngleSlider_change");
   wristAngleSlider.setShowValue(true);
-
-  wristAngleLabel = new GLabel(this, 5, 185, 70, 14);
-  wristAngleLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  wristAngleLabel.setText("Wrist Angle");
-  wristAngleLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
-  wristAngleLabel.setOpaque(false);
-
-  wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
+  wristAngleSlider.setVisible(false);
 
 
 
 
-  wristRotateTextField = new GTextField(this, 5, 210, 60, 20, G4P.SCROLLBARS_NONE);
+
+
+  wristRotateTextField = new GTextField(this, 300, 40, 60, 20, G4P.SCROLLBARS_NONE);
   wristRotateTextField.setText(Integer.toString( wristRotateParameters[0]));
   wristRotateTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateTextField.setOpaque(true);
   wristRotateTextField.addEventHandler(this, "wristRotateTextField_change");
+  
+  wristRotateLabel = new GLabel(this, 300, 65, 70, 14);
+  wristRotateLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  wristRotateLabel.setText("Wrist Rotate");
+  wristRotateLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  wristRotateLabel.setOpaque(false);
+  wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
   wristRotateSlider = new GSlider(this, 75, 200, 145, 40, 10.0);
   wristRotateSlider.setShowLimits(true);
@@ -1087,21 +1235,23 @@ public void createGUI() {
   wristRotateSlider.setOpaque(false);
   wristRotateSlider.addEventHandler(this, "wristRotateSlider_change");
   wristRotateSlider.setShowValue(true);
+  wristRotateSlider.setVisible(false);
 
 
-  wristRotateLabel = new GLabel(this, 5, 230, 70, 14);
-  wristRotateLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  wristRotateLabel.setText("Wrist Rotate");
-  wristRotateLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
-  wristRotateLabel.setOpaque(false);
-  wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
 
-  gripperTextField = new GTextField(this, 5, 255, 60, 20, G4P.SCROLLBARS_NONE);
+
+  gripperTextField = new GTextField(this, 190, 110, 60, 20, G4P.SCROLLBARS_NONE);
   gripperTextField.setText(Integer.toString(gripperParameters[0]));
   gripperTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   gripperTextField.setOpaque(true);
   gripperTextField.addEventHandler(this, "gripperTextField_change");
+  
+  gripperLabel = new GLabel(this, 190, 135, 60, 14);
+  gripperLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  gripperLabel.setText("Gripper");
+  gripperLabel.setOpaque(false);
+  
 
   gripperSlider = new GSlider(this, 75, 245, 145, 40, 10.0);
   gripperSlider.setShowLimits(true);
@@ -1112,12 +1262,10 @@ public void createGUI() {
   gripperSlider.setOpaque(false);
   gripperSlider.addEventHandler(this, "gripperSlider_change");
   gripperSlider.setShowValue(true);
+  gripperSlider.setVisible(false);
 
 
-  gripperLabel = new GLabel(this, 5, 275, 60, 14);
-  gripperLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  gripperLabel.setText("Gripper");
-  gripperLabel.setOpaque(false);
+
 
 
   deltaTextField = new GTextField(this, 5, 300, 60, 20, G4P.SCROLLBARS_NONE);
@@ -1222,7 +1370,33 @@ public void createGUI() {
   autoUpdateCheckbox.setOpaque(false);
   autoUpdateCheckbox.addEventHandler(this, "autoUpdateCheckbox_change");
   autoUpdateCheckbox.setText("Auto Update");
-
+ 
+ 
+  
+  gripperLeftSlider = new GCustomSlider(this, 180, 100, 150, 200, "gripperL");
+  gripperLeftSlider.setLimits(256.0, 512.0, 0.0);
+  gripperLeftSlider.setShowDecor(false, true, false, false);
+  gripperLeftSlider.setShowLimits(true);
+  gripperLeftSlider.setEasing(0.0);
+  gripperLeftSlider.setNumberFormat(G4P.INTEGER, 0);
+  gripperLeftSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  gripperLeftSlider.setShowValue(true);
+  gripperLeftSlider.addEventHandler(this, "gripperLeftSlider_change");
+  
+  
+  gripperRightSlider = new GCustomSlider(this, 324, 100, 150, 200, "gripperR");
+  gripperRightSlider.setShowDecor(false, true, false, false);
+  gripperRightSlider.setLimits(256.0, 0.0, 512.0);
+  gripperRightSlider.setShowDecor(false, true, false, false);
+ // gripperRightSlider.setShowLimits(true);
+  gripperRightSlider.setEasing(0.0);
+  gripperRightSlider.setNumberFormat(G4P.INTEGER, 0);
+  gripperRightSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  gripperRightSlider.setValue(256);
+ // gripperRightSlider.setShowValue(true);
+  gripperRightSlider.addEventHandler(this, "gripperRightSlider_change");
+  
+  
 
 
   controlPanel.addControl(xTextField);
@@ -1259,6 +1433,13 @@ public void createGUI() {
   controlPanel.addControl(digitalCheckbox7);
   controlPanel.addControl(autoUpdateCheckbox);
   controlPanel.addControl(updateButton);
+  controlPanel.addControl(baseKnob);
+  controlPanel.addControl(shoulderKnob);
+  controlPanel.addControl(elbowKnob);
+  controlPanel.addControl(wristAngleKnob);
+  controlPanel.addControl(wristRotateKnob);
+  controlPanel.addControl(gripperLeftSlider);
+  controlPanel.addControl(gripperRightSlider);
   //controlPanel.addControl(waitingButton);
 
   waitingButton = new GImageButton(this, 115, 408, 100, 30, new String[] { 
@@ -1274,7 +1455,7 @@ public void createGUI() {
   errorPanel.setOpaque(true);
   errorPanel.setVisible(false);
   errorPanel.addEventHandler(this, "errorPanel_Click");
-  errorPanel.setDraggable(false);
+  //errorPanel.setDraggable(false);
   errorPanel.setCollapsible(false);
   
   errorLinkButton = new GButton(this, 15, 120, 50, 20);
@@ -1308,7 +1489,7 @@ public void createGUI() {
   settingsPanel.setOpaque(true);
   settingsPanel.setVisible(false);
   settingsPanel.addEventHandler(this, "settingsPanel_Click");
-  settingsPanel.setDraggable(false);
+  //settingsPanel.setDraggable(false);
   settingsPanel.setCollapsible(false);
 
 
@@ -1374,8 +1555,8 @@ void setPositionParameters()
 {
 
   //switch to look foe aech arm
-  switch(currentArm)
-  {
+switch(currentArm)
+{
   //pincher
   case 1:
    //pincher, normal orinetation
@@ -1388,185 +1569,185 @@ void setPositionParameters()
       {
       //straight
       case 1:        
-        xSlider.setLimits( pincherNormalX[0], pincherNormalX[1], pincherNormalX[2]);    
-        xTextField.setText(Integer.toString(pincherNormalX[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(pincherNormalX, xParameters);
-
-        ySlider.setLimits( pincherNormalY[0], pincherNormalY[1], pincherNormalY[2]) ; 
-        yTextField.setText(Integer.toString(pincherNormalY[0]));
-        xLabel.setText("Y Coord");
-        arrayCopy(pincherNormalY, yParameters);
-
-        zSlider.setLimits( pincherNormalZ[0], pincherNormalZ[1], pincherNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(pincherNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(pincherNormalZ, zParameters);
-
-        wristAngleSlider.setLimits(pincherNormalWristAngle[0], pincherNormalWristAngle[1], pincherNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(pincherNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(pincherNormalWristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(pincherWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(false);
-        wristRotateTextField.setVisible(false);
-        wristRotateLabel.setVisible(false);
-
-        gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
-        gripperTextField.setText(Integer.toString(pincherGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(pincherGripper, gripperParameters);
-        break;
+      xSlider.setLimits( pincherNormalX[0], pincherNormalX[1], pincherNormalX[2]);    
+      xTextField.setText(Integer.toString(pincherNormalX[0]));
+      xLabel.setText("X Coord");
+      arrayCopy(pincherNormalX, xParameters);
+  
+      ySlider.setLimits( pincherNormalY[0], pincherNormalY[1], pincherNormalY[2]) ; 
+      yTextField.setText(Integer.toString(pincherNormalY[0]));
+      xLabel.setText("Y Coord");
+      arrayCopy(pincherNormalY, yParameters);
+  
+      zSlider.setLimits( pincherNormalZ[0], pincherNormalZ[1], pincherNormalZ[2]) ;   
+      zTextField.setText(Integer.toString(pincherNormalZ[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(pincherNormalZ, zParameters);
+  
+      wristAngleSlider.setLimits(pincherNormalWristAngle[0], pincherNormalWristAngle[1], pincherNormalWristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(pincherNormalWristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(pincherNormalWristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(pincherWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(false);
+      wristRotateLabel.setVisible(false);
+  
+      gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
+      gripperTextField.setText(Integer.toString(pincherGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(pincherGripper, gripperParameters);
+      break;
     //90 degrees
       case 2:
-        xSlider.setLimits( pincher90X[0], pincher90X[1], pincher90X[2]);    
-        xTextField.setText(Integer.toString(pincher90X[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(pincher90X, xParameters);
-
-        ySlider.setLimits( pincher90Y[0], pincher90Y[1], pincher90Y[2]) ; 
-        yTextField.setText(Integer.toString(pincher90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(pincher90Y, yParameters);
-
-        zSlider.setLimits( pincher90Z[0], pincher90Z[1], pincher90Z[2]) ;   
-        zTextField.setText(Integer.toString(pincher90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(pincher90Z, zParameters);
-
-        wristAngleSlider.setLimits(pincher90WristAngle[0], pincher90WristAngle[1], pincher90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(pincher90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(pincher90WristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(pincherWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(false);
-        wristRotateTextField.setVisible(false);
-        wristRotateLabel.setVisible(false);
-
-        gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
-        gripperTextField.setText(Integer.toString(pincherGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(pincherGripper, gripperParameters);
-
-        break;
+      xSlider.setLimits( pincher90X[0], pincher90X[1], pincher90X[2]);    
+      xTextField.setText(Integer.toString(pincher90X[0]));
+      xLabel.setText("X Coord");
+      arrayCopy(pincher90X, xParameters);
+  
+      ySlider.setLimits( pincher90Y[0], pincher90Y[1], pincher90Y[2]) ; 
+      yTextField.setText(Integer.toString(pincher90Y[0]));
+      yLabel.setText("Y Coord");
+      arrayCopy(pincher90Y, yParameters);
+  
+      zSlider.setLimits( pincher90Z[0], pincher90Z[1], pincher90Z[2]) ;   
+      zTextField.setText(Integer.toString(pincher90Z[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(pincher90Z, zParameters);
+  
+      wristAngleSlider.setLimits(pincher90WristAngle[0], pincher90WristAngle[1], pincher90WristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(pincher90WristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(pincher90WristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(pincherWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(false);
+      wristRotateLabel.setVisible(false);
+  
+      gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
+      gripperTextField.setText(Integer.toString(pincherGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(pincherGripper, gripperParameters);
+  
+      break;
       }
       break;
-
+  
     //cylindrical
     case 2:
       switch(currentOrientation)
       {
       //straight
       case 1: 
-        xSlider.setLimits( pincherBase[0], pincherBase[1], pincherBase[2]);    
-        xTextField.setText(Integer.toString(pincherBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(pincherBase, xParameters);
-
-        ySlider.setLimits( pincherNormalY[0], pincherNormalY[1], pincherNormalY[2]) ; 
-        yTextField.setText(Integer.toString(pincherNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(pincherNormalY, yParameters);
-
-        zSlider.setLimits( pincherNormalZ[0], pincherNormalZ[1], pincherNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(pincherNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(pincherNormalZ, zParameters);
-
-        wristAngleSlider.setLimits(pincherNormalWristAngle[0], pincherNormalWristAngle[1], pincherNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(pincherNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(pincherNormalWristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(pincherWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(false);
-        wristRotateTextField.setVisible(false);
-        wristRotateLabel.setVisible(false);
-
-
-        gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
-        gripperTextField.setText(Integer.toString(pincherGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(pincherGripper, gripperParameters);
-
-        break;
-
-    //90 degrees
-      case 2:  
-        xSlider.setLimits( pincherBase[0], pincherBase[1], pincherBase[2]);    
-        xTextField.setText(Integer.toString(pincherBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(pincherBase, xParameters);
-
-        ySlider.setLimits( pincher90Y[0], pincher90Y[1], pincher90Y[2]) ; 
-        yTextField.setText(Integer.toString(pincher90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(pincher90Y, yParameters);
-
-        zSlider.setLimits( pincher90Z[0], pincher90Z[1], pincher90Z[2]) ;   
-        zTextField.setText(Integer.toString(pincher90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(pincher90Z, zParameters);
-
-        wristAngleSlider.setLimits(pincher90WristAngle[0], pincher90WristAngle[1], pincher90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(pincher90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(pincher90WristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(pincherWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(false);
-        wristRotateTextField.setVisible(false);
-        wristRotateLabel.setVisible(false);
-
-
-        gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
-        gripperTextField.setText(Integer.toString(pincherGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(pincherGripper, gripperParameters);
-
-
-        break;
-      }
-
-      break;
-  //backhoe
-    case 3: 
-
-
       xSlider.setLimits( pincherBase[0], pincherBase[1], pincherBase[2]);    
       xTextField.setText(Integer.toString(pincherBase[0]));
       xLabel.setText("Base");
       arrayCopy(pincherBase, xParameters);
-
+  
+      ySlider.setLimits( pincherNormalY[0], pincherNormalY[1], pincherNormalY[2]) ; 
+      yTextField.setText(Integer.toString(pincherNormalY[0]));
+      yLabel.setText("Y Coord");
+      arrayCopy(pincherNormalY, yParameters);
+  
+      zSlider.setLimits( pincherNormalZ[0], pincherNormalZ[1], pincherNormalZ[2]) ;   
+      zTextField.setText(Integer.toString(pincherNormalZ[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(pincherNormalZ, zParameters);
+  
+      wristAngleSlider.setLimits(pincherNormalWristAngle[0], pincherNormalWristAngle[1], pincherNormalWristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(pincherNormalWristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(pincherNormalWristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(pincherWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(false);
+      wristRotateLabel.setVisible(false);
+  
+  
+      gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
+      gripperTextField.setText(Integer.toString(pincherGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(pincherGripper, gripperParameters);
+  
+      break;
+  
+    //90 degrees
+      case 2:  
+      xSlider.setLimits( pincherBase[0], pincherBase[1], pincherBase[2]);    
+      xTextField.setText(Integer.toString(pincherBase[0]));
+      xLabel.setText("Base");
+      arrayCopy(pincherBase, xParameters);
+  
+      ySlider.setLimits( pincher90Y[0], pincher90Y[1], pincher90Y[2]) ; 
+      yTextField.setText(Integer.toString(pincher90Y[0]));
+      yLabel.setText("Y Coord");
+      arrayCopy(pincher90Y, yParameters);
+  
+      zSlider.setLimits( pincher90Z[0], pincher90Z[1], pincher90Z[2]) ;   
+      zTextField.setText(Integer.toString(pincher90Z[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(pincher90Z, zParameters);
+  
+      wristAngleSlider.setLimits(pincher90WristAngle[0], pincher90WristAngle[1], pincher90WristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(pincher90WristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(pincher90WristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(pincherWristRotate[0], pincherWristRotate[1], pincherWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(pincherWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(pincherWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(false);
+      wristRotateLabel.setVisible(false);
+  
+  
+      gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
+      gripperTextField.setText(Integer.toString(pincherGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(pincherGripper, gripperParameters);
+  
+  
+      break;
+      }
+  
+      break;
+    //backhoe
+    case 3: 
+  
+  
+      xSlider.setLimits( pincherBase[0], pincherBase[1], pincherBase[2]);    
+      xTextField.setText(Integer.toString(pincherBase[0]));
+      xLabel.setText("Base");
+      arrayCopy(pincherBase, xParameters);
+  
       ySlider.setLimits( pincherBHShoulder[0], pincherBHShoulder[1], pincherBHShoulder[2]) ; 
       yTextField.setText(Integer.toString(pincherBHShoulder[0]));
       yLabel.setText("Shoulder");
       arrayCopy(pincherBHShoulder, yParameters);
-
+  
       zSlider.setLimits( pincherBHElbow[0], pincherBHElbow[1], pincherBHElbow[2]) ;   
       zTextField.setText(Integer.toString(pincherBHElbow[0]));
       zLabel.setText("Elbow");
       arrayCopy(pincherBHElbow, zParameters);
-
+  
       wristAngleSlider.setLimits(pincherBHWristAngle[0], pincherBHWristAngle[1], pincherBHWristAngle[2]); 
       wristAngleTextField.setText(Integer.toString(pincherBHWristAngle[0]));
       wristAngleLabel.setText("Wrist Angle");
       arrayCopy(pincherBHWristAngle, wristAngleParameters);
-
+  
       wristRotateSlider.setLimits(pincherBHWristRot[0], pincherBHWristRot[1], pincherBHWristRot[2]) ;   
       wristRotateTextField.setText(Integer.toString(pincherBHWristRot[0]));
       wristRotateLabel.setText("Wrist Rotate");
@@ -1574,13 +1755,13 @@ void setPositionParameters()
       wristRotateSlider.setVisible(false);
       wristRotateTextField.setVisible(false);
       wristRotateLabel.setVisible(false);
-
-
+  
+  
       gripperSlider.setLimits( pincherGripper[0], pincherGripper[1], pincherGripper[2]);    
       gripperTextField.setText(Integer.toString(pincherGripper[0]));
       gripperLabel.setText("Gripper");
       arrayCopy(pincherGripper, gripperParameters);
-
+  
       break;
     }
     break;//end pincher arm 
@@ -1590,208 +1771,261 @@ void setPositionParameters()
   case 2:
     switch(currentMode)
     {
-      //cartesian mode reactor arm
-    case 1:
-      switch(currentOrientation)
-      {
-        //normal orientation reactor arm arm cartesian
-      case 1:        
-
-        xSlider.setLimits( reactorNormalX[0], reactorNormalX[1], reactorNormalX[2]);    
-        xTextField.setText(Integer.toString(reactorNormalX[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(reactorNormalX, xParameters);
-
-        ySlider.setLimits( reactorNormalY[0], reactorNormalY[1], reactorNormalY[2]) ; 
-        yTextField.setText(Integer.toString(reactorNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactorNormalY, yParameters);
-
-        zSlider.setLimits( reactorNormalZ[0], reactorNormalZ[1], reactorNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(reactorNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactorNormalZ, zParameters);
-
-        wristAngleSlider.setLimits(reactorNormalWristAngle[0], reactorNormalWristAngle[1], reactorNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactorNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactorNormalWristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(reactorGripper, gripperParameters);
-        break;//end  normal orientation reactor arm arm cartesian
-
-        //90 degree mode reactor arm cartesian
-      case 2:
-        xSlider.setLimits( reactor90X[0], reactor90X[1], reactor90X[2]);    
-        xTextField.setText(Integer.toString(reactor90X[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(reactor90X, xParameters);
-
-        ySlider.setLimits( reactor90Y[0], reactor90Y[1], reactor90Y[2]) ; 
-        yTextField.setText(Integer.toString(reactor90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactor90Y, yParameters);
-
-        zSlider.setLimits( reactor90Z[0], reactor90Z[1], reactor90Z[2]) ;   
-        zTextField.setText(Integer.toString(reactor90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactor90Z, zParameters);
-
-        wristAngleSlider.setLimits(reactor90WristAngle[0], reactor90WristAngle[1], reactor90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactor90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactor90WristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(reactorGripper, gripperParameters);
-        break;//end 90 degree mode reactor arm cartesian
-      }
+      //cartesian mode reactor arm      
+      case 1:
+    
+        //hide/show appropriate GUI elements
+        baseKnob.setVisible(false);
+        shoulderKnob.setVisible(false);
+        elbowKnob.setVisible(false);
+        xSlider.setVisible(true);
+        ySlider.setVisible(true);
+        zSlider.setVisible(true);
+        wristRotateKnob.setVisible(true);
+        
+        switch(currentOrientation)
+        {
+          //normal orientation reactor arm arm cartesian
+          case 1:        
+      
+          wristAngleKnob.setTurnRange(reactorWristAngleNormalKnob[0], reactorWristAngleNormalKnob[1]); //set angle limits start/finish
+          wristAngleKnob.setLimits(reactorNormalWristAngle[0], reactorNormalWristAngle[1], reactorNormalWristAngle[2]);//set value limits
+      
+          xSlider.setLimits( reactorNormalX[0], reactorNormalX[1], reactorNormalX[2]);    
+          xTextField.setText(Integer.toString(reactorNormalX[0]));
+          xLabel.setText("X Coord");
+          arrayCopy(reactorNormalX, xParameters);
+      
+          ySlider.setLimits( reactorNormalY[0], reactorNormalY[1], reactorNormalY[2]) ; 
+          yTextField.setText(Integer.toString(reactorNormalY[0]));
+          yLabel.setText("Y Coord");
+          arrayCopy(reactorNormalY, yParameters);
+      
+          zSlider.setLimits( reactorNormalZ[0], reactorNormalZ[1], reactorNormalZ[2]) ;   
+          zTextField.setText(Integer.toString(reactorNormalZ[0]));
+          zLabel.setText("Z Coord");
+          arrayCopy(reactorNormalZ, zParameters);
+      
+          wristAngleSlider.setLimits(reactorNormalWristAngle[0], reactorNormalWristAngle[1], reactorNormalWristAngle[2]); 
+          wristAngleTextField.setText(Integer.toString(reactorNormalWristAngle[0]));
+          wristAngleLabel.setText("Wrist Angle");
+          arrayCopy(reactorNormalWristAngle, wristAngleParameters);
+      
+          wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
+          wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
+          wristRotateLabel.setText("Wrist Rotate");
+          arrayCopy(reactorWristRotate, wristRotateParameters);
+          wristRotateSlider.setVisible(false);
+          wristRotateTextField.setVisible(true);
+          wristRotateLabel.setVisible(true);
+      
+      
+          gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
+          gripperTextField.setText(Integer.toString(reactorGripper[0]));
+          gripperLabel.setText("Gripper");
+          arrayCopy(reactorGripper, gripperParameters);
+          
+          gripperLeftSlider.setLimits( reactorGripper[0], reactorGripper[2], reactorGripper[1]);    
+          gripperRightSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]); 
+          arrayCopy(reactorGripper, gripperParameters);
+          
+          
+          break;//end  normal orientation reactor arm arm cartesian
+      
+          //90 degree mode reactor arm cartesian
+          case 2:
+      
+          wristAngleKnob.setTurnRange(reactorWristAngle90Knob[0], reactorWristAngle90Knob[1]); //set angle limits start/finish
+          wristAngleKnob.setLimits(reactor90WristAngle[0], reactor90WristAngle[1], reactor90WristAngle[2]);//set value limits
+        
+          xSlider.setLimits( reactor90X[0], reactor90X[1], reactor90X[2]);    
+          xTextField.setText(Integer.toString(reactor90X[0]));
+          xLabel.setText("X Coord");
+          arrayCopy(reactor90X, xParameters);
+          
+          ySlider.setLimits( reactor90Y[0], reactor90Y[1], reactor90Y[2]) ; 
+          yTextField.setText(Integer.toString(reactor90Y[0]));
+          yLabel.setText("Y Coord");
+          arrayCopy(reactor90Y, yParameters);
+          
+          zSlider.setLimits( reactor90Z[0], reactor90Z[1], reactor90Z[2]) ;   
+          zTextField.setText(Integer.toString(reactor90Z[0]));
+          zLabel.setText("Z Coord");
+          arrayCopy(reactor90Z, zParameters);
+          
+          wristAngleSlider.setLimits(reactor90WristAngle[0], reactor90WristAngle[1], reactor90WristAngle[2]); 
+          wristAngleTextField.setText(Integer.toString(reactor90WristAngle[0]));
+          wristAngleLabel.setText("Wrist Angle");
+          arrayCopy(reactor90WristAngle, wristAngleParameters);
+          
+          wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
+          wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
+          wristRotateLabel.setText("Wrist Rotate");
+          arrayCopy(reactorWristRotate, wristRotateParameters);
+          wristRotateSlider.setVisible(false);
+          wristRotateTextField.setVisible(true);
+          wristRotateLabel.setVisible(true);
+          
+          
+          gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
+          gripperTextField.setText(Integer.toString(reactorGripper[0]));
+          gripperLabel.setText("Gripper");
+          arrayCopy(reactorGripper, gripperParameters);
+          
+          break;//end 90 degree mode reactor arm cartesian
+        }
       break;//end  reactor arm
-
+  
       //cylcindrical reactor arm  
-    case 2:
-      switch(currentOrientation)
-      {
-        //normal orientation reactor arm cylcindrical
-      case 1: 
-        xSlider.setLimits( reactorBase[0], reactorBase[1], reactorBase[2]);    
-        xTextField.setText(Integer.toString(reactorBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(reactorBase, xParameters);
-
-        ySlider.setLimits( reactorNormalY[0], reactorNormalY[1], reactorNormalY[2]) ; 
-        yTextField.setText(Integer.toString(reactorNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactorNormalY, yParameters);
-
-        zSlider.setLimits( reactorNormalZ[0], reactorNormalZ[1], reactorNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(reactorNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactorNormalZ, zParameters);
-
-        wristAngleSlider.setLimits(reactorNormalWristAngle[0], reactorNormalWristAngle[1], reactorNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactorNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactorNormalWristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
+      case 2:
+  
+        baseKnob.setVisible(true);
+        shoulderKnob.setVisible(false);
+        elbowKnob.setVisible(false);
+        xSlider.setVisible(false);
+        ySlider.setVisible(true);
+        zSlider.setVisible(true);
+        wristRotateKnob.setVisible(true);
+        
+        gripperLeftSlider.setLimits( reactorGripper[0], reactorGripper[2], reactorGripper[1]);    
+        gripperRightSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]); 
         arrayCopy(reactorGripper, gripperParameters);
-        break;//end  reactor arm
-
-        //90 degree orientation reactor arm cylcindrical
-      case 2:  
-        xSlider.setLimits( reactorBase[0], reactorBase[1], reactorBase[2]);    
-        xTextField.setText(Integer.toString(reactorBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(reactorBase, xParameters);
-
-        ySlider.setLimits( reactor90Y[0], reactor90Y[1], reactor90Y[2]) ; 
-        yTextField.setText(Integer.toString(reactor90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(reactor90Y, yParameters);
-
-        zSlider.setLimits( reactor90Z[0], reactor90Z[1], reactor90Z[2]) ;   
-        zTextField.setText(Integer.toString(reactor90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(reactor90Z, zParameters);
-
-        wristAngleSlider.setLimits(reactor90WristAngle[0], reactor90WristAngle[1], reactor90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(reactor90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(reactor90WristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(reactorWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
-        gripperTextField.setText(Integer.toString(reactorGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(reactorGripper, gripperParameters);
-        break;//end  90 degree orientation reactor arm cylcindrical
-      }
-
+          
+          
+          
+          switch(currentOrientation)
+          {
+          //normal orientation reactor arm cylcindrical
+          case 1: 
+            
+            
+            wristAngleKnob.setTurnRange(reactorWristAngleNormalKnob[0], reactorWristAngleNormalKnob[1]); //set angle limits start/finish
+            wristAngleKnob.setLimits(reactorNormalWristAngle[0], reactorNormalWristAngle[1], reactorNormalWristAngle[2]);//set value limits
+            
+            
+            xSlider.setLimits( reactorBase[0], reactorBase[1], reactorBase[2]);    
+            xTextField.setText(Integer.toString(reactorBase[0]));
+            xLabel.setText("Base");
+            arrayCopy(reactorBase, xParameters);
+        
+            ySlider.setLimits( reactorNormalY[0], reactorNormalY[1], reactorNormalY[2]) ; 
+            yTextField.setText(Integer.toString(reactorNormalY[0]));
+            yLabel.setText("Y Coord");
+            arrayCopy(reactorNormalY, yParameters);
+        
+            zSlider.setLimits( reactorNormalZ[0], reactorNormalZ[1], reactorNormalZ[2]) ;   
+            zTextField.setText(Integer.toString(reactorNormalZ[0]));
+            zLabel.setText("Z Coord");
+            arrayCopy(reactorNormalZ, zParameters);
+        
+            wristAngleSlider.setLimits(reactorNormalWristAngle[0], reactorNormalWristAngle[1], reactorNormalWristAngle[2]); 
+            wristAngleTextField.setText(Integer.toString(reactorNormalWristAngle[0]));
+            wristAngleLabel.setText("Wrist Angle");
+            arrayCopy(reactorNormalWristAngle, wristAngleParameters);
+        
+            wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
+            wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
+            wristRotateLabel.setText("Wrist Rotate");
+            arrayCopy(reactorWristRotate, wristRotateParameters);
+            wristRotateSlider.setVisible(false);
+            wristRotateTextField.setVisible(true);
+            wristRotateLabel.setVisible(true);
+        
+        
+        
+            gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
+            gripperTextField.setText(Integer.toString(reactorGripper[0]));
+            gripperLabel.setText("Gripper");
+            arrayCopy(reactorGripper, gripperParameters);
+          break;//end  reactor arm
+      
+          //90 degree orientation reactor arm cylcindrical
+            case 2:            
+            wristAngleKnob.setTurnRange(reactorWristAngle90Knob[0], reactorWristAngle90Knob[1]); //set angle limits start/finish
+            wristAngleKnob.setLimits(reactor90WristAngle[0], reactor90WristAngle[1], reactor90WristAngle[2]);//set value limits
+            
+            
+            
+            xSlider.setLimits( reactorBase[0], reactorBase[1], reactorBase[2]);    
+            xTextField.setText(Integer.toString(reactorBase[0]));
+            xLabel.setText("Base");
+            arrayCopy(reactorBase, xParameters);
+        
+            ySlider.setLimits( reactor90Y[0], reactor90Y[1], reactor90Y[2]) ; 
+            yTextField.setText(Integer.toString(reactor90Y[0]));
+            yLabel.setText("Y Coord");
+            arrayCopy(reactor90Y, yParameters);
+        
+            zSlider.setLimits( reactor90Z[0], reactor90Z[1], reactor90Z[2]) ;   
+            zTextField.setText(Integer.toString(reactor90Z[0]));
+            zLabel.setText("Z Coord");
+            arrayCopy(reactor90Z, zParameters);
+        
+            wristAngleSlider.setLimits(reactor90WristAngle[0], reactor90WristAngle[1], reactor90WristAngle[2]); 
+            wristAngleTextField.setText(Integer.toString(reactor90WristAngle[0]));
+            wristAngleLabel.setText("Wrist Angle");
+            arrayCopy(reactor90WristAngle, wristAngleParameters);
+        
+            wristRotateSlider.setLimits(reactorWristRotate[0], reactorWristRotate[1], reactorWristRotate[2]) ;   
+            wristRotateTextField.setText(Integer.toString(reactorWristRotate[0]));
+            wristRotateLabel.setText("Wrist Rotate");
+            arrayCopy(reactorWristRotate, wristRotateParameters);
+            wristRotateSlider.setVisible(false);
+            wristRotateTextField.setVisible(true);
+            wristRotateLabel.setVisible(true);
+        
+        
+            gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
+            gripperTextField.setText(Integer.toString(reactorGripper[0]));
+            gripperLabel.setText("Gripper");
+            arrayCopy(reactorGripper, gripperParameters);
+          break;//end  90 degree orientation reactor arm cylcindrical
+        }
+      
       break;//end  cylcindrical reactor arm  
-
-
-      //backhoe mode reactor arm
-    case 3: 
-
-      xSlider.setLimits( reactorBase[0], reactorBase[1], reactorBase[2]);    
-      xTextField.setText(Integer.toString(reactorBase[0]));
-      xLabel.setText("Base");
-      arrayCopy(reactorBase, xParameters);
-
-      ySlider.setLimits( reactorBHShoulder[0], reactorBHShoulder[1], reactorBHShoulder[2]) ; 
-      yTextField.setText(Integer.toString(reactorBHShoulder[0]));
-      yLabel.setText("Shoulder");
-      arrayCopy(reactorBHShoulder, yParameters);
-
-      zSlider.setLimits( reactorBHElbow[0], reactorBHElbow[1], reactorBHElbow[2]) ;   
-      zTextField.setText(Integer.toString(reactorBHElbow[0]));
-      zLabel.setText("Elbow");
-      arrayCopy(reactorBHElbow, zParameters);
-
-      wristAngleSlider.setLimits(reactorBHWristAngle[0], reactorBHWristAngle[1], reactorBHWristAngle[2]); 
-      wristAngleTextField.setText(Integer.toString(reactorBHWristAngle[0]));
-      wristAngleLabel.setText("Wrist Angle");
-      arrayCopy(reactorBHWristAngle, wristAngleParameters);
-
-      wristRotateSlider.setLimits(reactorBHWristRot[0], reactorBHWristRot[1], reactorBHWristRot[2]) ;   
-      wristRotateTextField.setText(Integer.toString(reactorBHWristRot[0]));
-      wristRotateLabel.setText("Wrist Rotate");
-      arrayCopy(reactorBHWristRot, wristRotateParameters);
-      wristRotateSlider.setVisible(true);
-      wristRotateTextField.setVisible(true);
-      wristRotateLabel.setVisible(true);
-
-
-      gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
-      gripperTextField.setText(Integer.toString(reactorGripper[0]));
-      gripperLabel.setText("Gripper");
-      arrayCopy(reactorGripper, gripperParameters);
+  
+  
+        //backhoe mode reactor arm
+      case 3: 
+          
+        baseKnob.setVisible(true);
+        shoulderKnob.setVisible(true);
+        elbowKnob.setVisible(true);
+        xSlider.setVisible(false);
+        ySlider.setVisible(false);
+        zSlider.setVisible(false);
+        wristRotateKnob.setVisible(true);
+          
+        gripperLeftSlider.setLimits( reactorGripper[0], reactorGripper[2], reactorGripper[1]);    
+        gripperRightSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]); 
+        arrayCopy(reactorGripper, gripperParameters);
+        
+          
+        wristAngleKnob.setTurnRange(reactorWristAngleBHKnob[0], reactorWristAngleBHKnob[1]); //set angle limits start/finish
+        wristAngleKnob.setLimits(reactorBHWristAngle[0], reactorBHWristAngle[1], reactorBHWristAngle[2]);//set value limits
+        arrayCopy(reactorBHWristAngle, wristAngleParameters);
+        
+                  
+        wristRotateKnob.setTurnRange(reactorWristRotKnob[0], reactorWristRotKnob[1]); //set angle limits start/finish
+        wristRotateKnob.setLimits(reactorBHWristRot[0], reactorBHWristRot[1], reactorBHWristRot[2]);//set value limits
+        
+        
+        wristRotateTextField.setText(Integer.toString(reactorBHWristRot[0]));
+        wristRotateLabel.setText("Wrist Rotate");
+        arrayCopy(reactorBHWristRot, wristRotateParameters);
+        
+        wristRotateSlider.setVisible(false);
+        wristRotateTextField.setVisible(true);
+        wristRotateLabel.setVisible(true);
+        
+        
+        gripperSlider.setLimits( reactorGripper[0], reactorGripper[1], reactorGripper[2]);    
+        gripperTextField.setText(Integer.toString(reactorGripper[0]));
+        gripperLabel.setText("Gripper");
+          arrayCopy(reactorGripper, gripperParameters);
       break;//end backhoe mode reactor arm
     }
-    break;//end reactor arm 
+  break;//end reactor arm 
 
     //widow arm 
   case 3:
@@ -1801,209 +2035,209 @@ void setPositionParameters()
     case 1:
       switch(currentOrientation)
       {
-        //normal orientation widow arm arm cartesian
+      //normal orientation widow arm arm cartesian
       case 1:        
-
-        xSlider.setLimits( widowNormalX[0], widowNormalX[1], widowNormalX[2]);    
-        xTextField.setText(Integer.toString(widowNormalX[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(widowNormalX, xParameters);
-
-        ySlider.setLimits( widowNormalY[0], widowNormalY[1], widowNormalY[2]) ; 
-        yTextField.setText(Integer.toString(widowNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widowNormalY, yParameters);
-
-        zSlider.setLimits( widowNormalZ[0], widowNormalZ[1], widowNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(widowNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widowNormalZ, zParameters);
-
-        wristAngleSlider.setLimits(widowNormalWristAngle[0], widowNormalWristAngle[1], widowNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widowNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widowNormalWristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper, gripperParameters);
-        break;
-
-
-        //90 degree mode widow arm cartesian
+  
+      xSlider.setLimits( widowNormalX[0], widowNormalX[1], widowNormalX[2]);    
+      xTextField.setText(Integer.toString(widowNormalX[0]));
+      xLabel.setText("X Coord");
+      arrayCopy(widowNormalX, xParameters);
+  
+      ySlider.setLimits( widowNormalY[0], widowNormalY[1], widowNormalY[2]) ; 
+      yTextField.setText(Integer.toString(widowNormalY[0]));
+      yLabel.setText("Y Coord");
+      arrayCopy(widowNormalY, yParameters);
+  
+      zSlider.setLimits( widowNormalZ[0], widowNormalZ[1], widowNormalZ[2]) ;   
+      zTextField.setText(Integer.toString(widowNormalZ[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(widowNormalZ, zParameters);
+  
+      wristAngleSlider.setLimits(widowNormalWristAngle[0], widowNormalWristAngle[1], widowNormalWristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(widowNormalWristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(widowNormalWristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(widowWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(true);
+      wristRotateLabel.setVisible(true);
+  
+  
+      gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
+      gripperTextField.setText(Integer.toString(widowGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(widowGripper, gripperParameters);
+      break;
+  
+  
+      //90 degree mode widow arm cartesian
       case 2:
-
-        xSlider.setLimits( widow90X[0], widow90X[1], widow90X[2]);    
-        xTextField.setText(Integer.toString(widow90X[0]));
-        xLabel.setText("X Coord");
-        arrayCopy(widow90X, xParameters);
-
-        ySlider.setLimits( widow90Y[0], widow90Y[1], widow90Y[2]) ; 
-        yTextField.setText(Integer.toString(widow90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widow90Y, yParameters);
-
-        zSlider.setLimits( widow90Z[0], widow90Z[1], widow90Z[2]) ;   
-        zTextField.setText(Integer.toString(widow90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widow90Z, zParameters);
-
-        wristAngleSlider.setLimits(widow90WristAngle[0], widow90WristAngle[1], widow90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widow90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widow90WristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper, gripperParameters);
-        break;
+  
+      xSlider.setLimits( widow90X[0], widow90X[1], widow90X[2]);    
+      xTextField.setText(Integer.toString(widow90X[0]));
+      xLabel.setText("X Coord");
+      arrayCopy(widow90X, xParameters);
+  
+      ySlider.setLimits( widow90Y[0], widow90Y[1], widow90Y[2]) ; 
+      yTextField.setText(Integer.toString(widow90Y[0]));
+      yLabel.setText("Y Coord");
+      arrayCopy(widow90Y, yParameters);
+  
+      zSlider.setLimits( widow90Z[0], widow90Z[1], widow90Z[2]) ;   
+      zTextField.setText(Integer.toString(widow90Z[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(widow90Z, zParameters);
+  
+      wristAngleSlider.setLimits(widow90WristAngle[0], widow90WristAngle[1], widow90WristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(widow90WristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(widow90WristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(widowWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(true);
+      wristRotateLabel.setVisible(true);
+  
+  
+      gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
+      gripperTextField.setText(Integer.toString(widowGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(widowGripper, gripperParameters);
+      break;
       }
       break;//end  widow arm
-
+  
       //cylcindrical widow arm  
     case 2:
       switch(currentOrientation)
       {
-        //normal orientation widow arm cylcindrical
+      //normal orientation widow arm cylcindrical
       case 1: 
-
-
-        xSlider.setLimits( widowBase[0], widowBase[1], widowBase[2]);    
-        xTextField.setText(Integer.toString(widowBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(widowBase, xParameters);
-
-        ySlider.setLimits( widowNormalY[0], widowNormalY[1], widowNormalY[2]) ; 
-        yTextField.setText(Integer.toString(widowNormalY[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widowNormalY, yParameters);
-
-        zSlider.setLimits( widowNormalZ[0], widowNormalZ[1], widowNormalZ[2]) ;   
-        zTextField.setText(Integer.toString(widowNormalZ[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widowNormalZ, zParameters);
-
-        wristAngleSlider.setLimits(widowNormalWristAngle[0], widowNormalWristAngle[1], widowNormalWristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widowNormalWristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widowNormalWristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper, gripperParameters);
-        break;
-        //90 degree orientation widow arm cylcindrical
-
+  
+  
+      xSlider.setLimits( widowBase[0], widowBase[1], widowBase[2]);    
+      xTextField.setText(Integer.toString(widowBase[0]));
+      xLabel.setText("Base");
+      arrayCopy(widowBase, xParameters);
+  
+      ySlider.setLimits( widowNormalY[0], widowNormalY[1], widowNormalY[2]) ; 
+      yTextField.setText(Integer.toString(widowNormalY[0]));
+      yLabel.setText("Y Coord");
+      arrayCopy(widowNormalY, yParameters);
+  
+      zSlider.setLimits( widowNormalZ[0], widowNormalZ[1], widowNormalZ[2]) ;   
+      zTextField.setText(Integer.toString(widowNormalZ[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(widowNormalZ, zParameters);
+  
+      wristAngleSlider.setLimits(widowNormalWristAngle[0], widowNormalWristAngle[1], widowNormalWristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(widowNormalWristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(widowNormalWristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(widowWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(true);
+      wristRotateLabel.setVisible(true);
+  
+  
+      gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
+      gripperTextField.setText(Integer.toString(widowGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(widowGripper, gripperParameters);
+      break;
+      //90 degree orientation widow arm cylcindrical
+  
       case 2:  
-
-        xSlider.setLimits( widowBase[0], widowBase[1], widowBase[2]);    
-        xTextField.setText(Integer.toString(widowBase[0]));
-        xLabel.setText("Base");
-        arrayCopy(widowBase, xParameters);
-
-        ySlider.setLimits( widow90Y[0], widow90Y[1], widow90Y[2]) ; 
-        yTextField.setText(Integer.toString(widow90Y[0]));
-        yLabel.setText("Y Coord");
-        arrayCopy(widow90Y, yParameters);
-
-        zSlider.setLimits( widow90Z[0], widow90Z[1], widow90Z[2]) ;   
-        zTextField.setText(Integer.toString(widow90Z[0]));
-        zLabel.setText("Z Coord");
-        arrayCopy(widow90Z, zParameters);
-
-        wristAngleSlider.setLimits(widow90WristAngle[0], widow90WristAngle[1], widow90WristAngle[2]); 
-        wristAngleTextField.setText(Integer.toString(widow90WristAngle[0]));
-        wristAngleLabel.setText("Wrist Angle");
-        arrayCopy(widow90WristAngle, wristAngleParameters);
-
-        wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
-        wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
-        wristRotateLabel.setText("Wrist Rotate");
-        arrayCopy(widowWristRotate, wristRotateParameters);
-        wristRotateSlider.setVisible(true);
-        wristRotateTextField.setVisible(true);
-        wristRotateLabel.setVisible(true);
-
-
-        gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
-        gripperTextField.setText(Integer.toString(widowGripper[0]));
-        gripperLabel.setText("Gripper");
-        arrayCopy(widowGripper, gripperParameters);
-        break;
+  
+      xSlider.setLimits( widowBase[0], widowBase[1], widowBase[2]);    
+      xTextField.setText(Integer.toString(widowBase[0]));
+      xLabel.setText("Base");
+      arrayCopy(widowBase, xParameters);
+  
+      ySlider.setLimits( widow90Y[0], widow90Y[1], widow90Y[2]) ; 
+      yTextField.setText(Integer.toString(widow90Y[0]));
+      yLabel.setText("Y Coord");
+      arrayCopy(widow90Y, yParameters);
+  
+      zSlider.setLimits( widow90Z[0], widow90Z[1], widow90Z[2]) ;   
+      zTextField.setText(Integer.toString(widow90Z[0]));
+      zLabel.setText("Z Coord");
+      arrayCopy(widow90Z, zParameters);
+  
+      wristAngleSlider.setLimits(widow90WristAngle[0], widow90WristAngle[1], widow90WristAngle[2]); 
+      wristAngleTextField.setText(Integer.toString(widow90WristAngle[0]));
+      wristAngleLabel.setText("Wrist Angle");
+      arrayCopy(widow90WristAngle, wristAngleParameters);
+  
+      wristRotateSlider.setLimits(widowWristRotate[0], widowWristRotate[1], widowWristRotate[2]) ;   
+      wristRotateTextField.setText(Integer.toString(widowWristRotate[0]));
+      wristRotateLabel.setText("Wrist Rotate");
+      arrayCopy(widowWristRotate, wristRotateParameters);
+      wristRotateSlider.setVisible(false);
+      wristRotateTextField.setVisible(true);
+      wristRotateLabel.setVisible(true);
+  
+  
+      gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
+      gripperTextField.setText(Integer.toString(widowGripper[0]));
+      gripperLabel.setText("Gripper");
+      arrayCopy(widowGripper, gripperParameters);
+      break;
       }
-
+  
       break;//end  cylcindrical widow arm  
-
-
+  
+  
       //backhoe mode widow arm
     case 3: 
       xSlider.setLimits( widowBase[0], widowBase[1], widowBase[2]);    
       xTextField.setText(Integer.toString(widowBase[0]));
       xLabel.setText("Base");
       arrayCopy(widowBase, xParameters);
-
+  
       ySlider.setLimits( widowBHShoulder[0], widowBHShoulder[1], widowBHShoulder[2]) ; 
       yTextField.setText(Integer.toString(widowBHShoulder[0]));
       yLabel.setText("Shoulder");
       arrayCopy(widowBHShoulder, yParameters);
-
+  
       zSlider.setLimits( widowBHElbow[0], widowBHElbow[1], widowBHElbow[2]) ;   
       zTextField.setText(Integer.toString(widowBHElbow[0]));
       zLabel.setText("Elbow");
       arrayCopy(widowBHElbow, zParameters);
-
+  
       wristAngleSlider.setLimits(widowBHWristAngle[0], widowBHWristAngle[1], widowBHWristAngle[2]); 
       wristAngleTextField.setText(Integer.toString(widowBHWristAngle[0]));
       wristAngleLabel.setText("Wrist Angle");
       arrayCopy(widowBHWristAngle, wristAngleParameters);
-
+  
       wristRotateSlider.setLimits(widowBHWristRot[0], widowBHWristRot[1], widowBHWristRot[2]) ;   
       wristRotateTextField.setText(Integer.toString(widowBHWristRot[0]));
       wristRotateLabel.setText("Wrist Rotate");
       arrayCopy(widowBHWristRot, wristRotateParameters);
-      wristRotateSlider.setVisible(true);
+      wristRotateSlider.setVisible(false);
       wristRotateTextField.setVisible(true);
       wristRotateLabel.setVisible(true);
-
-
+  
+  
       gripperSlider.setLimits( widowGripper[0], widowGripper[1], widowGripper[2]);    
       gripperTextField.setText(Integer.toString(widowGripper[0]));
       gripperLabel.setText("Gripper");
       arrayCopy(widowGripper, gripperParameters);
       break;
     }
-    break;//end widow arm
-  }
+  break;//end widow arm
+}
 
   //write defualt parameters back to internal values
   xCurrent = xParameters[0]; 
@@ -2016,4 +2250,5 @@ void setPositionParameters()
   extendedTextField.setText("0");
 
 }//end set postiion parameters
+
 

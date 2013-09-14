@@ -106,7 +106,7 @@ boolean gkey = false;
 
 
 public void setup(){
-  size(250, 816, JAVA2D);  //draw initial screen
+  size(700, 700, JAVA2D);  //draw initial screen
   
   createGUI();   //draw GUI components defined in gui.pde
 
