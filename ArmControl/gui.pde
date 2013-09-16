@@ -66,7 +66,7 @@ GButton settingsDismissButton;//dismiss the settings panel
 GCheckbox fileDebugCheckbox; //checkbox to enable debugging to file
 GCheckbox debugFileCheckbox0; //???
 
-//**********************Setup GUI functions
+// **********************Setup GUI functions
 
 public void setupPanel_click(GPanel source, GEvent event) { 
   printlnDebug("setupPanel - GPanel event occured " + System.currentTimeMillis()%10000000, 1 );
@@ -86,7 +86,7 @@ public void serialList_click(GDropList source, GEvent event)
 public void connectButton_click(GButton source, GEvent event) 
 {
   printlnDebug("connectButton - GButton event occured " + System.currentTimeMillis()%10000000, 1);
-  
+ 
   //check to make sure serialPortSelected is not -1, -1 means no serial port was selected. Valid port indexes are 0+
   if (selectedSerialPort > -1)
   {    
@@ -94,21 +94,20 @@ public void connectButton_click(GButton source, GEvent event)
     //try to connect to the port at 38400bps, otherwise show an error message
     try
     {
-      sPort = new Serial(this, Serial.list()[selectedSerialPort], 38400);
+      sPorts[selectedSerialPort] =  new Serial(this, Serial.list()[selectedSerialPort], 38400);
     }
     catch(Exception e)
     {
       printlnDebug("Error Opening Serial Port"+serialList.getSelectedText());
-      sPort = null;
-    
+      sPorts[selectedSerialPort] = null;
       displayError("Unable to open selected serial port" + serialList.getSelectedText() +". See link for possible solutions.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
     }
   }
     
   //check to see if the serial port connection has been made
-  if (sPort != null)
+  if (sPorts[selectedSerialPort] != null)
   {
-  
+    
     //try to communicate with arm
     if (checkArmStartup() == true)
     {       
@@ -133,8 +132,9 @@ public void connectButton_click(GButton source, GEvent event)
     //if arm is not found return an error
     else  
     {
-      sPort.stop();
-      sPort = null;
+      sPorts[selectedSerialPort].stop();
+//      sPorts.get(selectedSerialPort) = null;
+      sPorts[selectedSerialPort] = null;
       printlnDebug("No Arm Found on port "+serialList.getSelectedText()) ;
     
       displayError("No Arm found on serial port" + serialList.getSelectedText() +". Make sure power is on and the arm is connected to the computer.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
@@ -222,55 +222,35 @@ public void autoConnectButton_click(GButton source, GEvent event)
   //scan from the top of the list to the bottom, for most users the ArbotiX will be the most recently added ftdi device
   for (int i=Serial.list().length-1;i>=0;i--) 
   {
-    serialList.setSelected(i+1);
-    selectedSerialPort = i;
-    //try to connect to the current serial port
+    println("port"+i);
+    //try to connect to the port at 38400bps, otherwise show an error message
     try
     {
-      sPort = new Serial(this, Serial.list()[i], 38400);
+      sPorts[i] = new Serial(this, Serial.list()[i], 38400);
     }
     catch(Exception e)
     {
-      printlnDebug("Error Opening Serial Port for Auto Search");
-      sPort = null;
-      //no GUI error
-    }
-
-    //delayMs(100);//delay for some systems
-
-
-    //check to see if the serial port connection has been made       
-    if (sPort !=null)
-    {
-
-
-      //try to communicate with arm
-      if (checkArmStartup() == true)
-      {
-        printlnDebug("Arm Found from auto search on port "+Serial.list()[i]) ;
-
-        //enable & set visible control and mode panel, enable disconnect button
-        modePanel.setVisible(true);
-        modePanel.setEnabled(true);
-        controlPanel.setVisible(true);
-        controlPanel.setEnabled(true);
-        disconnectButton.setEnabled(true);
-        break;
-      }
-
-      //if arm is not found return an error
-      else  
-      {
-        printlnDebug("No Arm Found from auto search on port "+serialList.getSelectedText()) ;
-
-        sPort.stop();
-        sPort = null;
-      }
+      printlnDebug("Error Opening Serial Port "+Serial.list()[i] + " for auto search");
+      sPorts[i] = null;
     }
   }//end interating through serial list
-
-  //id sPort is null, not port was found. Set GUI elements appropriatley.
-  if (sPort == null)
+  
+  //try to communicate with arm
+  if (checkArmStartup() == true)
+  {
+    printlnDebug("Arm Found from auto search on port "+Serial.list()[armPortIndex]) ;
+  
+    //enable & set visible control and mode panel, enable disconnect button
+    modePanel.setVisible(true);
+    modePanel.setEnabled(true);
+    controlPanel.setVisible(true);
+    controlPanel.setEnabled(true);
+    disconnectButton.setEnabled(true);
+    //break;
+  }
+  
+  //if arm is not found return an error
+  else  
   {
     //enable connect button and serial port 
     connectButton.setEnabled(true);
@@ -285,8 +265,19 @@ public void autoConnectButton_click(GButton source, GEvent event)
     disconnectButton.setAlpha(128);
     //disable & set invisible control and mode panel
 
-
     displayError("No Arm found using auto seach. Please check power and connections", "");
+  }
+     //stop all serial ports without an arm connected 
+  for (int i=0;i<numSerialPorts;i++) 
+  {      
+    //if the index being scanned is not the index of an port with an arm connected, stop/null the port
+    //if the port is already null, then it was never opened
+    if (armPortIndex != i & sPorts[i] != null)
+    {
+      printlnDebug("Stopping port "+Serial.list()[i]) ;
+      sPorts[i].stop();
+      sPorts[i] = null;
+    }
   }
 }
 

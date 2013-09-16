@@ -103,6 +103,10 @@ boolean wangkey = false;
 boolean wrotkey = false;
 boolean gkey = false;
 
+int startupWaitTime = 10000;    //time in ms for the program to wait for a response from the ArbotiX
+Serial[] sPorts = new Serial[numSerialPorts];  //array of serial ports, one for each avaialable serial port.
+
+int armPortIndex = -1; //the index of the serial port that an arm is currently connected to(relative to the list of avaialble serial ports). -1 = no arm connected
 
 
 public void setup(){
@@ -120,6 +124,9 @@ public void setup(){
   serialList.setItems(serialPortString, 0);  //add contents of srialPortString[] to the serialList GUI    
   
   prepareExitHandler();//exit handler for clearing/stopping file handler
+  
+
+
 }
 
 //Main Loop
@@ -141,8 +148,8 @@ public void draw()
     prevCommandTime = currentTime; //update the prevCommandTime timestamp , used to calulcate the time the program can next send a command
 
     
-    //check that the serial port is active
-    if(sPort != null)
+    //check that the serial port is active - if the 'armPortIndex' variable is not -1, then a port has been connected and has an arm attached
+    if(armPortIndex > -1)
     {
       //send commander packet with the current global currentOffset coordinatges
       sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  

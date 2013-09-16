@@ -59,7 +59,7 @@ byte[] readFromArm(int bytesExpected, boolean wait)
   //if the 'wait' flag is TRUE this loop will wait until the serial port has data OR it has waited more than packetRepsonseTimeout milliseconds.
   //packetRepsonseTimeout is a global variable
   
-  while(wait == true & sPort.available() < bytesExpected  & millis()-startReadingTime < packetRepsonseTimeout)
+  while(wait == true & sPorts[armPortIndex].available() < bytesExpected  & millis()-startReadingTime < packetRepsonseTimeout)
   {
      //do nothing, just waiting for a response or timeout
   }
@@ -67,9 +67,9 @@ byte[] readFromArm(int bytesExpected, boolean wait)
   for(int i =0; i < bytesExpected;i++)    
   {
     // If data is available in the serial port, continute
-    if(sPort.available() > 0)
+    if(sPorts[armPortIndex].available() > 0)
     {
-      bufferByte = byte(sPort.readChar());
+      bufferByte = byte(sPorts[armPortIndex].readChar());
       responseBytes[i] = bufferByte;
       printDebug(hex(bufferByte) + "-",2); //debug 
     }
@@ -80,7 +80,7 @@ byte[] readFromArm(int bytesExpected, boolean wait)
   }//end looking for bytes from packet
   printlnDebug(" ",2); //debug  finish line
   
-  sPort.clear();  //clear serial port for the next read
+  sPorts[armPortIndex].clear();  //clear serial port for the next read
   
   return(responseBytes);  //return serial data
 }
@@ -202,27 +202,39 @@ boolean verifyPacket(byte[] returnPacket)
 boolean checkArmStartup()
 {
   byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
+  long startTime = millis();
+  long currentTime = startTime;
+  printlnDebug("Checking for arm on startup "); 
+  while(currentTime - startTime < startupWaitTime )
+  {
+    delayMs(100);  //The ArbotiX has a delay of 50ms between starting the serial continueing the program, include an extra 10ms for other ArbotiX startup tasks
+    for(int i = 0; i< sPorts.length;i++)
+    {  
+      if(sPorts[i] != null)
+      {
+        armPortIndex = i;
+        
+        printlnDebug("Checking for arm on startup - index# " + i); 
+        sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+        returnPacket = readFromArmFast(5);//read raw data from arm, complete with wait time
+        
+        if(verifyPacket(returnPacket) == true)
+        {
+          currentArm = returnPacket[1]; //set the current arm based on the return packet
+          printlnDebug("Startup Arm #" +currentArm+ " Found"); 
+          setPositionParameters();      //set the GUI default/min/maxes and field lables
+          
+          return(true) ;                //Return a true signal to signal that an arm has been found
+        }
+      }
+    }
 
-    
-  printDebug("Checking for arm on startup - "); 
-  sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
-    
-  delayMs(100);  //The ArbotiX has a delay of 50ms between starting the serial continueing the program, include an extra 10ms for other ArbotiX startup tasks
-  
-  returnPacket = readFromArmFast(5);//read raw data from arm. Do not wait for a response packet (to facilitate fast auto search)
-  //check if the return packet is a valid arm ID packet
-  if(verifyPacket(returnPacket) == true)
-  {
-    currentArm = returnPacket[1]; //set the current arm based on the return packet
-    printlnDebug("Startup Arm #" +currentArm+ "Found"); 
-    setPositionParameters();      //set the GUI default/min/maxes and field lables
-    return(true) ;                //Return a true signal to signal that an arm has been found
-  }
-  else
-  {
-    printlnDebug("Startup No Arm Found"); 
-    return(false); //no arm found
-  }
+    currentTime = millis();
+  }  
+  armPortIndex = -1;
+  return(false);
+ 
+
 }
 
 
@@ -462,7 +474,7 @@ void delayMs(int ms)
  ******************************************************/ 
 void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, int gripper, int delta, int button, int extended)
 {
-   sPort.clear();//clear the serial port for the next round of communications
+   sPorts[armPortIndex].clear();//clear the serial port for the next round of communications
    
   //convert each positional integer into 2 bytes using intToBytes()
   byte[] xValBytes = intToBytes(x);
@@ -483,7 +495,7 @@ void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, i
     //try to write the first header byte
     try
     {
-      sPort.write(0xff);//header        
+      sPorts[armPortIndex].write(0xff);//header        
     }
     //catch an exception in case of serial port problems
     catch(Exception e)
@@ -493,22 +505,22 @@ void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, i
     }   
     if(flag == true)
     {
-      sPort.write(xValBytes[1]); //X Coord High Byte
-      sPort.write(xValBytes[0]); //X Coord Low Byte
-      sPort.write(yValBytes[1]); //Y Coord High Byte
-      sPort.write(yValBytes[0]); //Y Coord Low Byte
-      sPort.write(zValBytes[1]); //Z Coord High Byte
-      sPort.write(zValBytes[0]); //Z Coord Low Byte
-      sPort.write(wristAngleValBytes[1]); //Wrist Angle High Byte
-      sPort.write(wristAngleValBytes[0]); //Wrist Angle Low Byte
-      sPort.write(wristRotValBytes[1]); //Wrist Rotate High Byte
-      sPort.write(wristRotValBytes[0]); //Wrist Rotate Low Byte
-      sPort.write(gripperValBytes[1]); //Gripper High Byte
-      sPort.write(gripperValBytes[0]); //Gripper Low Byte
-      sPort.write(deltaValByte); //Delta Low Byte  
-      sPort.write(buttonByte); //Button byte  
-      sPort.write(extValByte); //Extended instruction  
-      sPort.write(checksum);  //checksum
+      sPorts[armPortIndex].write(xValBytes[1]); //X Coord High Byte
+      sPorts[armPortIndex].write(xValBytes[0]); //X Coord Low Byte
+      sPorts[armPortIndex].write(yValBytes[1]); //Y Coord High Byte
+      sPorts[armPortIndex].write(yValBytes[0]); //Y Coord Low Byte
+      sPorts[armPortIndex].write(zValBytes[1]); //Z Coord High Byte
+      sPorts[armPortIndex].write(zValBytes[0]); //Z Coord Low Byte
+      sPorts[armPortIndex].write(wristAngleValBytes[1]); //Wrist Angle High Byte
+      sPorts[armPortIndex].write(wristAngleValBytes[0]); //Wrist Angle Low Byte
+      sPorts[armPortIndex].write(wristRotValBytes[1]); //Wrist Rotate High Byte
+      sPorts[armPortIndex].write(wristRotValBytes[0]); //Wrist Rotate Low Byte
+      sPorts[armPortIndex].write(gripperValBytes[1]); //Gripper High Byte
+      sPorts[armPortIndex].write(gripperValBytes[0]); //Gripper Low Byte
+      sPorts[armPortIndex].write(deltaValByte); //Delta Low Byte  
+      sPorts[armPortIndex].write(buttonByte); //Button byte  
+      sPorts[armPortIndex].write(extValByte); //Extended instruction  
+      sPorts[armPortIndex].write(checksum);  //checksum
       printlnDebug("Packet Sent: 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
     }
     
