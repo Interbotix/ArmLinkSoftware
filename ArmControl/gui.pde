@@ -66,6 +66,15 @@ GButton settingsDismissButton;//dismiss the settings panel
 GCheckbox fileDebugCheckbox; //checkbox to enable debugging to file
 GCheckbox debugFileCheckbox0; //???
 
+
+GButton movePosesUp;//button 1 
+GButton newPose; //button 2
+GButton movePosesDown; //button3
+GButton analog1; //button3
+
+ArrayList<GPanel> poses;
+
+
 // **********************Setup GUI functions
 
 public void setupPanel_click(GPanel source, GEvent event) { 
@@ -127,6 +136,8 @@ public void connectButton_click(GButton source, GEvent event)
       modePanel.setEnabled(true);
       controlPanel.setVisible(true);
       controlPanel.setEnabled(true);
+      delayMs(100);//short delay 
+      setCartesian();
     }
     
     //if arm is not found return an error
@@ -152,8 +163,8 @@ public void disconnectButton_click(GButton source, GEvent event)
   //TODO: call response & check
   
   ///stop/disconnect the serial port and set sPort to null for future checks
-  sPort.stop();   
-  sPort = null;
+  sPorts[armPortIndex].stop();   
+  sPorts[armPortIndex] = null;
   
   //enable connect button and serial port 
   connectButton.setEnabled(true);
@@ -246,6 +257,8 @@ public void autoConnectButton_click(GButton source, GEvent event)
     controlPanel.setVisible(true);
     controlPanel.setEnabled(true);
     disconnectButton.setEnabled(true);
+    delayMs(200);//shot delay 
+    setCartesian();
     //break;
   }
   
@@ -335,9 +348,14 @@ public void arm90Button_click(GImageButton source, GEvent event)
 public void cartesianModeButton_click(GButton source, GEvent event) 
 { 
   printlnDebug("cartesianModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
-  
-  //set ik mode buttons to correct colors
-  source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  setCartesian();
+
+} 
+
+void setCartesian()
+{
+    //set ik mode buttons to correct colors
+  cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
@@ -361,7 +379,8 @@ public void cartesianModeButton_click(GButton source, GEvent event)
   currentMode = 1;//set mode data
   setPositionParameters();//set parameters in gui and working vars
   changeArmMode();//change arm mode
-} 
+}
+
 
 
 //change ik mode to cylindrical
@@ -824,6 +843,180 @@ public void errorPanel_Click(GPanel source, GEvent event)
 } 
 
 
+
+public void handlePanelEvents(GPanel source, GEvent event) 
+{ 
+  if(dragFlag == -1)
+  {
+     dragFlag = int(source.getText());
+  } 
+  
+  
+  if(source.isCollapsed() == false)
+  {
+    currentPose = int(source.getText());
+    for(int i = 0; i < poses.size();i++)
+    {
+      if(i != currentPose)
+      {
+        poses.get(i).setCollapsed(true);
+      }
+    }
+    
+  }
+  
+  
+}
+
+//move the list of poses up
+public void movePosesUp_click(GButton source, GEvent event) 
+{ 
+  println("movePosesUp_click1 - GButton event occured " + System.currentTimeMillis()%10000000 );
+
+  currentTopPanel++;
+  println(currentTopPanel);
+  for(int i = 0; i < poses.size();i++)
+  {
+   
+    float px = poses.get(i).getX();
+    float py= poses.get(i).getY()-panelYOffset;
+    poses.get(i).moveTo(px,py);
+ 
+    if(currentTopPanel > i)
+    {
+      poses.get(i).setVisible(false);
+    }
+     
+    else if(i - currentTopPanel >= numberPanelsDisplay)
+    {
+      poses.get(i).setVisible(false);
+    }
+ 
+    else
+    {
+      poses.get(i).setVisible(true); 
+    }
+  } 
+} //end movePosesUp_click
+
+public void movePosesDown_click(GButton source, GEvent event) 
+{
+  println("button1 - GButton event occured " + System.currentTimeMillis()%10000000 );
+  
+  if(--currentTopPanel < 0)
+  {
+    currentTopPanel = 0;
+    return;
+  } 
+  
+  for(int i = 0; i < poses.size();i++)
+  {
+    float px = poses.get(i).getX();
+    float py=panelYOffset +poses.get(i).getY();
+   
+    poses.get(i).moveTo(px,py);
+
+    poses.get(i).moveTo(px,py);
+    
+    if(currentTopPanel > i)
+    {
+      poses.get(i).setVisible(false);
+    }
+   
+    else if(i- currentTopPanel  >= numberPanelsDisplay)
+    {
+      poses.get(i).setVisible(false);
+    }
+     
+    else
+    {
+       poses.get(i).setVisible(true); 
+    }
+   
+   
+
+   
+   
+ } 
+
+
+} //_CODE_:button1:949200:
+
+
+
+public void a1_click(GButton source, GEvent event) 
+{
+  println("a1click - GButton event occured " + System.currentTimeMillis()%10000000 );
+    byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
+  int analog = 0;
+   printlnDebug("sending request for anlaog 1"); 
+        sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 200);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+        returnPacket = readFromArmFast(5);//read raw data from arm, complete with wait time
+        byte[] analogBytes = {returnPacket[3],returnPacket[2]};
+        analog = bytesToInt(analogBytes);
+        
+        printlnDebug("Return Packet" + int(returnPacket[0]) + "-" +  int(returnPacket[1]) + "-"  + int(returnPacket[2]) + "-"  + int(returnPacket[3]) + "-"  + int(returnPacket[4]));
+        printlnDebug("analog value: " + analog);
+        //if(verifyPacket(returnPacket) == true)
+       // {
+      
+          
+          
+        //}
+        
+        
+        
+}
+
+
+public void newPose_click(GButton source, GEvent event) 
+{
+  println("button2 - GButton event occured " + System.currentTimeMillis()%10000000 );
+  
+  
+  float newY = poses.get(poses.size()-1).getY() + panelYOffset ;
+  
+  poses.add(new GPanel(this, panelsX, newY, 50, 18, numPanels + ""));
+  poses.get(numPanels).setCollapsible(true);
+  poses.get(numPanels).setCollapsed(true);//there is an odd bug if this is set to 'setCollapsed(false)' where the first time you click on the panel, it jumps to the bottom. setting 'setCollapse(true) seems to  aleviate this.
+  poses.get(numPanels).setLocalColorScheme(numPanels%8);
+  
+  controlPanel.addControl(poses.get(numPanels));
+  numPanels++;
+  
+  
+  
+     if(currentTopPanel > poses.size()-1)
+   {
+     poses.get(poses.size()-1).setVisible(false);
+   }
+   
+   else if(currentTopPanel - poses.size() < -numberPanelsDisplay)
+   {
+     poses.get(poses.size()-1).setVisible(false);
+   }
+   
+   
+   else
+   {
+    
+     poses.get(poses.size()-1).setVisible(true); 
+   }
+   
+   
+   
+   
+  
+  
+} //_CODE_:button2:332945:
+
+
+
+
+
+
+
+
 //display error and link of supplied strings
 void displayError(String message, String link)
 {
@@ -1035,7 +1228,7 @@ public void createGUI() {
 
 
 //control
-  controlPanel = new GPanel(this, 5, 200, 680, 480, "Control Panel");
+  controlPanel = new GPanel(this, 5, 200, 880, 480, "Control Panel");
   controlPanel.setText("Control Panel");
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
@@ -1043,8 +1236,8 @@ public void createGUI() {
   //controlPanel.setDraggable(false);
   controlPanel.setCollapsible(false);
   
-  //controlPanel.setVisible(false);
-  //controlPanel.setEnabled(false);
+  controlPanel.setVisible(false);
+  controlPanel.setEnabled(false);
 
 
 
@@ -1056,7 +1249,7 @@ public void createGUI() {
   baseKnob.setTurnMode(1281); //???
   baseKnob.addEventHandler(this, "baseKnob_change");//set event listener
   baseKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
-  //baseKnob.setVisible(false); //???
+  baseKnob.setVisible(false); //hide base knob by defualt
 
   shoulderKnob = new GKnob(this, 13, 161, 50, 50, 1); 
   shoulderKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
@@ -1076,7 +1269,7 @@ public void createGUI() {
   elbowKnob.addEventHandler(this, "elbowKnob_change");//set event listener
   elbowKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
 
-  wristAngleKnob = new GKnob(this, 25, 30, 50, 50, 1); 
+  wristAngleKnob = new GKnob(this, 225, 30, 50, 50, 1); 
   wristAngleKnob.setTurnRange(270.0, 90.0); //set angle limits start/finish
   wristAngleKnob.setLimits(512.0, 0, 1023.0);//set value limits
   wristAngleKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
@@ -1084,8 +1277,9 @@ public void createGUI() {
   wristAngleKnob.setTurnMode(1281); //???
   wristAngleKnob.addEventHandler(this, "wristAngleKnob_change");//set event listener
   wristAngleKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
+  //wristAngleKnob.setVisible(false);
 
-  wristRotateKnob = new GKnob(this, 350, 30, 50, 50, 1); 
+  wristRotateKnob = new GKnob(this, 380, 30, 50, 50, 1); 
   wristRotateKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
   wristRotateKnob.setLimits(512.0, 0, 1023.0);//set value limits
   wristRotateKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
@@ -1389,7 +1583,41 @@ public void createGUI() {
   
   
 
+  poses = new ArrayList<GPanel>();
+  
+  poses.add(new GPanel(this, panelsX, panelsYStart, 50, 18, "0"));
+  numPanels++;
+  poses.get(0).setCollapsible(true);
+  poses.get(0).setCollapsed(true);
+  poses.get(0).setLocalColorScheme(0);
 
+  movePosesUp = new GButton(this, 700, 26, 80, 30);
+  movePosesUp.setText("upt");
+  movePosesUp.addEventHandler(this, "movePosesUp_click");
+  
+  newPose = new GButton(this, 700, 120, 80, 30);
+  newPose.setText("new");
+  newPose.addEventHandler(this, "newPose_click");
+  
+  
+  movePosesDown = new GButton(this, 700, 73, 80, 30);
+  movePosesDown.setText("Down");
+  movePosesDown.addEventHandler(this, "movePosesDown_click");
+  
+  
+  analog1 = new GButton(this, 700, 150, 80, 30);
+  analog1.setText("a1");
+  analog1.addEventHandler(this, "a1_click");
+ 
+
+
+  controlPanel.addControl(movePosesDown);
+  controlPanel.addControl(newPose);
+  controlPanel.addControl(movePosesUp);
+  controlPanel.addControl(analog1);
+  controlPanel.addControl(poses.get(0));
+  
+  
   controlPanel.addControl(xTextField);
   controlPanel.addControl(xSlider);
   controlPanel.addControl(yTextField);
@@ -1545,7 +1773,7 @@ public void createGUI() {
 void setPositionParameters()
 {
 
-  //switch to look foe aech arm
+//switch to look for aech arm
 switch(currentArm)
 {
   //pincher

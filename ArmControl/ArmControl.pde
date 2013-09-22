@@ -109,8 +109,34 @@ Serial[] sPorts = new Serial[numSerialPorts];  //array of serial ports, one for 
 int armPortIndex = -1; //the index of the serial port that an arm is currently connected to(relative to the list of avaialble serial ports). -1 = no arm connected
 
 
+
+
+
+/********DRAG AND DROP VARS*/
+int numPanels =0;
+int currentTopPanel = 0;
+int dragFlag = -1;
+int panelsX = 550;  //x coordinate for all panels
+int panelsYStart = 25;//distance between top of parent and first panel
+int panelYOffset = 25;//distance between panels
+int panelHeight = 18;//height of the panel
+int lastDraggedOverId = -1;
+int lastDraggedOverColor = -1;
+int numberPanelsDisplay = 17;
+int draggingPosition = -1;
+float draggingY = 0;
+
+  GPanel tempPanel0;
+  GPanel tempPanel1;
+  
+  GPanel tempPanel;
+
+int currentPose = -1;  //current pose that has been selected. 
+
+/***********/
+
 public void setup(){
-  size(700, 700, JAVA2D);  //draw initial screen
+  size(900, 700, JAVA2D);  //draw initial screen
   
   createGUI();   //draw GUI components defined in gui.pde
 
@@ -188,7 +214,113 @@ public void draw()
     }
     
   }
-}
+  //DRAG AND DROP CODE
+     //check if the 'dragFlag' is set
+  if(dragFlag > -1)
+  {
+    
+      int dragPanelNumber = dragFlag - currentTopPanel;  //dragPanelNumber now has the panel # (of the panel that was just dragged) relative to the panels that are currently being displayed.
+         
+      float dragPanelY = poses.get(dragFlag).getY();  //the final y coordinate of the panel that was last dragged
+      
+      int newPanelPlacement = floor((dragPanelY - panelsYStart)/25);//determine the panel #(relative to panels being shown) that the dragged panel should displace
+   
+      //set bounds for dradding panels too high/low
+      newPanelPlacement = max(0,newPanelPlacement);//for negative numbers (i.e. dragged above first panel) set new panel to '0'
+      newPanelPlacement = min(min(numberPanelsDisplay-1,poses.size())-1,newPanelPlacement);//for numbers that are too high (i.e. dragged below the last panel) set to the # of panels to display, or the size of the array list, whichever is smaller
+      println(newPanelPlacement);
+       
+       
+      if(lastDraggedOverId == -1)
+      { 
+        
+        lastDraggedOverId = newPanelPlacement + currentTopPanel;
+        lastDraggedOverColor =   poses.get(newPanelPlacement + currentTopPanel).getLocalColorScheme();
+        poses.get(newPanelPlacement + currentTopPanel).setLocalColorScheme(15);
+        
+        println("First");
+      } 
+      else if((lastDraggedOverId != (newPanelPlacement + currentTopPanel)))
+      {
+        
+        poses.get(lastDraggedOverId).setLocalColorScheme(lastDraggedOverColor);
+        println("change!" + lastDraggedOverColor+ currentTopPanel);
+        
+        lastDraggedOverId = newPanelPlacement + currentTopPanel;
+        lastDraggedOverColor =   poses.get(newPanelPlacement + currentTopPanel).getLocalColorScheme();
+        poses.get(newPanelPlacement + currentTopPanel).setLocalColorScheme(15);
+      }
+      else
+      {
+      
+       //lastDraggedOverId = newPanelPlacement + currentTopPanel;
+       //poses.get(newPanelPlacement + currentTopPanel).setLocalColorScheme(0);
+        
+      }
+      
+        
+      
+    //check is the panel that set the 'dragFlag' has stopped being dragged.
+    if(poses.get(dragFlag).isDragging() == false)
+    {
+      
+      poses.get(lastDraggedOverId).setLocalColorScheme(lastDraggedOverColor);//set color for the displaced panel
+      lastDraggedOverId = -1;//reset lastDragged vars for next iteration
+      
+      //dragFlag now contains a value corresponding to the the panel that was just being dragged
+      //
+
+
+      int lowestPanel = min(dragPanelNumber, newPanelPlacement); //figure out which panel number is lower 
+      
+      
+      
+      println("you dragged panel #" + dragPanelNumber+ "to position "+ dragPanelY  +" Which puts it at panel #"+newPanelPlacement);
+      
+      
+      //array list management
+      tempPanel0 = poses.get(dragFlag);//copy the panel that was being dragged to a temporary object
+      poses.remove(dragFlag);//remove the panel from the array list
+      poses.add(newPanelPlacement,tempPanel0);//add the panel into the array list at the position of the displaced panel
+      
+      //rebuild all of the list placement based on its correct array placement
+      for(int i = lowestPanel; i < poses.size()-currentTopPanel;i++)
+        {
+           println("i " + i);
+          poses.get(currentTopPanel+i).moveTo(panelsX, panelsYStart + (panelYOffset*i));//move the panel that was being dragged to its new position
+          poses.get(currentTopPanel+i).setText(Integer.toString(currentTopPanel+i));//set the text displayed to the same as the new placement
+          //whenever the program displaces a panel down, one panel will need to go from being visible to not being visible this will always be the 'numberPanelsDisplay'th panel
+          if(i == numberPanelsDisplay)
+          {
+            poses.get(currentTopPanel+i).setVisible(false);//set the panel that has 'dropped off' the visual plane to not visible      
+  
+          }
+        
+        }       
+ 
+      
+      
+
+    tempPanel0 = null;
+    dragFlag = -1;   
+    println("reset Flag");
+
+    }//end dragging check.          
+  }//end dragFlag check
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+}//end draw()
+
 
 /******************************************************
  *  stop()
