@@ -109,7 +109,10 @@ Serial[] sPorts = new Serial[numSerialPorts];  //array of serial ports, one for 
 int armPortIndex = -1; //the index of the serial port that an arm is currently connected to(relative to the list of avaialble serial ports). -1 = no arm connected
 
 
-
+int analogSampleTime = 333;//time between analog samples
+long lastAnalogSample = millis();//
+int nextAnalog = 0;
+int[]analogValues = new int[8];
 
 
 /********DRAG AND DROP VARS*/
@@ -133,11 +136,16 @@ float draggingY = 0;
 
 int currentPose = -1;  //current pose that has been selected. 
 
+
+ArrayList<int[]> poseData;
+int[] blankPose = new int[8]; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
+
 /***********/
 
 public void setup(){
   size(900, 700, JAVA2D);  //draw initial screen
-  
+  poseData = new ArrayList<int[]>();
+   
   createGUI();   //draw GUI components defined in gui.pde
 
   //Build Serial Port List
@@ -151,7 +159,7 @@ public void setup(){
   
   prepareExitHandler();//exit handler for clearing/stopping file handler
   
-
+ 
 
 }
 
@@ -167,53 +175,88 @@ public void draw()
   //check if
   //  -update flag is true, and a packet needs to be sent
   //  --it has been more than 'updatePeriod' ms since the last packet was sent
-  if(updateFlag == true & currentTime - prevCommandTime > updatePeriod )
+  if(currentTime - prevCommandTime > updatePeriod )
   {
-    updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
-    updateButtonByte();  //conver the current 'digital button' checkboxes into a value to be sent to the arbotix/arm
-    prevCommandTime = currentTime; //update the prevCommandTime timestamp , used to calulcate the time the program can next send a command
-
     
-    //check that the serial port is active - if the 'armPortIndex' variable is not -1, then a port has been connected and has an arm attached
-    if(armPortIndex > -1)
+    if(updateFlag == true)
     {
-      //send commander packet with the current global currentOffset coordinatges
-      sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
-   
-    /*//use this code to enable return packet checking for positional commands
-      byte[] responseBytes = new byte[5];    //byte array to hold response data
-      responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
-
-      if(verifyPacket(responseBytes) == true)
+      updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
+      updateButtonByte();  //conver the current 'digital button' checkboxes into a value to be sent to the arbotix/arm
+      prevCommandTime = currentTime; //update the prevCommandTime timestamp , used to calulcate the time the program can next send a command
+  
+      
+      //check that the serial port is active - if the 'armPortIndex' variable is not -1, then a port has been connected and has an arm attached
+      if(armPortIndex > -1)
       {
-        printlnDebug("Moved!"); 
+        //send commander packet with the current global currentOffset coordinatges
+        sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+     
+     
+     
+     
+     
+     
+     
+     
+      /*//use this code to enable return packet checking for positional commands
+        byte[] responseBytes = new byte[5];    //byte array to hold response data
+        responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
+  
+        if(verifyPacket(responseBytes) == true)
+        {
+          printlnDebug("Moved!"); 
+        }
+        else
+        {
+          printlnDebug("No Arm Found"); 
+        }*/
+          
       }
+      
+      //in normal update mode, pressing the update button signals the program to send a packet. In this
+      //case the program must set the update flag to false in order to stop new packets from being sent
+      //until the update button is pressed again. 
+      //However in autoUpdate mode, the program should not change this flag (only unchecking the auto update flag should set the flag to false)
+      if(autoUpdateCheckbox.isSelected() == false)
+      {
+        updateFlag = false;//only set the updateFlag to false if the autoUpdate flag is false
+      }
+      //use this oppurtunity to set the extended byte to 0 if autoupdate is enabled - this way the extended packet only gets sent once
       else
       {
-        printlnDebug("No Arm Found"); 
-      }*/
-        
-    }
-    
-    //in normal update mode, pressing the update button signals the program to send a packet. In this
-    //case the program must set the update flag to false in order to stop new packets from being sent
-    //until the update button is pressed again. 
-    //However in autoUpdate mode, the program should not change this flag (only unchecking the auto update flag should set the flag to false)
-    if(autoUpdateCheckbox.isSelected() == false)
-    {
-      updateFlag = false;//only set the updateFlag to false if the autoUpdate flag is false
-    }
-    //use this oppurtunity to set the extended byte to 0 if autoupdate is enabled - this way the extended packet only gets sent once
-    else
-    {
-      if(extendedByte != 0)
-      {
-        extendedByte = 0;
-        extendedTextField.setText("0");
+        if(extendedByte != 0)
+        {
+          extendedByte = 0;
+          extendedTextField.setText("0");
+        }
       }
-    }
+    }//end command code
     
+    else if(currentTime - lastAnalogSample > analogSampleTime)
+    {
+      if( currentArm != 0)
+      {
+        println("analog");
+        
+        analogValues[nextAnalog] = analogRead(nextAnalog);
+        analogLabel[nextAnalog].setText(Integer.toString(analogValues[nextAnalog]));
+
+        nextAnalog = nextAnalog+1;
+        if(nextAnalog > 7)
+        {
+          nextAnalog = 0;
+          lastAnalogSample = millis();
+        }
+        
+      }
+        
+        
+      
+    }
   }
+  
+  
+  
   //DRAG AND DROP CODE
      //check if the 'dragFlag' is set
   if(dragFlag > -1)

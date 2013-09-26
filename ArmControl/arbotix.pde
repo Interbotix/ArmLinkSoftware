@@ -667,3 +667,24 @@ boolean getArmInfo()
   
 }
 
+
+
+
+int analogRead(int analogPort)
+{
+  byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
+  int analog = 0;
+  printlnDebug("sending request for anlaog 1"); 
+  int analogExtentded = 200 + analogPort;
+  sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, analogExtentded);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+  returnPacket = readFromArmFast(5);//read raw data from arm, complete with wait time
+  byte[] analogBytes = {returnPacket[3],returnPacket[2]};
+  analog = bytesToInt(analogBytes);
+  
+  printlnDebug("Return Packet" + int(returnPacket[0]) + "-" +  int(returnPacket[1]) + "-"  + int(returnPacket[2]) + "-"  + int(returnPacket[3]) + "-"  + int(returnPacket[4]));
+  printlnDebug("analog value: " + analog);
+  
+  return(analog);
+        
+}
+

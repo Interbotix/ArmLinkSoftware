@@ -70,9 +70,18 @@ GCheckbox debugFileCheckbox0; //???
 GButton movePosesUp;//button 1 
 GButton newPose; //button 2
 GButton movePosesDown; //button3
+GButton workspaceToPose; //button 2
+GButton poseToWorkspace; //button3
+
+
+
 GButton analog1; //button3
 
 ArrayList<GPanel> poses;
+
+
+GLabel[] analogLabel = new GLabel[8];
+
 
 
 // **********************Setup GUI functions
@@ -185,7 +194,7 @@ public void disconnectButton_click(GButton source, GEvent event)
   
   //uncheck all checkboxes to reset
   autoUpdateCheckbox.setSelected(false);
-  digitalCheckbox0.setSelected(false);
+  //digitalCheckbox0.setSelected(false);
   digitalCheckbox1.setSelected(false);
   digitalCheckbox2.setSelected(false);
   digitalCheckbox3.setSelected(false);
@@ -479,7 +488,7 @@ public int armTextFieldChange(GTextField source, GEvent event, GSlider targetSli
       if (textFieldString.charAt(i) != '-')
       {
         printlnDebug("Non Numeric Character in Textfield, reverting value", 1 );
-        source.setText(Integer.toString(currentVal));//set string to global xCurrent Value, last known good value  
+        source.setText(Integer.toString(currentVal));//set string to global Current Value, last known good value  
         return(currentVal); 
         //TODO: alternativeley the program could remove the offending character and write the string back
       }
@@ -785,54 +794,54 @@ public void digitalCheckbox0_change(GCheckbox source, GEvent event)
 {
   printlnDebug("digitalCheckbox0 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
 
-  digitalButtons[0] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  //digitalButtons[0] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
 
 public void digitalCheckbox1_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox1 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  digitalButtons[1] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[0] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 public void digitalCheckbox2_change(GCheckbox source, GEvent event) 
 {
   printlnDebug("digitalCheckbox2 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  digitalButtons[2] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[1] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
 
 public void digitalCheckbox3_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox3 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  digitalButtons[3] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[2] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 }
 
 
 public void digitalCheckbox4_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox4 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  digitalButtons[4] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[3] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
 
 public void digitalCheckbox5_change(GCheckbox source, GEvent event) 
 { 
   printlnDebug("digitalCheckbox5 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  digitalButtons[5] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[4] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
 
 public void digitalCheckbox6_change(GCheckbox source, GEvent event) 
 {
   printlnDebug("digitalCheckbox6 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[5] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
 
 public void digitalCheckbox7_change(GCheckbox source, GEvent event) 
 {
   printlnDebug("digitalCheckbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  digitalButtons[7] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+  digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
 
@@ -940,9 +949,175 @@ public void movePosesDown_click(GButton source, GEvent event)
  } 
 
 
-} //_CODE_:button1:949200:
+} 
+
+//save current workspace to the selected pose
+public void workspaceToPose_click(GButton source, GEvent event) 
+{
+  int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte  };
+  
+  poseData.set(currentPose, tempPose);
+  
+  for(int i = 0; i < 8; i++)
+  {
+     print("-" + poseData.get(currentPose)[i]+"-");  
+    
+  }
+  
+  
+}
+//load selected pose to workspace
+public void poseToWorkspace_click(GButton source, GEvent event) 
+{
+//  poses.get(currentPose)[0];
+
+int mask = 0;
+
+xCurrent = poseData.get(currentPose)[0];//set the value that will be sent
+xTextField.setText(Integer.toString(xCurrent));//set the text field
+xSlider.setValue(xCurrent);//set gui elemeent to same value
+
+yCurrent = poseData.get(currentPose)[1];//set the value that will be sent
+yTextField.setText(Integer.toString(yCurrent));//set the text field
+ySlider.setValue(yCurrent);//set gui elemeent to same value
 
 
+zCurrent = poseData.get(currentPose)[2];//set the value that will be sent
+zTextField.setText(Integer.toString(zCurrent));//set the text field
+zSlider.setValue(zCurrent);//set gui elemeent to same value
+
+wristAngleCurrent = poseData.get(currentPose)[3];//set the value that will be sent
+wristAngleTextField.setText(Integer.toString(wristAngleCurrent));//set the text field
+wristAngleKnob.setValue(wristAngleCurrent);//set gui elemeent to same value
+
+wristRotateCurrent = poseData.get(currentPose)[4];//set the value that will be sent
+wristRotateTextField.setText(Integer.toString(wristRotateCurrent));//set the text field
+wristRotateKnob.setValue(wristRotateCurrent);//set gui elemeent to same value
+
+gripperCurrent = poseData.get(currentPose)[5];//set the value that will be sent
+gripperTextField.setText(Integer.toString(gripperCurrent));//set the text field
+gripperSlider.setValue(gripperCurrent);//set gui elemeent to same value
+
+
+
+
+deltaCurrent = poseData.get(currentPose)[6];//set the value that will be sent
+deltaTextField.setText(Integer.toString(deltaCurrent));//set the text field
+deltaSlider.setValue(deltaCurrent);//set gui elemeent to same value
+
+
+
+//extendedByte
+
+
+int buttonByteFromPose = poseData.get(currentPose)[7];
+
+ //I'm sure there's a better way to do this
+  for (int i = 7; i>=0;i--)
+  {
+    //subtract 2^i from the button byte, if the value is non-negative, then that byte was active
+    if(buttonByteFromPose - pow(2,i) >= 0 )
+    {
+      buttonByteFromPose = buttonByteFromPose - int(pow(2,i));
+      switch(i)
+      {
+        case 0:
+        digitalCheckbox1.setSelected(true);
+        digitalButtons[1] = true;
+        break;
+        
+        case 1:
+        digitalCheckbox2.setSelected(true);
+        digitalButtons[2] = true;
+        break;
+     
+        case 2:
+        digitalCheckbox3.setSelected(true);
+        digitalButtons[3] = true;
+        break;
+        
+        case 3:
+        digitalCheckbox4.setSelected(true);
+        digitalButtons[4] = true;
+        break;
+        
+        case 4:
+        digitalCheckbox5.setSelected(true);
+        digitalButtons[5] = true;
+        break;
+        
+        case 5:
+        digitalCheckbox6.setSelected(true);
+        digitalButtons[6] = true;
+        break;
+        
+        case 6:
+        digitalCheckbox7.setSelected(true);
+        digitalButtons[7] = true;
+        break;
+        /*
+        case 7:
+        digitalCheckbox7.setSelected(true);
+        digitalButtons[7] = true;
+        break;
+        */
+      }
+ 
+   }
+   else
+   {      
+     switch(i)
+      {
+        case 0:
+        digitalCheckbox1.setSelected(false);
+        digitalButtons[1] = false;
+        break;
+        
+        case 1:
+        digitalCheckbox2.setSelected(false);
+        digitalButtons[2] = false;
+        break;
+     
+        case 2:
+        digitalCheckbox3.setSelected(false);
+        digitalButtons[3] = false;
+        break;
+        
+        case 3:
+        digitalCheckbox4.setSelected(false);
+        digitalButtons[4] = false;
+        break;
+        
+        case 4:
+        digitalCheckbox5.setSelected(false);
+        digitalButtons[5] = false;
+        break;
+        
+        case 5:
+        digitalCheckbox6.setSelected(false);
+        digitalButtons[6] = false;
+        break;
+        
+        case 6:
+        digitalCheckbox7.setSelected(false);
+        digitalButtons[7] = false;
+        break;
+        /*
+        case 7:
+        digitalCheckbox7.setSelected(false);
+        digitalButtons[7] = false;
+        break;
+        */
+      }
+     
+   }
+ 
+ 
+ }
+
+
+  
+}
 
 public void a1_click(GButton source, GEvent event) 
 {
@@ -976,6 +1151,8 @@ public void newPose_click(GButton source, GEvent event)
   
   float newY = poses.get(poses.size()-1).getY() + panelYOffset ;
   
+  poseData.add(blankPose);
+  
   poses.add(new GPanel(this, panelsX, newY, 50, 18, numPanels + ""));
   poses.get(numPanels).setCollapsible(true);
   poses.get(numPanels).setCollapsed(true);//there is an odd bug if this is set to 'setCollapsed(false)' where the first time you click on the panel, it jumps to the bottom. setting 'setCollapse(true) seems to  aleviate this.
@@ -1003,7 +1180,15 @@ public void newPose_click(GButton source, GEvent event)
      poses.get(poses.size()-1).setVisible(true); 
    }
    
-   
+  for(int i = 0; i < poseData.size();i++)
+  {
+    for(int j = 0; j < (poseData.get(i).length);j++)
+    {
+       print(poseData.get(i)[j]); 
+      
+    }
+    println("");
+  }
    
    
   
@@ -1497,6 +1682,8 @@ public void createGUI() {
   digitalCheckbox0.setOpaque(false);
   digitalCheckbox0.addEventHandler(this, "digitalCheckbox0_change");
   digitalCheckbox0.setText("0");
+  digitalCheckbox0.setVisible(false);
+  digitalCheckbox0.setEnabled(false);
 
   digitalCheckbox1 = new GCheckbox(this, 32, 385, 28, 20);
   digitalCheckbox1.setOpaque(false);
@@ -1543,6 +1730,58 @@ public void createGUI() {
   digitalsLabel.setOpaque(false);
 
 
+  analogLabel[0] = new GLabel(this, 350, 400, 60, 14);
+  analogLabel[0].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[0].setText("0");
+  analogLabel[0].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[0].setOpaque(false);
+
+  analogLabel[1] = new GLabel(this, 380, 400, 60, 14);
+  analogLabel[1].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[1].setText("1");
+  analogLabel[1].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[1].setOpaque(false);
+
+  analogLabel[2] = new GLabel(this, 410, 400, 60, 14);
+  analogLabel[2].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[2].setText("2");
+  analogLabel[2].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[2].setOpaque(false);
+
+  analogLabel[3] = new GLabel(this, 440, 400, 60, 14);
+  analogLabel[3].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[3].setText("3");
+  analogLabel[3].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[3].setOpaque(false);
+
+  analogLabel[4] = new GLabel(this, 350, 420, 60, 14);
+  analogLabel[4].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[4].setText("4");
+  analogLabel[4].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[4].setOpaque(false);
+
+  analogLabel[5] = new GLabel(this, 380, 420, 60, 14);
+  analogLabel[5].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[5].setText("5");
+  analogLabel[5].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[5].setOpaque(false);
+
+  analogLabel[6] = new GLabel(this, 410, 420, 60, 14);
+  analogLabel[6].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[6].setText("6");
+  analogLabel[6].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[6].setOpaque(false);
+
+  analogLabel[7] = new GLabel(this, 440, 420, 60, 14);
+  analogLabel[7].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogLabel[7].setText("7");
+  analogLabel[7].setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogLabel[7].setOpaque(false);
+
+
+
+
+
   updateButton = new GButton(this, 5, 425, 100, 50);
   updateButton.setText("Update");
   updateButton.addEventHandler(this, "updateButton_click");
@@ -1585,6 +1824,8 @@ public void createGUI() {
 
   poses = new ArrayList<GPanel>();
   
+  poseData.add(blankPose);
+  
   poses.add(new GPanel(this, panelsX, panelsYStart, 50, 18, "0"));
   numPanels++;
   poses.get(0).setCollapsible(true);
@@ -1604,6 +1845,14 @@ public void createGUI() {
   movePosesDown.setText("Down");
   movePosesDown.addEventHandler(this, "movePosesDown_click");
   
+  workspaceToPose = new GButton(this, 700, 180, 80, 30);
+  workspaceToPose.setText("-->");
+  workspaceToPose.addEventHandler(this, "workspaceToPose_click");
+  
+  poseToWorkspace = new GButton(this, 700, 210, 80, 30);
+  poseToWorkspace.setText("<--");
+  poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
+  
   
   analog1 = new GButton(this, 700, 150, 80, 30);
   analog1.setText("a1");
@@ -1614,6 +1863,8 @@ public void createGUI() {
   controlPanel.addControl(movePosesDown);
   controlPanel.addControl(newPose);
   controlPanel.addControl(movePosesUp);
+  controlPanel.addControl(poseToWorkspace);
+  controlPanel.addControl(workspaceToPose);
   controlPanel.addControl(analog1);
   controlPanel.addControl(poses.get(0));
   
@@ -1660,6 +1911,17 @@ public void createGUI() {
   controlPanel.addControl(gripperLeftSlider);
   controlPanel.addControl(gripperRightSlider);
   //controlPanel.addControl(waitingButton);
+  controlPanel.addControl(analogLabel[0]);
+  controlPanel.addControl(analogLabel[1]);
+  controlPanel.addControl(analogLabel[2]);
+  controlPanel.addControl(analogLabel[3]);
+  controlPanel.addControl(analogLabel[4]);
+  controlPanel.addControl(analogLabel[5]);
+  controlPanel.addControl(analogLabel[6]);
+  controlPanel.addControl(analogLabel[7]);
+  
+  
+  
 
   waitingButton = new GImageButton(this, 115, 408, 100, 30, new String[] { 
     "moving.jpg", "moving.jpg", "moving.jpg"
