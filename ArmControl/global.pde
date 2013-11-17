@@ -69,6 +69,40 @@ int extendedByte = 0;  //extended byte for special instructions
 
 //DEFAULT ARM PARAMETERS 
 
+
+ //XYZ 
+int[][] armParam0X = new int[3][3];
+int[][] armParam0Y = new int[3][3];
+int[][] armParam0Z = new int[3][3];
+int[][] armParam0WristAngle = new int[3][3];
+int[][] armParam0WristRotate = new int[3][3];
+
+int[][] armParam90X = new int[3][3];
+int[][] armParam90Y = new int[3][3];
+int[][] armParam90Z = new int[3][3];
+int[][] armParam90WristAngle = new int[3][3];
+int[][] armParam90WristRotate = new int[3][3];
+
+
+
+int[][] armParamBase = new int[3][3];
+int[][] armParamBHShoulder = new int[3][3];
+int[][] armParamBHElbow = new int[3][3];
+int[][] armParamBHWristAngle = new int[3][3];
+int[][] armParamBHWristRot = new int[3][3];
+
+
+int[][] armParamGripper = new int[3][3];
+
+
+int[][] armParamWristAngle0Knob = new int[3][2];
+int[][] armParamWristAngle90Knob = new int[3][2];
+int[][] armParamWristAngleBHKnob = new int[3][2];
+int[][] armParamWristRotKnob= new int[3][2];
+
+
+
+
 //default values for the phantomX pincher. These will be loaded into the working position variables 
 //when the pincher is connected, and when modes are changed.
 int[] pincherNormalX = {0,-200,200};
@@ -89,6 +123,12 @@ int[] pincherBHWristRot = {512,0,1023};
 
 int[] pincherBHWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] pincherBHWristAngle90Knob = {90,45};//angle data for knob limits
+
+int[] pincherWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] pincherWristRotKnob = {120,60};
+
+
+
 
 //default values for the phantomX reactor. These will be loaded into the working position variables 
 //when the reactor is connected, and when modes are changed.
@@ -133,6 +173,9 @@ int[] widowBHWristRot = {512,0,1023};
 
 int[] widowBHWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] widowBHWristAngle90Knob = {90,45};//angle data for knob limits
+
+int[] widowWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] widowWristRotKnob = {120,60};
 
 
 //END DEFAULT ARM PARAMETERS 
