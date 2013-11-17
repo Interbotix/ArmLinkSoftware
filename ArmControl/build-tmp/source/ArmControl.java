@@ -1,3 +1,1618 @@
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import g4p_controls.*; 
+import processing.serial.*; 
+import java.awt.Font; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class ArmControl extends PApplet {
+
+/***********************************************************************************
+ *  }--\     InterbotiX     /--{
+ *      |    ArmControl    |
+ *   __/                    \__
+ *  |__|                    |__|
+ *
+ *  The following software will allow you to control InterbotiX Robot Arms.
+ *  ArmControl will send serial packets to the ArbotiX Robocontroller that
+ *  specify coordinates for that arm to move to. TheArbotiX robocontroller
+ *  will then do the Inverse Kinematic calculations and send commands to the
+ *  DYNAMIXEL servos to move in such a way that the end effector ends up at
+ *  the specified coordinate.
+ *
+ *  Robot Arm Compatibilty:
+ *    The ArmControl Software is desiged to work with InterbotiX Robot Arms
+ *    running the ArmControl firmware. Currently supported arms are:
+ *      1)PhantomX Pincher Robot Arm
+ *      2)PhantomX Reactor Robot Arm
+ *      3)WidowX Robot Arm
+ *
+ *  Computer Compatibility:
+ *    ArmControl can be used on any system that supports
+ *      1)Java
+ *      2)Processing 2.0
+ *      3)Java serial library (Included for Mac/Windows/Linux with processing 2.0)
+ *    ArmControl has been tested on the following systems
+ *      1)Windows XP, Vista, 7, 8
+ *      2)Mac 10.6+
+ *      3)Linux?
+ *     Binaries for these systems are available
+ *
+ *  Building:
+ *    Once Java and Processing 2.0 have been installed, you will also need to download/install
+ *    the G4p GUI library for processing.
+ *    http://sourceforge.net/projects/g4p/files/?source=navbar
+ *    
+ *    (More information on G4P can be found at http://www.lagers.org.uk/g4p/download.html )
+ *    
+ *     Notice for Mac users:
+ *       To get the Serial library to work properly you will need to issue the following commands
+ *        sudo mkdir -p /var/lock
+ *        sudo chmod 777 /var/lock
+ *
+ *
+ *  External Resources
+ *  Arm Control Setup & Documentation
+ *    http://learn.trossenrobotics.com/arbotix/arbotix-communication-controllers/31-arm-control
+ *
+ *  PhantomX Pincher Robot Arm
+ *    http://learn.trossenrobotics.com/interbotix/robot-arms/pincher-arm
+ *  PhantomX Reactor Robot Arm
+ *    http://learn.trossenrobotics.com/interbotix/robot-arms/reactor-arm
+ *  WidowX Robot Arm
+ *    http://learn.trossenrobotics.com/interbotix/robot-arms/widowx-arm
+ *
+ ***********************************************************************************/
+
+      //import g4p library for GUI elements
+ //import serial library to communicate with the ArbotiX
+       //import font
+
+Serial sPort;               //serial port object, used to connect to a serial port and send data to the ArbotiX
+
+PrintWriter debugOutput;        //output object to write to a file
+
+int numSerialPorts = Serial.list().length;                 //Number of serial ports available at startup
+String[] serialPortString = new String[numSerialPorts+1];  //string array to the name of each serial port - used for populating the drop down menu
+int selectedSerialPort;                                    //currently selected port from serialList drop down
+
+boolean debugConsole = true;      //change to 'false' to disable debuging messages to the console, 'true' to enable 
+boolean debugFile = false;        //change to 'false' to disable debuging messages to a file, 'true' to enable
+
+boolean debugGuiEvent = true;     //change to 'false' to disable GUI debuging messages, 'true' to enable
+boolean debugSerialEvent = true;     //change to 'false' to disable GUI debuging messages, 'true' to enable
+//int lf = 10;    // Linefeed in ASCII
+
+boolean debugFileCreated  = false;  //flag to see if the debug file has been created yet or not
+
+boolean enableAnalog = false; //flag to enable reading analog inputs from the Arbotix
+
+boolean updateFlag = false;     //trip flag, true when the program needs to send a serial packet at the next interval, used by both 'update' and 'autoUpdate' controls
+int updatePeriod = 33;          //minimum period between packet in Milliseconds , 33ms = 30Hz which is the standard for the commander/arm control protocol
+
+long prevCommandTime = 0;       //timestamp for the last time that the program sent a serial packet
+long heartbeatTime = 0;         //timestamp for the last time that the program received a serial packet from the Arm
+long currentTime = 0;           //timestamp for currrent time
+
+int packetRepsonseTimeout = 5000;      //time to wait for a response from the ArbotiX Robocontroller / Arm Control Protocol
+
+int currentArm = 0;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX
+int currentMode = 0;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
+int currentOrientation = 0;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
+
+String helpLink = "http://learn.trossenrobotics.com";  //link for error panel to display
+
+
+PImage logoImg;
+PImage footerImg;
+
+//booleans for key tracking
+boolean xkey = false;
+boolean ykey = false;
+boolean zkey = false;
+boolean wangkey = false;
+boolean wrotkey = false;
+boolean gkey = false;
+
+int startupWaitTime = 10000;    //time in ms for the program to wait for a response from the ArbotiX
+Serial[] sPorts = new Serial[numSerialPorts];  //array of serial ports, one for each avaialable serial port.
+
+int armPortIndex = -1; //the index of the serial port that an arm is currently connected to(relative to the list of avaialble serial ports). -1 = no arm connected
+
+
+int analogSampleTime = 333;//time between analog samples
+long lastAnalogSample = millis();//
+int nextAnalog = 0;
+int[]analogValues = new int[8];
+
+
+/********DRAG AND DROP VARS*/
+int numPanels =0;
+int currentTopPanel = 0;
+int dragFlag = -1;
+int panelsX = 550;  //x coordinate for all panels
+int panelsYStart = 25;//distance between top of parent and first panel
+int panelYOffset = 25;//distance between panels
+int panelHeight = 18;//height of the panel
+int lastDraggedOverId = -1;
+int lastDraggedOverColor = -1;
+int numberPanelsDisplay = 17;
+int draggingPosition = -1;
+float draggingY = 0;
+
+  GPanel tempPanel0;
+  GPanel tempPanel1;
+  
+  GPanel tempPanel;
+
+int currentPose = -1;  //current pose that has been selected. 
+
+
+ArrayList<int[]> poseData;
+int[] blankPose = new int[8]; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
+
+/***********/
+
+public void setup(){
+  size(900, 700, JAVA2D);  //draw initial screen
+  poseData = new ArrayList<int[]>();
+   
+  createGUI();   //draw GUI components defined in gui.pde
+
+  //Build Serial Port List
+  serialPortString[0] = "Serial Port";   //first item in the list will be "Serial Port" to act as a label
+  //iterate through each avaialable serial port  
+  for (int i=0;i<numSerialPorts;i++) 
+  {
+    serialPortString[i+1] = Serial.list()[i];  //add the current serial port to the list, add one to the index to account for the first item/label "Serial Port"
+  }
+  serialList.setItems(serialPortString, 0);  //add contents of srialPortString[] to the serialList GUI    
+  
+  prepareExitHandler();//exit handler for clearing/stopping file handler
+  
+ 
+
+}
+
+//Main Loop
+public void draw()
+{
+  background(128);//draw background color
+  image(logoImg, 5, 5, 230, 78);  //draw logo image
+  image(footerImg, 15, 770);      //draw footer image
+
+  currentTime = millis();  //get current timestamp
+  
+  //check if
+  //  -update flag is true, and a packet needs to be sent
+  //  --it has been more than 'updatePeriod' ms since the last packet was sent
+  if(currentTime - prevCommandTime > updatePeriod )
+  {
+    
+    //check if
+    //  -update flag is true, and a packet needs to be sent
+    if(updateFlag == true)
+    {
+      updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
+      updateButtonByte();  //conver the current 'digital button' checkboxes into a value to be sent to the arbotix/arm
+      prevCommandTime = currentTime; //update the prevCommandTime timestamp , used to calulcate the time the program can next send a command
+  
+      
+      //check that the serial port is active - if the 'armPortIndex' variable is not -1, then a port has been connected and has an arm attached
+      if(armPortIndex > -1)
+      {
+        //send commander packet with the current global currentOffset coordinatges
+        sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+     
+
+      /*//use this code to enable return packet checking for positional commands
+        byte[] responseBytes = new byte[5];    //byte array to hold response data
+        responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
+  
+        if(verifyPacket(responseBytes) == true)
+        {
+          printlnDebug("Moved!"); 
+        }
+        else
+        {
+          printlnDebug("No Arm Found"); 
+        }*/
+          
+      }
+      
+      //in normal update mode, pressing the update button signals the program to send a packet. In this
+      //case the program must set the update flag to false in order to stop new packets from being sent
+      //until the update button is pressed again. 
+      //However in autoUpdate mode, the program should not change this flag (only unchecking the auto update flag should set the flag to false)
+      if(autoUpdateCheckbox.isSelected() == false)
+      {
+        updateFlag = false;//only set the updateFlag to false if the autoUpdate flag is false
+      }
+      //use this oppurtunity to set the extended byte to 0 if autoupdate is enabled - this way the extended packet only gets sent once
+      else
+      {
+        if(extendedByte != 0)
+        {
+          extendedByte = 0;
+          extendedTextField.setText("0");
+        }
+      }
+    }//end command code
+    
+
+    //check if
+    //--analog retrieval is enabled
+    //it has been long enough since the last sample
+    else if(currentTime - lastAnalogSample > analogSampleTime && (true == enableAnalog))
+    {
+      if( currentArm != 0)
+      {
+        println("analog");
+        
+        analogValues[nextAnalog] = analogRead(nextAnalog);
+        analogLabel[nextAnalog].setText(Integer.toString(analogValues[nextAnalog]));
+
+        nextAnalog = nextAnalog+1;
+        if(nextAnalog > 7)
+        {
+          nextAnalog = 0;
+          lastAnalogSample = millis();
+        }
+        
+      }
+        
+        
+      
+    }
+
+  }
+  
+  
+  
+  //DRAG AND DROP CODE
+     //check if the 'dragFlag' is set
+  if(dragFlag > -1)
+  {
+    
+      int dragPanelNumber = dragFlag - currentTopPanel;  //dragPanelNumber now has the panel # (of the panel that was just dragged) relative to the panels that are currently being displayed.
+         
+      float dragPanelY = poses.get(dragFlag).getY();  //the final y coordinate of the panel that was last dragged
+      
+      int newPanelPlacement = floor((dragPanelY - panelsYStart)/25);//determine the panel #(relative to panels being shown) that the dragged panel should displace
+   
+      //set bounds for dradding panels too high/low
+      newPanelPlacement = max(0,newPanelPlacement);//for negative numbers (i.e. dragged above first panel) set new panel to '0'
+      newPanelPlacement = min(min(numberPanelsDisplay-1,poses.size())-1,newPanelPlacement);//for numbers that are too high (i.e. dragged below the last panel) set to the # of panels to display, or the size of the array list, whichever is smaller
+      println(newPanelPlacement);
+       
+       
+      if(lastDraggedOverId == -1)
+      { 
+        
+        lastDraggedOverId = newPanelPlacement + currentTopPanel;
+        lastDraggedOverColor =   poses.get(newPanelPlacement + currentTopPanel).getLocalColorScheme();
+        poses.get(newPanelPlacement + currentTopPanel).setLocalColorScheme(15);
+        
+        println("First");
+      } 
+      else if((lastDraggedOverId != (newPanelPlacement + currentTopPanel)))
+      {
+        
+        poses.get(lastDraggedOverId).setLocalColorScheme(lastDraggedOverColor);
+        println("change!" + lastDraggedOverColor+ currentTopPanel);
+        
+        lastDraggedOverId = newPanelPlacement + currentTopPanel;
+        lastDraggedOverColor =   poses.get(newPanelPlacement + currentTopPanel).getLocalColorScheme();
+        poses.get(newPanelPlacement + currentTopPanel).setLocalColorScheme(15);
+      }
+      else
+      {
+      
+       //lastDraggedOverId = newPanelPlacement + currentTopPanel;
+       //poses.get(newPanelPlacement + currentTopPanel).setLocalColorScheme(0);
+        
+      }
+      
+        
+      
+    //check is the panel that set the 'dragFlag' has stopped being dragged.
+    if(poses.get(dragFlag).isDragging() == false)
+    {
+      
+      poses.get(lastDraggedOverId).setLocalColorScheme(lastDraggedOverColor);//set color for the displaced panel
+      lastDraggedOverId = -1;//reset lastDragged vars for next iteration
+      
+      //dragFlag now contains a value corresponding to the the panel that was just being dragged
+      //
+
+
+      int lowestPanel = min(dragPanelNumber, newPanelPlacement); //figure out which panel number is lower 
+      
+      
+      
+      println("you dragged panel #" + dragPanelNumber+ "to position "+ dragPanelY  +" Which puts it at panel #"+newPanelPlacement);
+      
+      
+      //array list management
+      tempPanel0 = poses.get(dragFlag);//copy the panel that was being dragged to a temporary object
+      poses.remove(dragFlag);//remove the panel from the array list
+      poses.add(newPanelPlacement,tempPanel0);//add the panel into the array list at the position of the displaced panel
+      
+      //rebuild all of the list placement based on its correct array placement
+      for(int i = lowestPanel; i < poses.size()-currentTopPanel;i++)
+        {
+           println("i " + i);
+          poses.get(currentTopPanel+i).moveTo(panelsX, panelsYStart + (panelYOffset*i));//move the panel that was being dragged to its new position
+          poses.get(currentTopPanel+i).setText(Integer.toString(currentTopPanel+i));//set the text displayed to the same as the new placement
+          //whenever the program displaces a panel down, one panel will need to go from being visible to not being visible this will always be the 'numberPanelsDisplay'th panel
+          if(i == numberPanelsDisplay)
+          {
+            poses.get(currentTopPanel+i).setVisible(false);//set the panel that has 'dropped off' the visual plane to not visible      
+  
+          }
+        
+        }       
+ 
+      
+      
+
+    tempPanel0 = null;
+    dragFlag = -1;   
+    println("reset Flag");
+
+    }//end dragging check.          
+  }//end dragFlag check
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+}//end draw()
+
+
+/******************************************************
+ *  stop()
+ *
+ *  Tasks to perform on end of program
+ ******************************************************/ 
+public void stop()
+{
+  
+ debugOutput.flush(); // Writes the remaining data to the file
+ debugOutput.close(); // Finishes the file 
+        
+}
+
+
+/******************************************************
+ *  prepareExitHandler()
+ *
+ *  Tasks to perform on end of program
+ * https://forum.processing.org/topic/run-code-on-exit
+ ******************************************************/ 
+private void prepareExitHandler () {
+  Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+    public void run () 
+    {
+      if(debugFileCreated == true)
+      {
+        debugOutput.flush(); // Writes the remaining data to the file
+        debugOutput.close(); // Finishes the file         
+      }  
+  }
+  }));
+}
+
+/******************************************************
+ *  printlnDebug()
+ *
+ *  function used to easily enable/disable degbugging
+ *  enables/disables debugging to the console
+ *  prints a line to the output
+ *
+ *  Parameters:
+ *    String message
+ *      string to be sent to the debugging method
+ *    int type
+ *        Type of event
+ *         type 0 = normal program message
+ *         type 1 = GUI event
+ *         type 2 = serial packet 
+ *  Globals Used:
+ *      boolean debugGuiEvent
+ *      boolean debugConsole
+ *      boolean debugFile
+ *      PrintWriter debugOutput
+ *      boolean debugFileCreated
+ *  Returns: 
+ *    void
+ ******************************************************/ 
+public void printlnDebug(String message, int type)
+{
+   if(debugConsole == true)
+   {
+      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      {
+        println(message); 
+      }
+   }
+
+  if(debugFile == true)
+  {
+    
+      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      {
+        
+        if(debugFileCreated == false)
+        {
+          debugOutput = createWriter("debugArmControl.txt");
+          debugOutput.println("Started at "+ day() +"-"+ month() +"-"+ year() +" "+ hour() +":"+ minute() +"-"+ second() +"-"); 
+          debugFileCreated = true;
+        }
+
+    
+        debugOutput.println(message); 
+       
+      }
+      
+    
+  }
+  
+
+
+}
+
+//wrapper for printlnDebug(String, int)
+//assume normal behavior, message type = 0
+public void printlnDebug(String message)
+{
+  printlnDebug(message, 0);
+}
+
+/******************************************************
+ *  printlnDebug()
+ *
+ *  function used to easily enable/disable degbugging
+ *  enables/disables debugging to the console
+ *  prints normally to the output
+ *
+ *  Parameters:
+ *    String message
+ *      string to be sent to the debugging method
+ *    int type
+ *        Type of event
+ *         type 0 = normal program message
+ *         type 1 = GUI event
+ *         type 2 = serial packet 
+ *  Globals Used:
+ *      boolean debugGuiEvent
+ *      boolean debugConsole
+ *      boolean debugFile
+ *      PrintWriter debugOutput
+ *      boolean debugFileCreated
+ *  Returns: 
+ *    void
+ ******************************************************/ 
+public void printDebug(String message, int type)
+{
+   if(debugConsole == true)
+   {
+      if((type == 1 & debugGuiEvent == true)  | type == 2)
+      {
+        print(message); 
+      }
+   }
+   
+  if(debugFile == true)
+  {
+    
+      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      {
+        
+        if(debugFileCreated == false)
+        {
+          debugOutput = createWriter("debugArmControl.txt");
+          
+          debugOutput.println("Started at "+ day() +"-"+ month() +"-"+ year() +" "+ hour() +":"+ minute() +"-"+ second() ); 
+        
+          debugFileCreated = true;
+        }
+
+    
+        debugOutput.print(message); 
+       
+      }
+      
+    
+  }
+  
+}
+
+//wrapper for printlnDebug(String, int)
+//assume normal behavior, message type = 0
+public void printDebug(String message)
+{
+  printDebug(message, 0);
+  
+}
+
+/******************************************************
+ * Key combinations
+ * holding a number ket and pressing up/down will
+ * increment/decrement the corresponding field
+ *
+ * The program will use keyPressed() to log whenever a
+ * number key is being held. If later 'Up' or 'Down'
+ * is also logged, they value will be changed
+ *  keyReleased() will be used to un-log the number values
+ *  once they are released.
+ *
+ * 1-x/base
+ * 2-y/shoulder
+ * 3-z/elbow
+ * 4-wrist angle
+ * 5-wrist rotate
+ * 6-gripper
+ ******************************************************/
+public void keyPressed()
+{
+  //change 'updageFlag' variable if 'enter' is pressed
+  if(key ==ENTER)
+  {
+    updateFlag = true;
+    updateOffsetCoordinates();
+  }
+  
+  //if any of the numbers 1-6 are currently being pressed, change the state of the variable
+  if(key =='1')
+  {
+   xkey=true; 
+  }
+  if(key =='2')
+  {
+   ykey=true; 
+  }
+  if(key =='3')
+  {
+   zkey=true; 
+  }
+  if(key =='4')
+  {
+   wangkey=true; 
+  }
+  if(key =='5')
+  {
+   wrotkey=true; 
+  }
+  if(key =='6')
+  {
+   gkey=true; 
+  }
+  
+  //check for up/down keys
+  if (key==CODED)
+  {
+   //if up AND a number 1-6 are being pressed, increment the appropriate field
+   if (keyCode == UP)
+   {
+     if(xkey==true)
+     {
+       xCurrent = xCurrent + 1;
+       xTextField.setText(Integer.toString(xCurrent));
+       xSlider.setValue(xCurrent);
+     }
+     if(ykey==true)
+     {
+       yCurrent = yCurrent + 1;
+       yTextField.setText(Integer.toString(yCurrent));
+       ySlider.setValue(yCurrent);
+     }
+     if(zkey==true)
+     {
+       zCurrent = zCurrent + 1;
+       zTextField.setText(Integer.toString(zCurrent));
+       zSlider.setValue(zCurrent);
+     }
+     if(wangkey==true)
+     {
+       wristAngleCurrent = wristAngleCurrent + 1;
+       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+       wristAngleSlider.setValue(wristAngleCurrent);
+     }
+     if(wrotkey==true)
+     {
+       wristRotateCurrent = wristRotateCurrent + 1;
+       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+       wristRotateSlider.setValue(wristRotateCurrent);
+     }
+     if(gkey==true)
+     {
+       gripperCurrent = gripperCurrent + 1;
+       gripperTextField.setText(Integer.toString(gripperCurrent));
+        gripperSlider.setValue(gripperCurrent);
+     }
+   }
+     
+   //if down AND a number 1-6 are being pressed, increment the appropriate field
+   if (keyCode == DOWN)
+   {
+     if(xkey==true)
+     {
+       xCurrent = xCurrent - 1;
+       xTextField.setText(Integer.toString(xCurrent));
+       xSlider.setValue(xCurrent);
+     }
+     if(ykey==true)
+     {
+       yCurrent = yCurrent - 1;
+       yTextField.setText(Integer.toString(yCurrent));
+       ySlider.setValue(yCurrent);
+     }
+     if(zkey==true)
+     {
+       zCurrent = zCurrent - 1;
+       zTextField.setText(Integer.toString(zCurrent));
+       zSlider.setValue(zCurrent);
+     }
+     if(wangkey==true)
+     {
+       wristAngleCurrent = wristAngleCurrent - 1;
+       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+       wristAngleSlider.setValue(wristAngleCurrent);
+     }
+     if(wrotkey==true)
+     {
+       wristRotateCurrent = wristRotateCurrent - 1;
+       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+       wristRotateSlider.setValue(wristRotateCurrent);
+     }
+     if(gkey==true)
+     {
+       gripperCurrent = gripperCurrent - 1;
+       gripperTextField.setText(Integer.toString(gripperCurrent));
+        gripperSlider.setValue(gripperCurrent);
+     }
+   }
+   
+     
+  } 
+}
+public void keyReleased()
+{
+  
+  //change variable state when number1-6 is released
+  
+  if(key =='1')
+  {
+   xkey=false; 
+  }
+  if(key =='2')
+  {
+   ykey=false; 
+  }
+  if(key =='3')
+  {
+   zkey=false; 
+  }
+  if(key =='4')
+  {
+   wangkey=false; 
+  }
+  if(key =='5')
+  {
+   wrotkey=false; 
+  }
+  if(key =='6')
+  {
+   gkey=false; 
+  }
+  
+  
+}
+/***********************************************************************************
+ *  }--\     InterbotiX     /--{
+ *      |    ArmControl    |
+ *   __/                    \__
+ *  |__|                    |__|
+ *
+ *  arbotix.pde
+ *	
+ *	This file has several functions for interfacing with the ArbotiX robocontroller
+ *	using the ArmControl protocol. 
+ *	See 'ArmControl.pde' for building this application.
+ *
+ ***********************************************************************************/
+
+
+/******************************************************
+ *  readFromArm(int, boolean)
+ *
+ *  reads data back from the ArbotiX/Arm
+ *
+ *  Normally this is called from readFromArm(int) - 
+ *  this will block the program and make it wait 
+ * 'packetRepsonseTimeout' ms. Most of the time the program
+ *  will need to wait, as the arm is moving to a position
+ *  and will not send a response packet until it has 
+ *  finished moving to that position.
+ *  
+ *  However this will add a lot of time to the 'autoSearch' 
+ *  functionality. When the arm starts up it will immediatley send a
+ *  ID packet to identify itself so a non-waiting version is   
+ *  avaialble -  readFromArmFast(int) which is equivalent to
+ *  readFromArm(int, false)
+ *
+ *  Parameters:
+ *    int bytesExpected
+ *      # of bytes expected in the response packet
+ *    boolean wait
+ *        Whether or not to wait 'packetRepsonseTimeout' ms for a response
+ *         true = wait
+ *         false = do not wait
+ *  Globals Used:
+ *      Serial sPort
+ *      long packetRepsonseTimeout
+ *
+ *  Returns: 
+ *    byte[]  responseBytes
+ *      byte array with response data from ArbotiX/Arm
+ ******************************************************/ 
+public byte[] readFromArm(int bytesExpected, boolean wait)
+{
+  byte[] responseBytes = new byte[bytesExpected];    //byte array to hold response data
+  delayMs(100);//wait a minimum 100ms to ensure that the controller has responded - this applies to both wait==true and wait==false conditions
+  
+  byte bufferByte = 0;  //current byte that is being read
+  long startReadingTime = millis();//time that the program started looking for data
+  
+  printDebug("Incoming Raw Packet from readFromArm():",2); //debug
+  
+  //if the 'wait' flag is TRUE this loop will wait until the serial port has data OR it has waited more than packetRepsonseTimeout milliseconds.
+  //packetRepsonseTimeout is a global variable
+  
+  while(wait == true & sPorts[armPortIndex].available() < bytesExpected  & millis()-startReadingTime < packetRepsonseTimeout)
+  {
+     //do nothing, just waiting for a response or timeout
+  }
+  
+  for(int i =0; i < bytesExpected;i++)    
+  {
+    // If data is available in the serial port, continute
+    if(sPorts[armPortIndex].available() > 0)
+    {
+      bufferByte = PApplet.parseByte(sPorts[armPortIndex].readChar());
+      responseBytes[i] = bufferByte;
+      printDebug(hex(bufferByte) + "-",2); //debug 
+    }
+    else
+    {
+      printDebug("NO BYTE-");//debug
+    }
+  }//end looking for bytes from packet
+  printlnDebug(" ",2); //debug  finish line
+  
+  sPorts[armPortIndex].clear();  //clear serial port for the next read
+  
+  return(responseBytes);  //return serial data
+}
+
+
+//wrapper for readFromArm(int, boolean)
+//assume normal behavior, wait = true
+public byte[] readFromArm(int bytesExpected)
+{
+  return(readFromArm(bytesExpected,true));
+}
+
+
+//wrapper for readFromArm(int, boolean)
+//wait = false. Used for autosearch/startup
+public byte[] readFromArmFast(int bytesExpected)
+{
+  return(readFromArm(bytesExpected,false));
+}
+
+
+
+
+/******************************************************
+ *  verifyPacket(int, boolean)
+ *
+ *  verifies a packet received from the ArbotiX/Arm
+ *
+ *  This function will do the following to verify a packet
+ *  -calculate a local checksum and compare it to the
+ *    transmitted checksum 
+ *  -check the error byte for any data 
+ *  -check that the armID is supported by this program
+ *
+ *  Parameters:
+ *    byte[]  returnPacket
+ *      byte array with response data from ArbotiX/Arm
+ *
+ *
+ *  Returns: 
+ *    boolean verifyPacket
+ *      true = packet is OK
+ *      false = problem with the packet
+ *
+ *  TODO: -Modify to return specific error messages
+ *        -Make the arm ID check modular to facilitate 
+ *         adding new arms.
+ ******************************************************/ 
+public boolean verifyPacket(byte[] returnPacket)
+{
+  int packetLength = returnPacket.length;  //length of the packet
+  int tempChecksum = 0; //int for temporary checksum calculation
+  byte localChecksum; //local checksum calculated by processing
+  
+  printDebug("Begin Packet Verification of :");
+  for(int i = 0; i < packetLength;i++)
+  {
+    printDebug(returnPacket[i]+":");
+  }
+  //check header, which should always be 255/0xff
+  if(returnPacket[0] == PApplet.parseByte(255))
+  {  
+      //iterate through bytes # 1 through packetLength-1 (do not include header(0) or checksum(packetLength)
+      for(int i = 1; i<packetLength-1;i++)
+      {
+        tempChecksum = PApplet.parseInt(returnPacket[i]) + tempChecksum;//add byte value to checksum
+      }
+  
+      localChecksum = PApplet.parseByte(~(tempChecksum % 256)); //calculate checksum locally - modulus 256 to islotate bottom byte, then invert(~)
+      
+      //check if calculated checksum matches the one in the packet
+      if(localChecksum == returnPacket[packetLength-1])
+      {
+        //check is the error packet is 0, which indicates no error
+        if(returnPacket[3] == 0)
+        {
+          //check that the arm id packet is a valid arm
+          if(returnPacket[1] == 1 | returnPacket[1] == 2 |returnPacket[1] == 3)
+          {
+            printlnDebug("verifyPacket Success!");
+            return(true);
+          }
+          else {printlnDebug("verifyPacket Error: Invalid Arm Detected! Arm ID:"+returnPacket[1]);}
+        }
+        else {printlnDebug("verifyPacket Error: Error Packet Reports:"+returnPacket[3]);}
+      }
+      else {printlnDebug("verifyPacket Error: Checksum does not match: Returned:"+ returnPacket[packetLength-1] +" Calculated:"+localChecksum );}
+  }
+  else {printlnDebug("verifyPacket Error: No Header!");}
+
+  return(false);
+
+}
+
+/******************************************************
+ *  checkArmStartup()
+ *
+ *  function used to check for the presense of a 
+ *  ArbotiX/Arm on a serial port. This function should
+ *  be called directly after a serial port has opened -
+ *  opening a serial port over a USB-FTDI device will
+ *  reset the ArbotiX, and the first thing the ArbotiX
+ *  will do is send a standard Arm ID packet. This function
+ *  looks specifically for that packet
+ *  This function also sets the initial Global 'currenArm'
+ *
+ *  Parameters:
+ *    None
+ *
+ *  Globals used:
+ *    int currentArm
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been detected on current serial port
+ *      false = no arm detected on current serial port
+ *
+ ******************************************************/ 
+public boolean checkArmStartup()
+{
+  byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
+  long startTime = millis();
+  long currentTime = startTime;
+  printlnDebug("Checking for arm on startup "); 
+  while(currentTime - startTime < startupWaitTime )
+  {
+    delayMs(100);  //The ArbotiX has a delay of 50ms between starting the serial continueing the program, include an extra 10ms for other ArbotiX startup tasks
+    for(int i = 0; i< sPorts.length;i++)
+    {  
+      if(sPorts[i] != null)
+      {
+        armPortIndex = i;
+        
+        printlnDebug("Checking for arm on startup - index# " + i); 
+        sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+        returnPacket = readFromArmFast(5);//read raw data from arm, complete with wait time
+        
+        if(verifyPacket(returnPacket) == true)
+        {
+          currentArm = returnPacket[1]; //set the current arm based on the return packet
+          printlnDebug("Startup Arm #" +currentArm+ " Found"); 
+          setPositionParameters();      //set the GUI default/min/maxes and field lables
+          
+          return(true) ;                //Return a true signal to signal that an arm has been found
+        }
+      }
+    }
+
+    currentTime = millis();
+  }  
+  armPortIndex = -1;
+  return(false);
+ 
+
+}
+
+
+/******************************************************
+ *  isArmConnected()
+ *
+ *  generic function to check for the presence of an arm
+ *  during normal operation.
+ *
+ *  Parameters:
+ *    None
+ *
+ *  Globals used:
+ *    int currentArm
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been detected on current serial port
+ *      false = no arm detected on current serial port
+ *
+ ******************************************************/ 
+public boolean isArmConnected()
+{  
+  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
+ 
+  printlnDebug("Checking for arm -  sending packet"); 
+  sendCommanderPacket(0, 200, 200, 0, 512, 256, 128, 0, 112);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+  
+  returnPacket = readFromArm(5);//read raw data from arm, complete with wait time
+
+  if(verifyPacket(returnPacket) == true)
+  {
+    printlnDebug("Arm Found"); 
+    return(true) ;
+  }
+  else
+  {
+    printlnDebug("No Arm Found"); 
+    return(false); 
+  }
+}
+
+/******************************************************
+ *  putArmToSleep()
+ *
+ *  function to put the arm to sleep. This will move 
+ *  the arm to a 'rest' position and then turn the 
+ * torque off for the servos
+ *
+ *  Parameters:
+ *    None
+ *
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been put to sleep
+ *      false = no return packet was detected from the arm.
+ *
+ ******************************************************/ 
+public boolean putArmToSleep()
+{
+  printDebug("Attempting to put arm in sleep mode - "); 
+  sendCommanderPacket(0,0,0,0,0,0,0,0,96);//only the last/extended byte matters - 96 signals the arm to go to sleep
+  
+  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
+  returnPacket = readFromArm(5);//read raw data from arm
+  if(verifyPacket(returnPacket) == true)
+  {
+    printlnDebug("Sleep mode success!"); 
+    return(true) ;
+  }
+  else
+  {
+    printlnDebug("Sleep mode-No return packet detected"); 
+    displayError("There was a problem putting the arm in sleep mode","");
+    return(false); 
+  }
+}
+
+
+/******************************************************
+ *  changeArmMode()
+ *
+ *  sends a packet to set the arms mode and orientation
+ *  based on the global mode and orientation values
+ *  This function will send a packet with the extended 
+ *  byte coresponding to the correct IK mode and wrist 
+ *  orientation. The arm will move from its current 
+ *  position to the 'home' position for the current 
+ *  mode.
+ *  Backhoe mode does not have different straight/
+ *  90 degree modes.
+ *  
+ *  Extended byte - Mode 
+ *  32 - cartesian, straight mode
+ *  40 - cartesian, 90 degree mode
+ *  48 - cylindrical, straight mode
+ *  56 - cylindrical, 90 degree mode
+ *  64 - backhoe
+ *  
+ *  Parameters:
+ *    None
+ *
+ *  Globals used:
+ *    currentMode
+ *    currentOrientation
+ *
+ *  Returns: 
+ *    boolean 
+ *      true = arm has been put in the mode correctly
+ *      false = no return packet was detected from the arm.
+ *
+ ******************************************************/ 
+public boolean changeArmMode()
+{
+  
+  byte[] returnPacket = new byte[5];//return id packet is 5 bytes long
+  
+ //switch based on the current mode
+ switch(currentMode)
+  {
+    //cartesian mode case
+    case 1:
+      //switch based on the current orientation
+      switch(currentOrientation)
+      {
+        case 1:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,32);//only the last/extended byte matters, 32 = cartesian, straight mode
+          printDebug("Setting Arm to Cartesian IK mode, Gripper Angle Straight - "); 
+          break;
+        case 2:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,40);//only the last/extended byte matters, 40 = cartesian, 90 degree mode
+          printDebug("Setting Arm to Cartesian IK mode, Gripper Angle 90 degree - "); 
+          break;
+      }//end orientation switch
+      break;//end cartesian mode case
+      
+    //cylindrical mode case
+    case 2:
+      //switch based on the current orientation
+      switch(currentOrientation)
+      {
+        case 1:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,48);//only the last/extended byte matters, 48 = cylindrical, straight mode
+          printDebug("Setting Arm to Cylindrical IK mode, Gripper Angle Straight - "); 
+          break;
+        case 2:
+          sendCommanderPacket(0,0,0,0,0,0,0,0,56);//only the last/extended byte matters, 56 = cylindrical, 90 degree mode
+          printDebug("Setting Arm to Cylindrical IK mode, Gripper Angle 90 degree - "); 
+          break;
+      }//end orientation switch
+      break;//end cylindrical mode case
+
+    //backhoe mode case
+    case 3:
+      sendCommanderPacket(0,0,0,0,0,0,0,0,64);//only the last/extended byte matters, 64 = backhoe
+          printDebug("Setting Arm to Backhoe IK mode - "); 
+      break;//end backhoe mode case
+  } 
+  
+  returnPacket = readFromArm(5);//read raw data from arm
+  if(verifyPacket(returnPacket) == true)
+  {
+    printlnDebug("Response succesful! Arm mode changed"); 
+    return(true) ;
+  }
+  else
+  {
+    printlnDebug("No Response - Failure?"); 
+    
+    displayError("There was a problem setting the arm mode","");
+    
+    return(false); 
+  }
+  
+}
+
+/******************************************************
+ *  delayMs(int)
+ *
+ *  function waits/blocks the program for 'ms' milliseconds
+ *  Used for very short delays where the program only needs
+ *  to wait and does not need to execute code
+ *  
+ *  Parameters:
+ *    int ms
+ *      time, in milliseconds to wait
+ *  Returns: 
+ *    void
+ ******************************************************/ 
+public void delayMs(int ms)
+{
+  
+  int time = millis();  //time that the program starts the loop
+  while(millis()-time < ms)
+  {
+     //loop/do nothing until the different between the current time and 'time'
+  }
+}
+
+
+/******************************************************
+ *  sendCommanderPacket(int, int, int, int, int, int, int, int, int)
+ *
+ *  This function will send a commander style packet 
+ *  the ArbotiX/Arm. This packet has 9 bytes and includes
+ *  positional data, button data, and extended instructions.
+ *  This function is often used with the function
+ *  readFromArm()    
+ *  to verify the packet was received correctly
+ *   
+ *  Parameters:
+ *    int x
+ *      offset X value (cartesian mode), or base value(Cylindrical and backhoe mode) - will be converted into 2 bytes
+ *    int y
+ *        Y Value (cartesian and cylindrical mode) or shoulder value(backhoe mode) - will be converted into 2 bytes
+ *    int z
+ *        Z Value (cartesian and cylindrical mode) or elbow value(backhoe mode) - will be converted into 2 bytes
+ *    int wristAngle
+ *      offset wristAngle value(cartesian and cylindrical mode) or wristAngle value (backhoe mode) - will be converted into 2 bytes
+ *    int wristRotate
+ *      offset wristRotate value(cartesian and cylindrical mode) or wristRotate value (backhoe mode) - will be converted into 2 bytes
+ *    int gripper
+ *      Gripper Value(All modes) - will be converted into 2 bytes
+ *    int delta
+ *      delta(speed) value (All modes) - will be converted into 1 byte
+ *    int button
+ *      digital button values (All modes) - will be converted into 1 byte
+ *    int extended
+ *       value for extended instruction / special instruction - will be converted into 1 byte
+ *
+ *  Global used: sPort
+ *
+ *  Return: 
+ *    Void
+ *
+ ******************************************************/ 
+public void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, int gripper, int delta, int button, int extended)
+{
+   sPorts[armPortIndex].clear();//clear the serial port for the next round of communications
+   
+  //convert each positional integer into 2 bytes using intToBytes()
+  byte[] xValBytes = intToBytes(x);
+  byte[] yValBytes = intToBytes(y);
+  byte[] zValBytes =  intToBytes(z);
+  byte[] wristRotValBytes = intToBytes(wristRotate);
+  byte[] wristAngleValBytes = intToBytes(wristAngle);
+  byte[] gripperValBytes = intToBytes(gripper);
+  //cast int to bytes
+  byte buttonByte = PApplet.parseByte(button);
+  byte extValByte = PApplet.parseByte(extended);
+  byte deltaValByte = PApplet.parseByte(delta);
+  boolean flag = true;
+  //calculate checksum - add all values, take lower byte (%256) and invert result (~). you can also invert results by (255-sum)
+  byte checksum = (byte)(~(xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValByte + buttonByte+extValByte)%256);
+
+  //send commander style packet. Following labels are for cartesian mode, see function comments for clyindrical/backhoe mode
+    //try to write the first header byte
+    try
+    {
+      sPorts[armPortIndex].write(0xff);//header        
+    }
+    //catch an exception in case of serial port problems
+    catch(Exception e)
+    {
+       printlnDebug("Error: packet not sent: " + e + ": 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
+       flag = false;
+    }   
+    if(flag == true)
+    {
+      sPorts[armPortIndex].write(xValBytes[1]); //X Coord High Byte
+      sPorts[armPortIndex].write(xValBytes[0]); //X Coord Low Byte
+      sPorts[armPortIndex].write(yValBytes[1]); //Y Coord High Byte
+      sPorts[armPortIndex].write(yValBytes[0]); //Y Coord Low Byte
+      sPorts[armPortIndex].write(zValBytes[1]); //Z Coord High Byte
+      sPorts[armPortIndex].write(zValBytes[0]); //Z Coord Low Byte
+      sPorts[armPortIndex].write(wristAngleValBytes[1]); //Wrist Angle High Byte
+      sPorts[armPortIndex].write(wristAngleValBytes[0]); //Wrist Angle Low Byte
+      sPorts[armPortIndex].write(wristRotValBytes[1]); //Wrist Rotate High Byte
+      sPorts[armPortIndex].write(wristRotValBytes[0]); //Wrist Rotate Low Byte
+      sPorts[armPortIndex].write(gripperValBytes[1]); //Gripper High Byte
+      sPorts[armPortIndex].write(gripperValBytes[0]); //Gripper Low Byte
+      sPorts[armPortIndex].write(deltaValByte); //Delta Low Byte  
+      sPorts[armPortIndex].write(buttonByte); //Button byte  
+      sPorts[armPortIndex].write(extValByte); //Extended instruction  
+      sPorts[armPortIndex].write(checksum);  //checksum
+      printlnDebug("Packet Sent: 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
+    }
+    
+         
+}
+
+/******************************************************
+ *  intToBytes(int)
+ *
+ *  This function will take an interger and convert it
+ *  into two bytes. These bytes can then be easily 
+ *  transmitted to the ArbotiX/Arm. Byte[0] is the low byte
+ *  and Byte[1] is the high byte
+ *   
+ *  Parameters:
+ *    int convertInt
+ *      integer to be converted to bytes
+ *  Return: 
+ *    byte[]
+ *      byte array with two bytes Byte[0] is the low byte and Byte[1] 
+ *      is the high byte
+ ******************************************************/ 
+public byte[] intToBytes(int convertInt)
+{
+  byte[] returnBytes = new byte[2]; // array that holds the two bytes to return
+  byte mask = PApplet.parseByte(255);          //mask for the low byte (255/0xff)
+  returnBytes[0] =PApplet.parseByte(convertInt & mask);//low byte - perform an '&' operation with the byte mask to remove the high byte
+  returnBytes[1] =PApplet.parseByte((convertInt>>8) & mask);//high byte - shift the byte to the right 8 bits. perform an '&' operation with the byte mask to remove any additional data
+  return(returnBytes);  //return byte array
+  
+}
+
+/******************************************************
+ *  bytesToInt(byte[])
+ *
+ *  Take two bytes and convert them into an integer
+ *   
+ *  Parameters:
+ *    byte[] convertBytes
+ *      bytes to be converted to integer
+ *  Return: 
+ *    int
+ *      integer value from 2 butes
+ ******************************************************/ 
+public int bytesToInt(byte[] convertBytes)
+{
+  return((PApplet.parseInt(convertBytes[1]<<8))+PApplet.parseInt(convertBytes[0]));//shift high byte up 8 bytes, and add it to the low byte. cast to int to ensure proper signed/unsigned behavior
+}
+
+/****************
+ *  updateOffsetCoordinates()
+ *
+ *  modifies the current global coordinate
+ *  with an appropriate offset
+ *
+ *  As the armControl software communicates in
+ *  unsigned bytes, any value that has negative
+ *  values in the GUI must be offset. This function
+ *  will add the approprate offsets based on the 
+ *  current mode of operation( global variable 'currentMode')
+ *
+ *  Parameters:
+ *    None:
+ *  Globals used:
+ *    'Current' position vars
+ *    'CurrentOffset' position vars
+ *  Return: 
+ *    void
+ ***************/
+
+public void  updateOffsetCoordinates()
+{
+  //offsets are applied based on current mode
+  switch(currentMode)
+    {
+       case 1:        
+         //x, wrist angle, and wrist rotate must be offset, all others are normal
+         xCurrentOffset = xCurrent + 512;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent + 90;
+         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+         break;
+        
+       case 2:
+       
+         //wrist angle, and wrist rotate must be offset, all others are normal
+         xCurrentOffset = xCurrent;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent + 90;
+         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+         break;
+        
+       case 3:
+       
+         //no offsets needed
+         xCurrentOffset = xCurrent;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent;
+         wristRotateCurrentOffset = wristRotateCurrent;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+        break; 
+    }  
+}
+
+/****************
+ *  updateButtonByte()
+ *
+ *  
+ *
+ *  Parameters:
+ *    None:
+ *  Globals used:
+ *    int[] digitalButtons
+ *    int digitalButtonByte
+ *  Return: 
+ *    void
+ ***************/
+
+public void updateButtonByte()
+{
+  digitalButtonByte = 0;
+   for(int i=0;i<8;i++)
+  {
+    if(digitalButtons[i] == true)
+    {
+      digitalButtonByte += pow(2,i);
+    }
+  }
+}
+
+
+//TODO//
+public boolean getArmInfo()
+{
+  return(true);
+  
+}
+
+
+
+
+public int analogRead(int analogPort)
+{
+  byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
+  int analog = 0;
+  printlnDebug("sending request for anlaog 1"); 
+  int analogExtentded = 200 + analogPort;
+  sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, analogExtentded);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '112' is the extended byte that will request an ID packet
+  returnPacket = readFromArmFast(5);//read raw data from arm, complete with wait time
+  byte[] analogBytes = {returnPacket[3],returnPacket[2]};
+  analog = bytesToInt(analogBytes);
+  
+  printlnDebug("Return Packet" + PApplet.parseInt(returnPacket[0]) + "-" +  PApplet.parseInt(returnPacket[1]) + "-"  + PApplet.parseInt(returnPacket[2]) + "-"  + PApplet.parseInt(returnPacket[3]) + "-"  + PApplet.parseInt(returnPacket[4]));
+  printlnDebug("analog value: " + analog);
+  
+  return(analog);
+        
+}
+
+
+/***********************************************************************************
+ *  }--\     InterbotiX     /--{
+ *      |    ArmControl    |
+ *   __/                    \__
+ *  |__|                    |__|
+ *
+ *  arbotix.pde
+ *  
+ *  This file has several global variables relating to the positional data for the arms.
+ *  See 'ArmControl.pde' for building this application.
+ *
+ *
+ * The following variables are named for Cartesian mode -
+ * however the data that will be held/sent will vary based on the current IK mode
+ ****************************************************************************
+ * Variable name | Cartesian Mode | Cylindrcal Mode | Backhoe Mode          |
+ *_______________|________________|_________________|_______________________|
+ *   x           |   x            |   base          |   base joint          |
+ *   y           |   y            |   y             |   shoulder joint      |
+ *   z           |   z            |   z             |   elbow joint         |
+ *   wristAngle  |  wristAngle    |  wristAngle     |   wrist angle joint   |
+ *   wristRotate |  wristeRotate  |  wristeRotate   |   wrist rotate jount  |
+ *   gripper     |  gripper       |  gripper        |   gripper joint       |
+ *   delta       |  delta         |  delta          |   n/a                 |
+********************************************************************************/
+
+
+//WORKING POSITION VARIABLES
+
+//default values and min/max , {default, min, max}
+//initially set to values for pincher in normal mode which should be safe for most arms (this shouldn't matter, as these values will get changed when an arm is connected)
+//these parameters will be loaded based on the 1)Arm type 2)IK mode 3)Wrist Angle Orientation
+int[] xParameters = {0,-200,200};//
+int[] yParameters = {200,50,240};
+int[] zParameters = {200,20,250};
+int[] wristAngleParameters = {0,-90,90};
+int[] wristRotateParameters = {0,-512,511};
+int[] gripperParameters = {256,0,512};
+int[] deltaParameters = {125,0,256};
+
+//values for the current value directly from the GUI element. These are updated by the slider/text boxes
+int xCurrent = xParameters[0]; //current x value in text field/slider
+int yCurrent = yParameters[0]; //current y value in text field/slider
+int zCurrent = zParameters[0]; //current z value in text field/slider
+int wristAngleCurrent = wristAngleParameters[0]; //current Wrist Angle value in text field/slider
+int wristRotateCurrent = wristRotateParameters[0]; //current  Wrist Rotate value in text field/slider
+int gripperCurrent = gripperParameters[0]; //current Gripper value in text field/slider
+int deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
+
+//offset values to be send to the ArbotiX/Arm. whether or not these values get offsets depends on the current mode
+//it will be possible for the 'Current' value to be the same as the 'currentOffset' value.
+// see updateOffsetCoordinates()
+int xCurrentOffset = xParameters[0]; //current x value to be send to ArbotiX/Arm
+int yCurrentOffset = yParameters[0]; //current y value to be send to ArbotiX/Arm
+int zCurrentOffset = zParameters[0]; //current z value to be send to ArbotiX/Arm
+int wristAngleCurrentOffset = wristAngleParameters[0]; //current Wrist Angle value to be send to ArbotiX/Arm
+int wristRotateCurrentOffset = wristRotateParameters[0]; //current  Wrist Rotate value to be send to ArbotiX/Arm
+int gripperCurrentOffset = gripperParameters[0]; //current Gripper value to be send to ArbotiX/Arm
+int deltaCurrentOffset = deltaParameters[0]; //current delta value to be send to ArbotiX/Arm
+
+boolean[] digitalButtons = {false,false,false,false,false,false,false,false};  //array of 8 boolean to hold the current states of the checkboxes that correspond to the digital i/o
+int digitalButtonByte;//int will hold the button byte (will be cast to byte later)
+
+int extendedByte = 0;  //extended byte for special instructions
+
+
+//END WORKING POSITION VARIABLES
+
+//DEFAULT ARM PARAMETERS 
+
+
+ //XYZ 
+int[][] armParam0X = new int[3][3];
+int[][] armParam0Y = new int[3][3];
+int[][] armParam0Z = new int[3][3];
+int[][] armParam0WristAngle = new int[3][3];
+int[][] armParam0WristRotate = new int[3][3];
+
+int[][] armParam90X = new int[3][3];
+int[][] armParam90Y = new int[3][3];
+int[][] armParam90Z = new int[3][3];
+int[][] armParam90WristAngle = new int[3][3];
+int[][] armParam90WristRotate = new int[3][3];
+
+
+
+int[][] armParamBase = new int[3][3];
+int[][] armParamBHShoulder = new int[3][3];
+int[][] armParamBHElbow = new int[3][3];
+int[][] armParamBHWristAngle = new int[3][3];
+int[][] armParamBHWristRot = new int[3][3];
+
+
+int[][] armParamGripper = new int[3][3];
+
+
+int[][] armParamWristAngle0Knob = new int[3][2];
+int[][] armParamWristAngle90Knob = new int[3][2];
+int[][] armParamWristAngleBHKnob = new int[3][2];
+int[][] armParamWristRotKnob= new int[3][2];
+
+int[][] armParamBaseKnob = new int[3][2];
+int[][] armParamElbowKnob = new int[3][2];
+int[][] armParamShoulderKnob = new int[3][2];
+
+
+//default values for the phantomX pincher. These will be loaded into the working position variables 
+//when the pincher is connected, and when modes are changed.
+int[] pincherNormalX = {0,-200,200};
+int[] pincherNormalY = {200,50,240};
+int[] pincherNormalZ = {200,20,250};
+int[] pincherNormalWristAngle = {0,-90,90};
+int[] pincherWristRotate = {0,-512,511};
+int[] pincherGripper = {256,0,512};
+int[] pincher90X = {0,-200,200};
+int[] pincher90Y = {140,20,150};
+int[] pincher90Z = {30,10,150};
+int[] pincher90WristAngle = {-90,-90,-45};
+int[] pincherBase = {512,0,1023};
+int[] pincherBHShoulder = {512,205,815};
+int[] pincherBHElbow = {512,205,1023};
+int[] pincherBHWristAngle = {512,205,815};
+int[] pincherBHWristRot = {512,0,1023};
+
+int[] pincherBHWristAngleNormalKnob = {90,270};//angle data for knob limits
+int[] pincherBHWristAngle90Knob = {90,45};//angle data for knob limits
+
+int[] pincherWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] pincherWristRotKnob = {120,60};
+
+int[] pincherBaseKnob = {120,60};
+int[] pincherShoulderKnob = {120,60};
+int[] pincherElbowKnob = {120,60};
+
+
+
+//default values for the phantomX reactor. These will be loaded into the working position variables 
+//when the reactor is connected, and when modes are changed.
+int[] reactorNormalX = {0,-300,300};
+int[] reactorNormalY = {200,50,350};
+int[] reactorNormalZ = {200,20,250};
+int[] reactorNormalWristAngle = {0,-90,90};
+int[] reactorWristRotate = {0,-512,511};
+int[] reactorGripper = {256,0,512};
+int[] reactor90X = {0,-300,300};
+int[] reactor90Y = {150,20,140};
+int[] reactor90Z = {30,10,150};
+int[] reactor90WristAngle = {-90,-90,-45};
+int[] reactorBase = {512,0,1023};
+int[] reactorBHShoulder = {512,205,810};
+int[] reactorBHElbow = {512,210,900};
+int[] reactorBHWristAngle = {512,200,830};
+int[] reactorBHWristRot = {512,0,1023};
+
+int[] reactorWristAngleNormalKnob = {270,90};//angle data for knob limits
+int[] reactorWristAngle90Knob = {90,135};//angle data for knob limits
+int[] reactorWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] reactorWristRotKnob = {120,60};
+int[] reactorBaseKnob = {120,60};
+int[] reactorShoulderKnob = {120,60};
+int[] reactorElbowKnob = {120,60};
+
+
+
+//default values for the widowx. These will be loaded into the working position variables 
+//when the widowx is connected, and when modes are changed.
+int[] widowNormalX = {0,-300,300};
+int[] widowNormalY = {200,50,400};
+int[] widowNormalZ = {200,20,350};
+int[] widowNormalWristAngle = {0,-90,90};
+int[] widowWristRotate = {0,-512,511};
+int[] widowGripper = {256,0,512};
+int[] widow90X = {0,-300,300};
+int[] widow90Y = {150,20,250};
+int[] widow90Z = {30,10,200};
+int[] widow90WristAngle = {-90,-90,-45};
+int[] widowBase = {2048,0,4095};
+int[] widowBHShoulder = {2048,1024,3072};
+int[] widowBHElbow = {2048,1024,3072};
+int[] widowBHWristAngle = {2048,1024,3072};
+int[] widowBHWristRot = {512,0,1023};
+
+int[] widowBHWristAngleNormalKnob = {90,270};//angle data for knob limits
+int[] widowBHWristAngle90Knob = {90,135};//angle data for knob limits
+
+int[] widowWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] widowWristRotKnob = {120,60};
+
+int[] widowBaseKnob = {0,360};
+int[] widowShoulderKnob = {0,360};
+int[] widowElbowKnob = {0,360};
+
+
+//END DEFAULT ARM PARAMETERS 
+
 /***********************************************************************************
  *  }--\     InterbotiX     /--{
  *      |    ArmControl    |
@@ -361,7 +1976,7 @@ public void cartesianModeButton_click(GButton source, GEvent event)
 
 } 
 
-void setCartesian()
+public void setCartesian()
 {
     //set ik mode buttons to correct colors
   cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
@@ -499,7 +2114,7 @@ public int armTextFieldChange(GTextField source, GEvent event, GSlider targetSli
   //only write value to slider/global if the enter key is pressed or focus is lost on the text field
   if (event == GEvent.ENTERED | event == GEvent.LOST_FOCUS)
   {
-    textFieldValue = int(textFieldString);//take String from text field and conver it to an int
+    textFieldValue = PApplet.parseInt(textFieldString);//take String from text field and conver it to an int
 
     //check if the value is over the global max for this field - if so, set the textField value to the maximum value
     if (textFieldValue > maxVal)
@@ -597,7 +2212,7 @@ public void extendedTextField_change(GTextField source, GEvent event)
   if (event == GEvent.ENTERED | event == GEvent.LOST_FOCUS)
   {
     printlnDebug("Change Extended Byte");
-    extendedByte = int(textFieldString);//take String from text field and conver it to an int
+    extendedByte = PApplet.parseInt(textFieldString);//take String from text field and conver it to an int
 
     //check if the value is over the global max for this field - if so, set the textField value to the maximum value
     if (extendedByte > 255)
@@ -857,13 +2472,13 @@ public void handlePanelEvents(GPanel source, GEvent event)
 { 
   if(dragFlag == -1)
   {
-     dragFlag = int(source.getText());
+     dragFlag = PApplet.parseInt(source.getText());
   } 
   
   
   if(source.isCollapsed() == false)
   {
-    currentPose = int(source.getText());
+    currentPose = PApplet.parseInt(source.getText());
     for(int i = 0; i < poses.size();i++)
     {
       if(i != currentPose)
@@ -1018,7 +2633,7 @@ int buttonByteFromPose = poseData.get(currentPose)[7];
     //subtract 2^i from the button byte, if the value is non-negative, then that byte was active
     if(buttonByteFromPose - pow(2,i) >= 0 )
     {
-      buttonByteFromPose = buttonByteFromPose - int(pow(2,i));
+      buttonByteFromPose = buttonByteFromPose - PApplet.parseInt(pow(2,i));
       switch(i)
       {
         case 0:
@@ -1130,7 +2745,7 @@ public void a1_click(GButton source, GEvent event)
         byte[] analogBytes = {returnPacket[3],returnPacket[2]};
         analog = bytesToInt(analogBytes);
         
-        printlnDebug("Return Packet" + int(returnPacket[0]) + "-" +  int(returnPacket[1]) + "-"  + int(returnPacket[2]) + "-"  + int(returnPacket[3]) + "-"  + int(returnPacket[4]));
+        printlnDebug("Return Packet" + PApplet.parseInt(returnPacket[0]) + "-" +  PApplet.parseInt(returnPacket[1]) + "-"  + PApplet.parseInt(returnPacket[2]) + "-"  + PApplet.parseInt(returnPacket[3]) + "-"  + PApplet.parseInt(returnPacket[4]));
         printlnDebug("analog value: " + analog);
         //if(verifyPacket(returnPacket) == true)
        // {
@@ -1203,7 +2818,7 @@ public void newPose_click(GButton source, GEvent event)
 
 
 //display error and link of supplied strings
-void displayError(String message, String link)
+public void displayError(String message, String link)
 {
   //grey out other panels
   setupPanel.setAlpha(128);
@@ -1234,7 +2849,7 @@ void displayError(String message, String link)
 }
 
 //hide error panel and other panels to their normal state
-void hideError()
+public void hideError()
 {
   //grey out other panels
   setupPanel.setAlpha(255);
@@ -1427,8 +3042,8 @@ public void createGUI() {
 
 
   baseKnob = new GKnob(this, 100, 30, 50, 50, 1); 
-  baseKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
-  baseKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  baseKnob.setTurnRange(120.0f, 60.0f); //set angle limits start/finish
+  baseKnob.setLimits(512.0f, 0, 1023.0f);//set value limits
   baseKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
   baseKnob.setStickToTicks(false);   //no need to stick to ticks
   baseKnob.setTurnMode(1281); //???
@@ -1437,8 +3052,8 @@ public void createGUI() {
   baseKnob.setVisible(false); //hide base knob by defualt
 
   shoulderKnob = new GKnob(this, 13, 161, 50, 50, 1); 
-  shoulderKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
-  shoulderKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  shoulderKnob.setTurnRange(120.0f, 60.0f); //set angle limits start/finish
+  shoulderKnob.setLimits(512.0f, 0, 1023.0f);//set value limits
   shoulderKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
   shoulderKnob.setStickToTicks(false);   //no need to stick to ticks
   shoulderKnob.setTurnMode(1281); //???
@@ -1446,8 +3061,8 @@ public void createGUI() {
   shoulderKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
 
   elbowKnob = new GKnob(this, 113, 161, 50, 50, 1); 
-  elbowKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
-  elbowKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  elbowKnob.setTurnRange(120.0f, 60.0f); //set angle limits start/finish
+  elbowKnob.setLimits(512.0f, 0, 1023.0f);//set value limits
   elbowKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
   elbowKnob.setStickToTicks(false);   //no need to stick to ticks
   elbowKnob.setTurnMode(1281); //???
@@ -1455,8 +3070,8 @@ public void createGUI() {
   elbowKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
 
   wristAngleKnob = new GKnob(this, 225, 30, 50, 50, 1); 
-  wristAngleKnob.setTurnRange(270.0, 90.0); //set angle limits start/finish
-  wristAngleKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  wristAngleKnob.setTurnRange(270.0f, 90.0f); //set angle limits start/finish
+  wristAngleKnob.setLimits(512.0f, 0, 1023.0f);//set value limits
   wristAngleKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
   wristAngleKnob.setStickToTicks(false);   //no need to stick to ticks
   wristAngleKnob.setTurnMode(1281); //???
@@ -1465,8 +3080,8 @@ public void createGUI() {
   //wristAngleKnob.setVisible(false);
 
   wristRotateKnob = new GKnob(this, 380, 30, 50, 50, 1); 
-  wristRotateKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
-  wristRotateKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  wristRotateKnob.setTurnRange(120.0f, 60.0f); //set angle limits start/finish
+  wristRotateKnob.setLimits(512.0f, 0, 1023.0f);//set value limits
   wristRotateKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
   wristRotateKnob.setStickToTicks(false);   //no need to stick to ticks
   wristRotateKnob.setTurnMode(1281); //???
@@ -1486,11 +3101,11 @@ public void createGUI() {
   xLabel.setText("X Coord");
   xLabel.setOpaque(false);
 
-  xSlider = new GSlider(this, 75, 30, 100, 40, 10.0);
+  xSlider = new GSlider(this, 75, 30, 100, 40, 10.0f);
   xSlider.setShowLimits(true);
-  xSlider.setLimits(0.0, -200.0, 200.0);
+  xSlider.setLimits(0.0f, -200.0f, 200.0f);
   xSlider.setNbrTicks(50);
-  xSlider.setEasing(0.0);
+  xSlider.setEasing(0.0f);
   xSlider.setNumberFormat(G4P.INTEGER, 0);
   xSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   xSlider.setOpaque(false);
@@ -1512,10 +3127,10 @@ public void createGUI() {
 
 
 
-  ySlider = new GSlider(this, -35, 155, 145, 65, 10.0);
+  ySlider = new GSlider(this, -35, 155, 145, 65, 10.0f);
   ySlider.setShowLimits(true);
-  ySlider.setLimits(200.0, 50.0, 240.0);
-  ySlider.setEasing(0.0);
+  ySlider.setLimits(200.0f, 50.0f, 240.0f);
+  ySlider.setEasing(0.0f);
   ySlider.setNumberFormat(G4P.INTEGER, 0);
   ySlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   ySlider.setOpaque(false);
@@ -1524,7 +3139,7 @@ public void createGUI() {
   ySlider.setTextOrientation(G4P.ORIENT_RIGHT);
   
   
-  ySlider.setRotation(3.1415927*1.5, GControlMode.CENTER); 
+  ySlider.setRotation(3.1415927f*1.5f, GControlMode.CENTER); 
 
 
   zTextField = new GTextField(this, 105, 80, 65, 20, G4P.SCROLLBARS_NONE);
@@ -1539,16 +3154,16 @@ public void createGUI() {
   zLabel.setOpaque(false);
 
 
-  zSlider = new GSlider(this, 65, 155, 145, 65, 10.0);
+  zSlider = new GSlider(this, 65, 155, 145, 65, 10.0f);
   zSlider.setShowLimits(true);
-  zSlider.setLimits(200.0, 20.0, 250.0);
-  zSlider.setEasing(0.0);
+  zSlider.setLimits(200.0f, 20.0f, 250.0f);
+  zSlider.setEasing(0.0f);
   zSlider.setNumberFormat(G4P.INTEGER, 0);
   zSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   zSlider.setOpaque(false);
   zSlider.addEventHandler(this, "zSlider_change"); 
   zSlider.setShowValue(true); 
-  zSlider.setRotation(3.1415927*1.5, GControlMode.CENTER); 
+  zSlider.setRotation(3.1415927f*1.5f, GControlMode.CENTER); 
   zSlider.setTextOrientation(G4P.ORIENT_RIGHT);
   
 
@@ -1567,10 +3182,10 @@ public void createGUI() {
   wristAngleLabel.setOpaque(false);
   wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
-  wristAngleSlider = new GSlider(this, 75, 155, 145, 40, 10.0);
+  wristAngleSlider = new GSlider(this, 75, 155, 145, 40, 10.0f);
   wristAngleSlider.setShowLimits(true);
-  wristAngleSlider.setLimits(0.0, -90.0, 90.0);
-  wristAngleSlider.setEasing(0.0);
+  wristAngleSlider.setLimits(0.0f, -90.0f, 90.0f);
+  wristAngleSlider.setEasing(0.0f);
   wristAngleSlider.setNumberFormat(G4P.INTEGER, 0);
   wristAngleSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristAngleSlider.setOpaque(false);
@@ -1596,10 +3211,10 @@ public void createGUI() {
   wristRotateLabel.setOpaque(false);
   wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
-  wristRotateSlider = new GSlider(this, 75, 200, 145, 40, 10.0);
+  wristRotateSlider = new GSlider(this, 75, 200, 145, 40, 10.0f);
   wristRotateSlider.setShowLimits(true);
-  wristRotateSlider.setLimits(0.0, -512.0, 512.0);
-  wristRotateSlider.setEasing(0.0);
+  wristRotateSlider.setLimits(0.0f, -512.0f, 512.0f);
+  wristRotateSlider.setEasing(0.0f);
   wristRotateSlider.setNumberFormat(G4P.INTEGER, 0);
   wristRotateSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateSlider.setOpaque(false);
@@ -1623,10 +3238,10 @@ public void createGUI() {
   gripperLabel.setOpaque(false);
   
 
-  gripperSlider = new GSlider(this, 75, 245, 145, 40, 10.0);
+  gripperSlider = new GSlider(this, 75, 245, 145, 40, 10.0f);
   gripperSlider.setShowLimits(true);
-  gripperSlider.setLimits(256.0, 0.0, 512.0);
-  gripperSlider.setEasing(0.0);
+  gripperSlider.setLimits(256.0f, 0.0f, 512.0f);
+  gripperSlider.setEasing(0.0f);
   gripperSlider.setNumberFormat(G4P.INTEGER, 0);
   gripperSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   gripperSlider.setOpaque(false);
@@ -1645,11 +3260,11 @@ public void createGUI() {
   deltaTextField.addEventHandler(this, "deltaTextField_change");
 
 
-  deltaSlider = new GSlider(this, 75, 290, 145, 40, 10.0);
+  deltaSlider = new GSlider(this, 75, 290, 145, 40, 10.0f);
   deltaSlider.setShowValue(true);
   deltaSlider.setShowLimits(true);
-  deltaSlider.setLimits(125.0, 0.0, 255.0);
-  deltaSlider.setEasing(0.0);
+  deltaSlider.setLimits(125.0f, 0.0f, 255.0f);
+  deltaSlider.setEasing(0.0f);
   deltaSlider.setNumberFormat(G4P.INTEGER, 0);
   deltaSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   deltaSlider.setOpaque(false);
@@ -1798,10 +3413,10 @@ public void createGUI() {
  
   
   gripperLeftSlider = new GCustomSlider(this, 180, 100, 150, 200, "gripperL");
-  gripperLeftSlider.setLimits(256.0, 512.0, 0.0);
+  gripperLeftSlider.setLimits(256.0f, 512.0f, 0.0f);
   gripperLeftSlider.setShowDecor(false, true, false, false);
   gripperLeftSlider.setShowLimits(true);
-  gripperLeftSlider.setEasing(0.0);
+  gripperLeftSlider.setEasing(0.0f);
   gripperLeftSlider.setNumberFormat(G4P.INTEGER, 0);
   gripperLeftSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   gripperLeftSlider.setShowValue(true);
@@ -1810,10 +3425,10 @@ public void createGUI() {
   
   gripperRightSlider = new GCustomSlider(this, 324, 100, 150, 200, "gripperR");
   gripperRightSlider.setShowDecor(false, true, false, false);
-  gripperRightSlider.setLimits(256.0, 0.0, 512.0);
+  gripperRightSlider.setLimits(256.0f, 0.0f, 512.0f);
   gripperRightSlider.setShowDecor(false, true, false, false);
  // gripperRightSlider.setShowLimits(true);
-  gripperRightSlider.setEasing(0.0);
+  gripperRightSlider.setEasing(0.0f);
   gripperRightSlider.setNumberFormat(G4P.INTEGER, 0);
   gripperRightSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   gripperRightSlider.setValue(256);
@@ -2032,7 +3647,7 @@ public void createGUI() {
  *    2 - 90 degrees
  ******************************************************/ 
 
-void setPositionParameters()
+public void setPositionParameters()
 {
 
 armParam0X = new int[][]{pincherNormalX,reactorNormalX,widowNormalX};
@@ -2391,3 +4006,12 @@ switch(currentMode)
 }//end set postiion parameters
 
 
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "ArmControl" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}

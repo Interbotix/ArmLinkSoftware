@@ -76,6 +76,8 @@ boolean debugSerialEvent = true;     //change to 'false' to disable GUI debuging
 
 boolean debugFileCreated  = false;  //flag to see if the debug file has been created yet or not
 
+boolean enableAnalog = false; //flag to enable reading analog inputs from the Arbotix
+
 boolean updateFlag = false;     //trip flag, true when the program needs to send a serial packet at the next interval, used by both 'update' and 'autoUpdate' controls
 int updatePeriod = 33;          //minimum period between packet in Milliseconds , 33ms = 30Hz which is the standard for the commander/arm control protocol
 
@@ -178,6 +180,8 @@ public void draw()
   if(currentTime - prevCommandTime > updatePeriod )
   {
     
+    //check if
+    //  -update flag is true, and a packet needs to be sent
     if(updateFlag == true)
     {
       updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
@@ -191,13 +195,7 @@ public void draw()
         //send commander packet with the current global currentOffset coordinatges
         sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
      
-     
-     
-     
-     
-     
-     
-     
+
       /*//use this code to enable return packet checking for positional commands
         byte[] responseBytes = new byte[5];    //byte array to hold response data
         responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
@@ -232,7 +230,11 @@ public void draw()
       }
     }//end command code
     
-    else if(currentTime - lastAnalogSample > analogSampleTime)
+
+    //check if
+    //--analog retrieval is enabled
+    //it has been long enough since the last sample
+    else if(currentTime - lastAnalogSample > analogSampleTime && (true == enableAnalog))
     {
       if( currentArm != 0)
       {
@@ -253,6 +255,7 @@ public void draw()
         
       
     }
+
   }
   
   

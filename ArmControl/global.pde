@@ -100,7 +100,9 @@ int[][] armParamWristAngle90Knob = new int[3][2];
 int[][] armParamWristAngleBHKnob = new int[3][2];
 int[][] armParamWristRotKnob= new int[3][2];
 
-
+int[][] armParamBaseKnob = new int[3][2];
+int[][] armParamElbowKnob = new int[3][2];
+int[][] armParamShoulderKnob = new int[3][2];
 
 
 //default values for the phantomX pincher. These will be loaded into the working position variables 
@@ -127,6 +129,9 @@ int[] pincherBHWristAngle90Knob = {90,45};//angle data for knob limits
 int[] pincherWristAngleBHKnob = {270,90};//angle data for knob limits
 int[] pincherWristRotKnob = {120,60};
 
+int[] pincherBaseKnob = {120,60};
+int[] pincherShoulderKnob = {120,60};
+int[] pincherElbowKnob = {120,60};
 
 
 
@@ -149,9 +154,14 @@ int[] reactorBHWristAngle = {512,200,830};
 int[] reactorBHWristRot = {512,0,1023};
 
 int[] reactorWristAngleNormalKnob = {270,90};//angle data for knob limits
-int[] reactorWristAngle90Knob = {45,90};//angle data for knob limits
+int[] reactorWristAngle90Knob = {90,135};//angle data for knob limits
 int[] reactorWristAngleBHKnob = {270,90};//angle data for knob limits
 int[] reactorWristRotKnob = {120,60};
+int[] reactorBaseKnob = {120,60};
+int[] reactorShoulderKnob = {120,60};
+int[] reactorElbowKnob = {120,60};
+
+
 
 //default values for the widowx. These will be loaded into the working position variables 
 //when the widowx is connected, and when modes are changed.
@@ -172,10 +182,14 @@ int[] widowBHWristAngle = {2048,1024,3072};
 int[] widowBHWristRot = {512,0,1023};
 
 int[] widowBHWristAngleNormalKnob = {90,270};//angle data for knob limits
-int[] widowBHWristAngle90Knob = {90,45};//angle data for knob limits
+int[] widowBHWristAngle90Knob = {90,135};//angle data for knob limits
 
 int[] widowWristAngleBHKnob = {270,90};//angle data for knob limits
 int[] widowWristRotKnob = {120,60};
+
+int[] widowBaseKnob = {0,360};
+int[] widowShoulderKnob = {0,360};
+int[] widowElbowKnob = {0,360};
 
 
 //END DEFAULT ARM PARAMETERS 
