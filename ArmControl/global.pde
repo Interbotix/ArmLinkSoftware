@@ -187,9 +187,9 @@ int[] widowBHWristAngle90Knob = {90,135};//angle data for knob limits
 int[] widowWristAngleBHKnob = {270,90};//angle data for knob limits
 int[] widowWristRotKnob = {120,60};
 
-int[] widowBaseKnob = {0,360};
-int[] widowShoulderKnob = {0,360};
-int[] widowElbowKnob = {0,360};
+int[] widowBaseKnob = {90,90};
+int[] widowShoulderKnob = {90,90};
+int[] widowElbowKnob = {90,90};
 
 
 //END DEFAULT ARM PARAMETERS 
