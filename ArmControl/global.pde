@@ -147,13 +147,13 @@ int[] reactor90X = {0,-300,300};
 int[] reactor90Y = {150,20,140};
 int[] reactor90Z = {30,10,150};
 int[] reactor90WristAngle = {-90,-90,-45};
-int[] reactorBase = {512,0,1023};
+int[] reactorBase = {512,1023,0};
 int[] reactorBHShoulder = {512,205,810};
 int[] reactorBHElbow = {512,210,900};
 int[] reactorBHWristAngle = {512,200,830};
 int[] reactorBHWristRot = {512,0,1023};
 
-int[] reactorWristAngleNormalKnob = {270,90};//angle data for knob limits
+int[] reactorWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] reactorWristAngle90Knob = {90,135};//angle data for knob limits
 int[] reactorWristAngleBHKnob = {270,90};//angle data for knob limits
 int[] reactorWristRotKnob = {120,60};

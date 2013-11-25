@@ -469,7 +469,7 @@ public void controlPanel_click(GPanel source, GEvent event) { //_CODE_:controlPa
 //-check for values out of the current range
 //-write the value to the slider upon an 'enter' or when the fiels loses focus
 //-
-public int armTextFieldChange(GTextField source, GEvent event, GSlider targetSlider, int minVal, int maxVal, int currentVal )
+public int armTextFieldChange(GTextField source, GEvent event, GValueControl targetSlider, int minVal, int maxVal, int currentVal )
 {
   String textFieldString = source.getText();//string value from textField
   int textFieldValue;//converted integer from textField
@@ -522,6 +522,9 @@ public int armTextFieldChange(GTextField source, GEvent event, GSlider targetSli
   return(currentVal);
 }
 
+
+
+
 public void xTextField_change(GTextField source, GEvent event) 
 {
   printlnDebug("xTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
@@ -543,13 +546,13 @@ public void zTextField_change(GTextField source, GEvent event)
 public void wristAngleTextField_change(GTextField source, GEvent event) 
 {
   printlnDebug("wristAngleTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
-  wristAngleCurrent = armTextFieldChange(source, event, wristAngleSlider, wristAngleParameters[1], wristAngleParameters[2], wristAngleCurrent);
+  wristAngleCurrent = armTextFieldChange(source, event, wristAngleKnob, wristAngleParameters[1], wristAngleParameters[2], wristAngleCurrent);
 }
 
 public void wristRotateTextField_change(GTextField source, GEvent event) 
 {
   printlnDebug("wristRotateTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
-  wristRotateCurrent = armTextFieldChange(source, event, wristRotateSlider, wristRotateParameters[1], wristRotateParameters[2], wristRotateCurrent);
+  wristRotateCurrent = armTextFieldChange(source, event, wristRotateKnob, wristRotateParameters[1], wristRotateParameters[2], wristRotateCurrent);
 }
 
 public void gripperTextField_change(GTextField source, GEvent event) 
@@ -1454,7 +1457,7 @@ public void createGUI() {
   elbowKnob.addEventHandler(this, "elbowKnob_change");//set event listener
   elbowKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
 
-  wristAngleKnob = new GKnob(this, 225, 30, 50, 50, 1); 
+  wristAngleKnob = new GKnob(this, 250, 30, 50, 50, 1); 
   wristAngleKnob.setTurnRange(270.0, 90.0); //set angle limits start/finish
   wristAngleKnob.setLimits(512.0, 0, 1023.0);//set value limits
   wristAngleKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
@@ -1807,6 +1810,7 @@ public void createGUI() {
   gripperLeftSlider.setShowValue(true);
   gripperLeftSlider.addEventHandler(this, "gripperLeftSlider_change");
   
+  gripperLeftSlider.setValue(256);
   
   gripperRightSlider = new GCustomSlider(this, 324, 100, 150, 200, "gripperR");
   gripperRightSlider.setShowDecor(false, true, false, false);
@@ -2115,6 +2119,11 @@ switch(currentMode)
       gripperTextField.setText(Integer.toString(armParamGripper[currentArm-1][0]));
       gripperLabel.setText("Gripper");
       arrayCopy(armParamGripper[currentArm-1], gripperParameters);
+      
+         gripperLeftSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][2], armParamGripper[currentArm-1][1]);    
+      gripperRightSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][1], armParamGripper[currentArm-1][2]); 
+      arrayCopy(armParamGripper[currentArm-1], gripperParameters);
+      
       break;
 
       //90 degrees
@@ -2156,7 +2165,10 @@ switch(currentMode)
       gripperTextField.setText(Integer.toString(armParamGripper[currentArm-1][0]));
       gripperLabel.setText("Gripper");
       arrayCopy(armParamGripper[currentArm-1], gripperParameters);
-  
+     gripperLeftSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][2], armParamGripper[currentArm-1][1]);    
+      gripperRightSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][1], armParamGripper[currentArm-1][2]); 
+      arrayCopy(armParamGripper[currentArm-1], gripperParameters);
+      
       break;
     }
   break;
@@ -2224,7 +2236,10 @@ switch(currentMode)
       gripperTextField.setText(Integer.toString(armParamGripper[currentArm-1][0]));
       gripperLabel.setText("Gripper");
       arrayCopy(armParamGripper[currentArm-1], gripperParameters);
-  
+     gripperLeftSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][2], armParamGripper[currentArm-1][1]);    
+      gripperRightSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][1], armParamGripper[currentArm-1][2]); 
+      arrayCopy(armParamGripper[currentArm-1], gripperParameters);
+      
       break;
   
       //90 degrees
@@ -2268,7 +2283,10 @@ switch(currentMode)
       gripperTextField.setText(Integer.toString(armParamGripper[currentArm-1][0]));
       gripperLabel.setText("Gripper");
       arrayCopy(armParamGripper[currentArm-1], gripperParameters);
-  
+     gripperLeftSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][2], armParamGripper[currentArm-1][1]);    
+      gripperRightSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][1], armParamGripper[currentArm-1][2]); 
+      arrayCopy(armParamGripper[currentArm-1], gripperParameters);
+      
   
       break;
     }
