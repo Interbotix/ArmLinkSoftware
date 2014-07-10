@@ -169,7 +169,7 @@ public void setup(){
 public void draw()
 {
   background(128);//draw background color
-  image(logoImg, 5, 5, 230, 78);  //draw logo image
+  image(logoImg, 505, 5, 230, 78);  //draw logo image
   image(footerImg, 15, 770);      //draw footer image
 
   currentTime = millis();  //get current timestamp

@@ -1327,7 +1327,7 @@ public void createGUI() {
 
 //Setup
 
-  setupPanel = new GPanel(this, 5, 83, 240, 75, "Setup Panel");
+  setupPanel = new GPanel(this, 5, 5, 465, 50, "Setup Panel");
   setupPanel.setText("Setup Panel");
   setupPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   setupPanel.setOpaque(true);
@@ -1336,26 +1336,27 @@ public void createGUI() {
   setupPanel.setCollapsible(false);
 
 
-  serialList = new GDropList(this, 5, 24, 160, 132, 6);
+  serialList = new GDropList(this, 5, 24, 200, 132, 6);
   //serialList.setItems(loadStrings("list_700876"), 0);
   serialList.addEventHandler(this, "serialList_click");
   serialList.setFont(new Font("Dialog", Font.PLAIN, 9));  
   serialList.setLocalColorScheme(GCScheme.CYAN_SCHEME);
 
-  connectButton = new GButton(this, 5, 47, 75, 20);
+  connectButton = new GButton(this, 215, 24, 75, 20);
   connectButton.setText("Connect");
   connectButton.addEventHandler(this, "connectButton_click");
 
-  disconnectButton = new GButton(this, 90, 47, 75, 20);
+  disconnectButton = new GButton(this, 300, 24, 75, 20);
   disconnectButton.setText("Disconnect");
   disconnectButton.addEventHandler(this, "disconnectButton_click");
 
   disconnectButton.setEnabled(false);
   disconnectButton.setAlpha(128);
 
-  autoConnectButton = new GButton(this, 170, 24, 55, 43);
+  autoConnectButton = new GButton(this, 385, 24, 75, 20);
   autoConnectButton.setText("Auto Search");
   autoConnectButton.addEventHandler(this, "autoConnectButton_click");
+  autoConnectButton.setLocalColorScheme(GCScheme.PURPLE_SCHEME);
 
 
   setupPanel.addControl(serialList);
