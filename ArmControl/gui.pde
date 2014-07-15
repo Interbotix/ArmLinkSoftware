@@ -34,9 +34,11 @@ GButton connectButton,disconnectButton,autoConnectButton; //buttons for connecti
 
 //mode panel
 GPanel modePanel; //panel to hold current mode buttons
+//wrist panel
+GPanel wristPanel; //panel to hold current wrist buttons
 
-GButton cartesianModeButton, cylindricalModeButton, backhoeModeButton; //buttons to chage IK mode
-GImageButton armStraightButton,arm90Button;//image buttons to hold wrist angle orientation mode
+GButton cartesianModeButton, cylindricalModeButton, backhoeModeButton,orient90Button, orientStraightButton; //buttons to chage IK mode
+//DEPRACATED GImageButton armStraightButton,arm90Button;//image buttons to hold wrist angle orientation mode
 
 //control panel
 GPanel controlPanel; 
@@ -214,8 +216,8 @@ public void disconnectButton_click(GButton source, GEvent event)
   backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
   //reset alpha trapsnparency on orientation buttons
-  armStraightButton.setAlpha(128);
-  arm90Button.setAlpha(128);
+  //DEPRECATED armStraightButton.setAlpha(128);
+  //DEPRECATEDarm90Button.setAlpha(128);
 } 
 
 
@@ -311,9 +313,13 @@ public void modePanel_click(GPanel source, GEvent event)
 { 
   printlnDebug("modePanel - GPanel event occured " + System.currentTimeMillis()%10000000 );
 } 
+public void wristPanel_click(GPanel source, GEvent event) 
+{ 
+  printlnDebug("wristPanel - GPanel event occured " + System.currentTimeMillis()%10000000 );
+} 
 
 //change mode data when button to straigten gripper angle is pressed
-public void armStraightButton_click(GImageButton source, GEvent event) 
+public void orientStraightButton_click(GImageButton source, GEvent event) 
 { 
   printlnDebug("armstraught - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
   
@@ -324,8 +330,8 @@ public void armStraightButton_click(GImageButton source, GEvent event)
   cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   }
   
-  armStraightButton.setAlpha(255);
-  arm90Button.setAlpha(128);
+  //DEPRECATED armStraightButton.setAlpha(255);
+  //DEPRECATED arm90Button.setAlpha(128);
   
   currentOrientation = 1;
   setPositionParameters();
@@ -334,18 +340,23 @@ public void armStraightButton_click(GImageButton source, GEvent event)
 
 
 //change mode data when button to move  gripper angle to 90 degrees is pressed
-public void arm90Button_click(GImageButton source, GEvent event) 
+public void orient90Button_click(GImageButton source, GEvent event) 
 {
   printlnDebug("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
   
+  //set default mode if none has been set
   if (currentMode == 0)
   {
   currentMode =1;
   cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   }
   
-  armStraightButton.setAlpha(128);
-  arm90Button.setAlpha(255);
+  //DEPRECATED armStraightButton.setAlpha(128);
+  //DEPRECATED arm90Button.setAlpha(255);
+  
+  
+  orient90Button.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  orientStraightButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   
   currentOrientation = 2;
   setPositionParameters();
@@ -357,6 +368,9 @@ public void arm90Button_click(GImageButton source, GEvent event)
 public void cartesianModeButton_click(GButton source, GEvent event) 
 { 
   printlnDebug("cartesianModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
+  
+
+  
   setCartesian();
 
 } 
@@ -368,6 +382,19 @@ void setCartesian()
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
+  
+  //Show/enable straight/90 wrist mode
+  wristPanel.setAlpha(255);
+  wristPanel.setVisible(true);
+  wristPanel.setEnabled(true);
+  
+  //set wrist angle orientation if not defined
+  if (currentOrientation == 0)
+  {
+    currentOrientation =1;
+  }
+   
+  
   //set wrist angle orientation if not defined
   if (currentOrientation == 0)
   {
@@ -376,13 +403,13 @@ void setCartesian()
   
   if (currentOrientation == 1)
   {
-    armStraightButton.setAlpha(255);
-    arm90Button.setAlpha(128);
+    orientStraightButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+    orient90Button.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   }
-  else  
+  else if (currentOrientation == 2)
   {
-    armStraightButton.setAlpha(128);
-    arm90Button.setAlpha(255);
+    orientStraightButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+    orient90Button.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   }
 
   currentMode = 1;//set mode data
@@ -403,6 +430,14 @@ public void cylindricalModeButton_click(GButton source, GEvent event)
   backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
   
+  
+  //Enable straight/90 wrist panel
+  wristPanel.setAlpha(255);
+  wristPanel.setVisible(true);
+  wristPanel.setEnabled(true);
+  
+  
+  
   //set wrist angle orientation if not defined
   if (currentOrientation == 0)
   {
@@ -411,13 +446,13 @@ public void cylindricalModeButton_click(GButton source, GEvent event)
   
   if (currentOrientation == 1)
   {
-    armStraightButton.setAlpha(255);
-    arm90Button.setAlpha(128);
+    orientStraightButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+    orient90Button.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   }
-  else  
+  else if (currentOrientation == 2)
   {
-    armStraightButton.setAlpha(128);
-    arm90Button.setAlpha(255);
+    orientStraightButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+    orient90Button.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   }
   
   currentMode = 2;//set mode data
@@ -435,9 +470,18 @@ public void backhoeModeButton_click(GButton source, GEvent event)
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
-  //set wrist angle alphas to 128(gey out)
-  armStraightButton.setAlpha(128);
-  arm90Button.setAlpha(128);
+  //DEPRICATED
+  //set wrist angle alphas to 128(grey out)
+  //armStraightButton.setAlpha(128);
+  //arm90Button.setAlpha(128);
+  
+  
+  //Backhoe mode does not need straight/90 wrist mode, so hide and disable the panel
+  wristPanel.setAlpha(64);
+//  wristPanel.setVisible(false);
+  wristPanel.setEnabled(false);
+  
+  
   
   currentMode = 3;//set mode data
   
@@ -1366,7 +1410,7 @@ public void createGUI() {
 
 
 //mode
-  modePanel = new GPanel(this, 300, 50, 240, 110, "Mode Panel");
+  modePanel = new GPanel(this, 5, 60, 240, 39, "Mode Panel");
   modePanel.setText("Mode Panel");
   modePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   modePanel.setOpaque(true);
@@ -1377,6 +1421,14 @@ public void createGUI() {
   //modePanel.setVisible(false);
   //modePanel.setEnabled(false);
 
+//wrist angle
+  wristPanel = new GPanel(this, 260, 60, 240, 39, "Wrist Panel");
+  wristPanel.setText("Wtist Panel");
+  wristPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  wristPanel.setOpaque(true);
+  wristPanel.addEventHandler(this, "wristPanel_click");
+  //modePanel.setDraggable(false);
+  wristPanel.setCollapsible(false);
   
   cartesianModeButton = new GButton(this, 0, 18, 80, 20);
   cartesianModeButton.setText("Cartesian");
@@ -1389,30 +1441,48 @@ public void createGUI() {
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
 
   backhoeModeButton = new GButton(this, 160, 18, 80, 20);
-  backhoeModeButton.setText("Backkhoe");
+  backhoeModeButton.setText("Backhoe");
   backhoeModeButton.addEventHandler(this, "backhoeModeButton_click");
   backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
 
-  armStraightButton = new GImageButton(this, 5, 40, 100, 65, new String[] { 
-    "armStraightm.png", "armStraightm.png", "armStraightm.png"
-  } 
-  );
-  armStraightButton.addEventHandler(this, "armStraightButton_click");
-  armStraightButton.setAlpha(128);
 
-  arm90Button = new GImageButton(this, 130, 40, 100, 65, new String[] { 
-    "arm90m.png", "arm90m.png", "arm90m.png"
-  } 
-  );
-  arm90Button.addEventHandler(this, "arm90Button_click");
-  arm90Button.setAlpha(128);
+  
+  orientStraightButton = new GButton(this, 0, 18, 80, 20);
+  orientStraightButton.setText("Straight");
+  orientStraightButton.addEventHandler(this, " wrist90ModeButton_click");
+  orientStraightButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  
+  orient90Button = new GButton(this, 80, 18, 80, 20);
+  orient90Button.setText("90 Degrees");
+  orient90Button.addEventHandler(this, " wristStraightModeButton_click");
+  orient90Button.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+
+  
+  
+
+  //DEPRECATEDarmStraightButton = new GImageButton(this, 5, 40, 100, 65, new String[] { 
+ //DEPRECATED   "armStraightm.png", "armStraightm.png", "armStraightm.png"
+ //DEPRECATED } 
+  //DEPRECATED);
+  //DEPRECATEDarmStraightButton.addEventHandler(this, "armStraightButton_click");
+ //DEPRECATED armStraightButton.setAlpha(128);
+
+ //DEPRECATED arm90Button = new GImageButton(this, 130, 40, 100, 65, new String[] { 
+  //DEPRECATED  "arm90m.png", "arm90m.png", "arm90m.png"
+  //DEPRECATED} 
+  //DEPRECATED);
+  //DEPRECATEDarm90Button.addEventHandler(this, "arm90Button_click");
+  //DEPRECATEDarm90Button.setAlpha(128);
 
 
   modePanel.addControl(cartesianModeButton);
   modePanel.addControl(cylindricalModeButton);
   modePanel.addControl(backhoeModeButton);
-  modePanel.addControl(arm90Button);
-  modePanel.addControl(armStraightButton);
+  //modePanel.addControl(arm90Button);
+  //modePanel.addControl(armStraightButton);
+
+  wristPanel.addControl(orientStraightButton);
+  wristPanel.addControl(orient90Button);
 
 
 
