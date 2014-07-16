@@ -71,7 +71,7 @@ boolean debugConsole = true;      //change to 'false' to disable debuging messag
 boolean debugFile = false;        //change to 'false' to disable debuging messages to a file, 'true' to enable
 
 boolean debugGuiEvent = true;     //change to 'false' to disable GUI debuging messages, 'true' to enable
-boolean debugSerialEvent = true;     //change to 'false' to disable GUI debuging messages, 'true' to enable
+boolean debugSerialEvent = false;     //change to 'false' to disable GUI debuging messages, 'true' to enable
 //int lf = 10;    // Linefeed in ASCII
 
 boolean debugFileCreated  = false;  //flag to see if the debug file has been created yet or not

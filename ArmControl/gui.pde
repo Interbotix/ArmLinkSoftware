@@ -319,9 +319,9 @@ public void wristPanel_click(GPanel source, GEvent event)
 } 
 
 //change mode data when button to straigten gripper angle is pressed
-public void orientStraightButton_click(GImageButton source, GEvent event) 
+public void orientStraightButton_click(GButton source, GEvent event) 
 { 
-  printlnDebug("armstraught - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+  printlnDebug("armstraight - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
   
   
   if (currentMode == 0)
@@ -333,6 +333,10 @@ public void orientStraightButton_click(GImageButton source, GEvent event)
   //DEPRECATED armStraightButton.setAlpha(255);
   //DEPRECATED arm90Button.setAlpha(128);
   
+  
+  orient90Button.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  orientStraightButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  
   currentOrientation = 1;
   setPositionParameters();
   changeArmMode();
@@ -340,15 +344,15 @@ public void orientStraightButton_click(GImageButton source, GEvent event)
 
 
 //change mode data when button to move  gripper angle to 90 degrees is pressed
-public void orient90Button_click(GImageButton source, GEvent event) 
+public void orient90Button_click(GButton source, GEvent event) 
 {
   printlnDebug("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
   
   //set default mode if none has been set
   if (currentMode == 0)
   {
-  currentMode =1;
-  cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+    currentMode =1;
+    cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   }
   
   //DEPRECATED armStraightButton.setAlpha(128);
@@ -1422,8 +1426,8 @@ public void createGUI() {
   //modePanel.setEnabled(false);
 
 //wrist angle
-  wristPanel = new GPanel(this, 260, 60, 240, 39, "Wrist Panel");
-  wristPanel.setText("Wtist Panel");
+  wristPanel = new GPanel(this, 260, 60, 210, 39, "Wrist Panel");
+  wristPanel.setText("Wrist Panel");
   wristPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristPanel.setOpaque(true);
   wristPanel.addEventHandler(this, "wristPanel_click");
@@ -1449,12 +1453,12 @@ public void createGUI() {
   
   orientStraightButton = new GButton(this, 0, 18, 80, 20);
   orientStraightButton.setText("Straight");
-  orientStraightButton.addEventHandler(this, " wrist90ModeButton_click");
+  orientStraightButton.addEventHandler(this, "orientStraightButton_click");
   orientStraightButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
   orient90Button = new GButton(this, 80, 18, 80, 20);
   orient90Button.setText("90 Degrees");
-  orient90Button.addEventHandler(this, " wristStraightModeButton_click");
+  orient90Button.addEventHandler(this, "orient90Button_click");
   orient90Button.setLocalColorScheme(GCScheme.CYAN_SCHEME);
 
   
