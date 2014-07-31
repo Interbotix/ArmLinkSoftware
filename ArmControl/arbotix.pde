@@ -158,7 +158,7 @@ boolean verifyPacket(byte[] returnPacket)
         if(returnPacket[3] == 0)
         {
           //check that the arm id packet is a valid arm
-          if(returnPacket[1] == 1 | returnPacket[1] == 2 |returnPacket[1] == 3)
+          if(returnPacket[1] == 1 || returnPacket[1] == 2 || returnPacket[1] == 3 || returnPacket[1] == 5)
           {
             printlnDebug("verifyPacket Success!");
             return(true);

@@ -5,7 +5,7 @@
  *   __/                    \__
  *  |__|                    |__|
  *
- *  arbotix.pde
+ *  global.pde
  *  
  *  This file has several global variables relating to the positional data for the arms.
  *  See 'ArmControl.pde' for building this application.
@@ -111,7 +111,7 @@ int[] pincherNormalX = {0,-200,200};
 int[] pincherNormalY = {200,50,240};
 int[] pincherNormalZ = {200,20,250};
 int[] pincherNormalWristAngle = {0,-90,90};
-int[] pincherWristRotate = {0,-512,511};
+int[] pincherWristRotate = {0,0,0};//not implemented in hardware
 int[] pincherGripper = {256,0,512};
 int[] pincher90X = {0,-200,200};
 int[] pincher90Y = {140,20,150};
@@ -141,7 +141,7 @@ int[] reactorNormalX = {0,-300,300};
 int[] reactorNormalY = {200,50,350};
 int[] reactorNormalZ = {200,20,250};
 int[] reactorNormalWristAngle = {0,-90,90};
-int[] reactorWristRotate = {0,-512,511};
+int[] reactorWristRotate = {0,0,0};
 int[] reactorGripper = {256,0,512};
 int[] reactor90X = {0,-300,300};
 int[] reactor90Y = {150,20,140};
@@ -192,5 +192,40 @@ int[] widowShoulderKnob = {90,90};
 int[] widowElbowKnob = {90,90};
 
 
+
+//default values for the RobotGeek Snapper. These will be loaded into the working position variables 
+//when the snapper is connected, and when modes are changed.
+int[] snapperNormalX = {0,-150,150};
+int[] snapperNormalY = {150,55,200}; //the limits are really 50-200, but 50-54 cause a problem when height Z is maximum
+int[] snapperNormalZ = {150,20,225};
+int[] snapperNormalWristAngle = {0,-30,30};
+
+
+int[] snapperWristRotate = {0,0,0};  //Not Implemented in Snapper hardware
+int[] snapperGripper = {256,0,512};
+int[] snapper90X = {0,-200,200};          //Not Implemented in Snapper firmware
+int[] snapper90Y = {140,20,150};          //Not Implemented in Snapper firmware
+int[] snapper90Z = {30,10,150};          //Not Implemented in Snapper firmware
+int[] snapper90WristAngle = {-90,-90,-45};          //Not Implemented in Snapper firmware
+int[] snapperBase = {512,0,1023};          //Not Implemented in Snapper firmware
+int[] snapperBHShoulder = {512,205,815};          //Not Implemented in Snapper firmware
+int[] snapperBHElbow = {512,205,1023};          //Not Implemented in Snapper firmware
+int[] snapperBHWristAngle = {512,205,815};          //Not Implemented in Snapper firmware
+int[] snapperBHWristRot = {512,0,1023};          //Not Implemented in Snapper firmware
+
+int[] snapperBHWristAngleNormalKnob = {150,210};//angle data for knob limits
+int[] snapperBHWristAngle90Knob = {90,45};//angle data for knob limits
+
+int[] snapperWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] snapperWristRotKnob = {120,60};
+
+int[] snapperBaseKnob = {120,60};
+int[] snapperShoulderKnob = {120,60};
+int[] snapperElbowKnob = {120,60};
+
+
+
+
 //END DEFAULT ARM PARAMETERS 
+
 

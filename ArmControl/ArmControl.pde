@@ -87,7 +87,7 @@ long currentTime = 0;           //timestamp for currrent time
 
 int packetRepsonseTimeout = 5000;      //time to wait for a response from the ArbotiX Robocontroller / Arm Control Protocol
 
-int currentArm = 0;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX
+int currentArm = 0;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX, 5 = snapper
 int currentMode = 0;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
 int currentOrientation = 0;  //Current wrist oritnation 1 = straight/normal, 2=90 degrees
 
@@ -429,7 +429,7 @@ void printlnDebug(String message, int type)
 {
    if(debugConsole == true)
    {
-      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      if((type == 1 & debugGuiEvent == true) || type == 0 || type == 2)
       {
         println(message); 
       }
@@ -438,7 +438,7 @@ void printlnDebug(String message, int type)
   if(debugFile == true)
   {
     
-      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      if((type == 1 & debugGuiEvent == true) || type == 0 || type == 2)
       {
         
         if(debugFileCreated == false)
@@ -495,7 +495,7 @@ void printDebug(String message, int type)
 {
    if(debugConsole == true)
    {
-      if((type == 1 & debugGuiEvent == true)  | type == 2)
+      if((type == 1 & debugGuiEvent == true)  || type == 2)
       {
         print(message); 
       }
@@ -504,7 +504,7 @@ void printDebug(String message, int type)
   if(debugFile == true)
   {
     
-      if((type == 1 & debugGuiEvent == true) | type == 0 | type == 2)
+      if((type == 1 & debugGuiEvent == true) || type == 0 || type == 2)
       {
         
         if(debugFileCreated == false)
