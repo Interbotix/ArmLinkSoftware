@@ -117,7 +117,7 @@ int[] pincher90X = {0,-200,200};
 int[] pincher90Y = {140,20,150};
 int[] pincher90Z = {30,10,150};
 int[] pincher90WristAngle = {-90,-90,-45};
-int[] pincherBase = {512,0,1023};
+int[] pincherBase = {512,1023,0};
 int[] pincherBHShoulder = {512,205,815};
 int[] pincherBHElbow = {512,205,1023};
 int[] pincherBHWristAngle = {512,205,815};
@@ -130,8 +130,8 @@ int[] pincherWristAngleBHKnob = {270,90};//angle data for knob limits
 int[] pincherWristRotKnob = {120,60};
 
 int[] pincherBaseKnob = {120,60};
-int[] pincherShoulderKnob = {120,60};
-int[] pincherElbowKnob = {120,60};
+int[] pincherShoulderKnob = {180,00};
+int[] pincherElbowKnob = {180,0};
 
 
 
@@ -175,7 +175,7 @@ int[] widow90X = {0,-300,300};
 int[] widow90Y = {150,20,250};
 int[] widow90Z = {30,10,200};
 int[] widow90WristAngle = {-90,-90,-45};
-int[] widowBase = {2048,0,4095};
+int[] widowBase = {2048,4095,};
 int[] widowBHShoulder = {2048,1024,3072};
 int[] widowBHElbow = {2048,1024,3072};
 int[] widowBHWristAngle = {2048,1024,3072};

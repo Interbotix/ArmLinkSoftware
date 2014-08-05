@@ -1506,7 +1506,7 @@ public void createGUI() {
 
   baseKnob = new GKnob(this, 100, 30, 50, 50, 1); 
   baseKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
-  baseKnob.setLimits(512.0, 0, 1023.0);//set value limits
+  baseKnob.setLimits(512.0, 1023.0, 0.0);//set value limits
   baseKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
   baseKnob.setStickToTicks(false);   //no need to stick to ticks
   baseKnob.setTurnMode(1281); //???
