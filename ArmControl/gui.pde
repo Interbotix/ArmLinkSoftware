@@ -80,6 +80,9 @@ GButton poseToWorkspace; //button3
 
 
 GButton analog1; //button3
+GButton playButton; //play sequence
+GButton stopButton; //stop sequence
+
 
 ArrayList<GPanel> poses;
 
@@ -1065,37 +1068,47 @@ public void poseToWorkspace_click(GButton source, GEvent event)
 {
 //  poses.get(currentPose)[0];
 
+poseToWorkspaceInternal(currentPose);
+  
+}
+
+
+
+public void poseToWorkspaceInternal(int pose)
+{
+  
+  
 int mask = 0;
 
-xCurrent = poseData.get(currentPose)[0];//set the value that will be sent
+xCurrent = poseData.get(pose)[0];//set the value that will be sent
 xTextField.setText(Integer.toString(xCurrent));//set the text field
 xSlider.setValue(xCurrent);//set gui elemeent to same value
 
-yCurrent = poseData.get(currentPose)[1];//set the value that will be sent
+yCurrent = poseData.get(pose)[1];//set the value that will be sent
 yTextField.setText(Integer.toString(yCurrent));//set the text field
 ySlider.setValue(yCurrent);//set gui elemeent to same value
 
 
-zCurrent = poseData.get(currentPose)[2];//set the value that will be sent
+zCurrent = poseData.get(pose)[2];//set the value that will be sent
 zTextField.setText(Integer.toString(zCurrent));//set the text field
 zSlider.setValue(zCurrent);//set gui elemeent to same value
 
-wristAngleCurrent = poseData.get(currentPose)[3];//set the value that will be sent
+wristAngleCurrent = poseData.get(pose)[3];//set the value that will be sent
 wristAngleTextField.setText(Integer.toString(wristAngleCurrent));//set the text field
 wristAngleKnob.setValue(wristAngleCurrent);//set gui elemeent to same value
 
-wristRotateCurrent = poseData.get(currentPose)[4];//set the value that will be sent
+wristRotateCurrent = poseData.get(pose)[4];//set the value that will be sent
 wristRotateTextField.setText(Integer.toString(wristRotateCurrent));//set the text field
 wristRotateKnob.setValue(wristRotateCurrent);//set gui elemeent to same value
 
-gripperCurrent = poseData.get(currentPose)[5];//set the value that will be sent
+gripperCurrent = poseData.get(pose)[5];//set the value that will be sent
 gripperTextField.setText(Integer.toString(gripperCurrent));//set the text field
 gripperSlider.setValue(gripperCurrent);//set gui elemeent to same value
 
 
 
 
-deltaCurrent = poseData.get(currentPose)[6];//set the value that will be sent
+deltaCurrent = poseData.get(pose)[6];//set the value that will be sent
 deltaTextField.setText(Integer.toString(deltaCurrent));//set the text field
 deltaSlider.setValue(deltaCurrent);//set gui elemeent to same value
 
@@ -1104,7 +1117,7 @@ deltaSlider.setValue(deltaCurrent);//set gui elemeent to same value
 //extendedByte
 
 
-int buttonByteFromPose = poseData.get(currentPose)[7];
+int buttonByteFromPose = poseData.get(pose)[7];
 
  //I'm sure there's a better way to do this
   for (int i = 7; i>=0;i--)
@@ -1210,8 +1223,18 @@ int buttonByteFromPose = poseData.get(currentPose)[7];
  }
 
 
-  
 }
+
+
+
+
+
+
+
+
+
+
+
 
 public void a1_click(GButton source, GEvent event) 
 {
@@ -1238,6 +1261,17 @@ public void a1_click(GButton source, GEvent event)
 }
 
 
+public void playButton_click(GButton source, GEvent event) 
+{
+  playSequence = true;
+}
+
+public void stopButton_click(GButton source, GEvent event) 
+{
+  playSequence = false;
+}
+
+
 public void newPose_click(GButton source, GEvent event) 
 {
   println("button2 - GButton event occured " + System.currentTimeMillis()%10000000 );
@@ -1254,6 +1288,12 @@ public void newPose_click(GButton source, GEvent event)
   
   sequencePanel.addControl(poses.get(numPanels));
   numPanels++;
+  
+   int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte  };
+  
+  poseData.set(poses.size()-1, tempPose);
+  
+  
   
   
   
@@ -1614,7 +1654,7 @@ public void createGUI() {
   wristAngleKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
   //wristAngleKnob.setVisible(false);
 
-  wristRotateKnob = new GKnob(this, 380, 30, 50, 50, 1); 
+  wristRotateKnob = new GKnob(this, 5, 30, 50, 50, 1); 
   wristRotateKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
   wristRotateKnob.setLimits(512.0, 0, 1023.0);//set value limits
   wristRotateKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
@@ -1733,7 +1773,7 @@ public void createGUI() {
 
 
 
-  wristRotateTextField = new GTextField(this, 300, 40, 60, 20, G4P.SCROLLBARS_NONE);
+  wristRotateTextField = new GTextField(this, 5, 40, 60, 20, G4P.SCROLLBARS_NONE);
   wristRotateTextField.setText(Integer.toString( wristRotateParameters[0]));
   wristRotateTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateTextField.setOpaque(true);
@@ -2012,7 +2052,8 @@ public void createGUI() {
 
   poses = new ArrayList<GPanel>();
   
-  poseData.add(blankPose);
+  //poseData.add(blankPose);  
+  poseData.add(defaultPose);
   
   poses.add(new GPanel(this, panelsX, panelsYStart, 50, 18, "0"));
   numPanels++;
@@ -2046,6 +2087,15 @@ public void createGUI() {
   analog1.setText("a1");
   analog1.addEventHandler(this, "a1_click");
  
+  playButton = new GButton(this, 5, 150, 80, 30);
+  playButton.setText("play");
+  playButton.addEventHandler(this, "playButton_click");
+ 
+
+  stopButton = new GButton(this, 5, 240, 80, 30);
+  stopButton.setText("Stop");
+  stopButton.addEventHandler(this, "stopButton_click");
+ 
 
 
   sequencePanel.addControl(movePosesDown);
@@ -2054,6 +2104,8 @@ public void createGUI() {
   sequencePanel.addControl(poseToWorkspace);
   sequencePanel.addControl(workspaceToPose);
   //sequencePanel.addControl(analog1);
+  sequencePanel.addControl(playButton);
+  sequencePanel.addControl(stopButton);
   sequencePanel.addControl(poses.get(0));
   
   

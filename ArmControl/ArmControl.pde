@@ -142,6 +142,14 @@ int currentPose = -1;  //current pose that has been selected.
 ArrayList<int[]> poseData;
 int[] blankPose = new int[8]; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
 
+
+int[] defaultPose = {0, 200, 200, 0, 512, 256, 125, 0}; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
+
+
+boolean playSequence = false;
+int lastTime;
+int lastPose;
+
 /***********/
 
 public void setup(){
@@ -356,12 +364,56 @@ public void draw()
   }//end dragFlag check
   
   
+
+
   
   
+  if(playSequence == true)
+  {
+   if(millis() - lastTime > 1000)
+   {
+     println("50 millis");
+     for(int i = 0; i < poses.size();i++)
+     {
+       if(i == lastPose)
+        {
+          poses.get(i).setCollapsed(false);
+          poseToWorkspaceInternal(lastPose);
+           updateFlag = true;//set update flag to signal sending an update on the next cycle
+          updateOffsetCoordinates();//update the coordinates to offset based on the current mode
+
+          
+          
+      println("play"+i);
+        }
+        else
+        {
+         poses.get(i).setCollapsed(true);
+          
+        }
+      
+    }
+        lastPose = lastPose + 1;
+  
+    lastTime = millis();
+  
+    if(lastPose  >= poses.size())
+    {
+       //playSequence = false;
+       lastPose = 0;
+      println("play ending");
+    }
+  
+     
+   }
+    
+    
+    
+    
+  }
   
   
-  
-  
+
   
   
   
