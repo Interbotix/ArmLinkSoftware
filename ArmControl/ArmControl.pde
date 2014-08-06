@@ -111,7 +111,7 @@ Serial[] sPorts = new Serial[numSerialPorts];  //array of serial ports, one for 
 int armPortIndex = -1; //the index of the serial port that an arm is currently connected to(relative to the list of avaialble serial ports). -1 = no arm connected
 
 
-int analogSampleTime = 333;//time between analog samples
+int analogSampleTime = 33;//time between analog samples
 long lastAnalogSample = millis();//
 int nextAnalog = 0;
 int[]analogValues = new int[8];
@@ -121,7 +121,7 @@ int[]analogValues = new int[8];
 int numPanels =0;
 int currentTopPanel = 0;
 int dragFlag = -1;
-int panelsX = 550;  //x coordinate for all panels
+int panelsX = 100;  //x coordinate for all panels
 int panelsYStart = 25;//distance between top of parent and first panel
 int panelYOffset = 25;//distance between panels
 int panelHeight = 18;//height of the panel
@@ -241,7 +241,8 @@ public void draw()
         println("analog");
         
         analogValues[nextAnalog] = analogRead(nextAnalog);
-        analogLabel[nextAnalog].setText(Integer.toString(analogValues[nextAnalog]));
+        analogLabel[nextAnalog].setText(
+        Integer.toString(nextAnalog) + ":" + Integer.toString(analogValues[nextAnalog]));
 
         nextAnalog = nextAnalog+1;
         if(nextAnalog > 7)

@@ -29,6 +29,8 @@ GButton helpButton;
 
 //setup panel
 GPanel setupPanel; //panel to hold setup data
+GPanel ioPanel; //panel to hold I/O data
+GPanel sequencePanel;
 GDropList serialList; //drop down to hold list of serial ports
 GButton connectButton,disconnectButton,autoConnectButton; //buttons for connecting/disconnecting and auto seeach
 
@@ -47,9 +49,9 @@ GTextField xTextField, yTextField, zTextField, wristAngleTextField, wristRotateT
 //sliders for positional data/delta
 GSlider xSlider, ySlider, zSlider, wristAngleSlider, wristRotateSlider, gripperSlider, deltaSlider; 
 //text labels for positional data/delta/extended
-GLabel xLabel, yLabel, zLabel, wristAngleLabel, wristRotateLabel, gripperLabel, deltaLabel, extendedLabel,digitalsLabel;
+GLabel xLabel, yLabel, zLabel, wristAngleLabel, wristRotateLabel, gripperLabel, deltaLabel, extendedLabel,digitalsLabel,analogTextLabel;
 //checkboxes for digital output values
-GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7; 
+GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox; 
 GCheckbox autoUpdateCheckbox;   //checkbox to enable auto-update mode
 GButton updateButton;           //button to manually update
 GImageButton waitingButton;    //waiting button, unused
@@ -90,6 +92,12 @@ GLabel[] analogLabel = new GLabel[8];
 
 public void setupPanel_click(GPanel source, GEvent event) { 
   printlnDebug("setupPanel - GPanel event occured " + System.currentTimeMillis()%10000000, 1 );
+} 
+public void ioPanel_click(GPanel source, GEvent event) { 
+  printlnDebug("ioPanel - GPanel event occured " + System.currentTimeMillis()%10000000, 1 );
+} 
+public void sequencePanel_click(GPanel source, GEvent event) { 
+  printlnDebug("sequencePanel - GPanel event occured " + System.currentTimeMillis()%10000000, 1 );
 } 
 
 //Called when a new serial port is selected
@@ -147,6 +155,8 @@ public void connectButton_click(GButton source, GEvent event)
       modePanel.setEnabled(true);
       controlPanel.setVisible(true);
       controlPanel.setEnabled(true);
+      sequencePanel.setVisible(true);
+      sequencePanel.setEnabled(true);
       delayMs(100);//short delay 
       setCartesian();
     }
@@ -190,7 +200,9 @@ public void disconnectButton_click(GButton source, GEvent event)
   disconnectButton.setAlpha(128);
   //disable & set invisible control and mode panel
   controlPanel.setVisible(false);
-  controlPanel.setEnabled(false);    
+  controlPanel.setEnabled(false); 
+  sequencePanel.setVisible(false);
+  sequencePanel.setEnabled(false);    
   modePanel.setVisible(false);
   modePanel.setEnabled(false);
   
@@ -204,6 +216,8 @@ public void disconnectButton_click(GButton source, GEvent event)
   digitalCheckbox5.setSelected(false);
   digitalCheckbox6.setSelected(false);
   digitalCheckbox7.setSelected(false);
+  
+  analogCheckbox.setSelected(false);
   
   //set arm/mode/orientation to default
   currentMode = 0;
@@ -267,6 +281,8 @@ public void autoConnectButton_click(GButton source, GEvent event)
     modePanel.setEnabled(true);
     controlPanel.setVisible(true);
     controlPanel.setEnabled(true);
+    sequencePanel.setVisible(true);
+    sequencePanel.setEnabled(true);
     disconnectButton.setEnabled(true);
     delayMs(200);//shot delay 
     setCartesian();
@@ -895,6 +911,33 @@ public void digitalCheckbox7_change(GCheckbox source, GEvent event)
   digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
+public void analogCheckbox_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("analogCheckbox - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+  
+  if(source.isSelected())
+  {
+    enableAnalog = true;
+    for(int j=0;j < 8; j++)
+    {
+      analogLabel[j].setVisible(true);
+    }
+  }
+  else
+  {
+    enableAnalog = false;
+    for(int j=0;j < 8; j++)
+    {
+      analogLabel[j].setVisible(false);
+    }
+  }
+  
+  
+
+  
+  
+} 
+
 
 //**********************Error GUI functions
 public void errorPanel_Click(GPanel source, GEvent event) 
@@ -1209,7 +1252,7 @@ public void newPose_click(GButton source, GEvent event)
   poses.get(numPanels).setCollapsed(true);//there is an odd bug if this is set to 'setCollapsed(false)' where the first time you click on the panel, it jumps to the bottom. setting 'setCollapse(true) seems to  aleviate this.
   poses.get(numPanels).setLocalColorScheme(numPanels%8);
   
-  controlPanel.addControl(poses.get(numPanels));
+  sequencePanel.addControl(poses.get(numPanels));
   numPanels++;
   
   
@@ -1259,9 +1302,11 @@ void displayError(String message, String link)
   //grey out other panels
   setupPanel.setAlpha(128);
   controlPanel.setAlpha(128);
+  sequencePanel.setAlpha(128);
   modePanel.setAlpha(128);
   setupPanel.setEnabled(false);
   controlPanel.setEnabled(false);
+  sequencePanel.setEnabled(false);
   modePanel.setEnabled(false);
 
   //show error panel
@@ -1290,10 +1335,12 @@ void hideError()
   //grey out other panels
   setupPanel.setAlpha(255);
   controlPanel.setAlpha(255);
+  sequencePanel.setAlpha(255);
   modePanel.setAlpha(255);
   setupPanel.setEnabled(true);
   controlPanel.setEnabled(true);
   modePanel.setEnabled(true);
+  sequencePanel.setEnabled(true);
 
   //show error panel
   errorPanel.setVisible(false);
@@ -1382,6 +1429,18 @@ public void createGUI() {
   setupPanel.addEventHandler(this, "setupPanel_click");
   //setupPanel.setDraggable(false);
   setupPanel.setCollapsible(false);
+  
+  
+  ioPanel = new GPanel(this, 5, 105, 465, 100, "I/O Panel");
+  ioPanel.setText("I/O Panel");
+  ioPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  ioPanel.setOpaque(true);
+  ioPanel.addEventHandler(this, "ioPanel_click");
+  //setupPanel.setDraggable(false);
+  ioPanel.setCollapsible(false);
+  
+  
+  
 
 
   serialList = new GDropList(this, 5, 24, 200, 132, 6);
@@ -1491,7 +1550,7 @@ public void createGUI() {
 
 
 //control
-  controlPanel = new GPanel(this, 5, 200, 880, 480, "Control Panel");
+  controlPanel = new GPanel(this, 5, 220, 295, 450, "Control Panel");
   controlPanel.setText("Control Panel");
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
@@ -1501,6 +1560,19 @@ public void createGUI() {
   
   controlPanel.setVisible(false);
   controlPanel.setEnabled(false);
+  
+  
+  
+  sequencePanel = new GPanel(this, 305, 220, 160, 450, "Sequence Panel");
+  sequencePanel.setText("Sequence Panel");
+  sequencePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  sequencePanel.setOpaque(true);
+  sequencePanel.addEventHandler(this, "sequencePanel_click");
+  //controlPanel.setDraggable(false);
+  sequencePanel.setCollapsible(false);
+  
+  sequencePanel.setVisible(false);
+  sequencePanel.setEnabled(false);
 
 
 
@@ -1514,7 +1586,7 @@ public void createGUI() {
   baseKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
   baseKnob.setVisible(false); //hide base knob by defualt
 
-  shoulderKnob = new GKnob(this, 13, 161, 50, 50, 1); 
+  shoulderKnob = new GKnob(this, 13, 130, 50, 50, 1); 
   shoulderKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
   shoulderKnob.setLimits(512.0, 0, 1023.0);//set value limits
   shoulderKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
@@ -1523,7 +1595,7 @@ public void createGUI() {
   shoulderKnob.addEventHandler(this, "shoulderKnob_change");//set event listener
   shoulderKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
 
-  elbowKnob = new GKnob(this, 113, 161, 50, 50, 1); 
+  elbowKnob = new GKnob(this, 113, 130, 50, 50, 1); 
   elbowKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
   elbowKnob.setLimits(512.0, 0, 1023.0);//set value limits
   elbowKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
@@ -1577,20 +1649,20 @@ public void createGUI() {
 
 
 
-  yTextField = new GTextField(this, 5, 80, 65, 20, G4P.SCROLLBARS_NONE);
+  yTextField = new GTextField(this, 5, 90, 65, 20, G4P.SCROLLBARS_NONE);
   yTextField.setText(Integer.toString(yParameters[0]));
   yTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   yTextField.setOpaque(true);
   yTextField.addEventHandler(this, "yTextField_change");
 
-  yLabel = new GLabel(this, 5, 100, 65, 14);
+  yLabel = new GLabel(this, 5, 110, 65, 14);
   yLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   yLabel.setText("Y Coord");
   yLabel.setOpaque(false);
 
 
 
-  ySlider = new GSlider(this, -35, 155, 145, 65, 10.0);
+  ySlider = new GSlider(this, -35, 165, 145, 65, 10.0);
   ySlider.setShowLimits(true);
   ySlider.setLimits(200.0, 50.0, 240.0);
   ySlider.setEasing(0.0);
@@ -1605,19 +1677,19 @@ public void createGUI() {
   ySlider.setRotation(3.1415927*1.5, GControlMode.CENTER); 
 
 
-  zTextField = new GTextField(this, 105, 80, 65, 20, G4P.SCROLLBARS_NONE);
+  zTextField = new GTextField(this, 105, 90, 65, 20, G4P.SCROLLBARS_NONE);
   zTextField.setText(Integer.toString(zParameters[0]));
   zTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   zTextField.setOpaque(true);
   zTextField.addEventHandler(this, "zTextField_change");
 
-  zLabel = new GLabel(this, 105, 100, 65, 14);
+  zLabel = new GLabel(this, 105, 110, 65, 14);
   zLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   zLabel.setText("Z Coord");
   zLabel.setOpaque(false);
 
 
-  zSlider = new GSlider(this, 65, 155, 145, 65, 10.0);
+  zSlider = new GSlider(this, 65, 165, 145, 65, 10.0);
   zSlider.setShowLimits(true);
   zSlider.setLimits(200.0, 20.0, 250.0);
   zSlider.setEasing(0.0);
@@ -1689,13 +1761,13 @@ public void createGUI() {
 
 
 
-  gripperTextField = new GTextField(this, 190, 110, 60, 20, G4P.SCROLLBARS_NONE);
+  gripperTextField = new GTextField(this, 190, 90, 60, 20, G4P.SCROLLBARS_NONE);
   gripperTextField.setText(Integer.toString(gripperParameters[0]));
   gripperTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   gripperTextField.setOpaque(true);
   gripperTextField.addEventHandler(this, "gripperTextField_change");
   
-  gripperLabel = new GLabel(this, 190, 135, 60, 14);
+  gripperLabel = new GLabel(this, 190, 110, 60, 14);
   gripperLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   gripperLabel.setText("Gripper");
   gripperLabel.setOpaque(false);
@@ -1711,6 +1783,7 @@ public void createGUI() {
   gripperSlider.addEventHandler(this, "gripperSlider_change");
   gripperSlider.setShowValue(true);
   gripperSlider.setVisible(false);
+  gripperSlider.setShowTicks(false);
 
 
 
@@ -1756,44 +1829,44 @@ public void createGUI() {
   extendedLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
 
-  digitalCheckbox0 = new GCheckbox(this, 5, 385, 28, 20);
+  digitalCheckbox0 = new GCheckbox(this, 5, 20, 28, 20);
   digitalCheckbox0.setOpaque(false);
   digitalCheckbox0.addEventHandler(this, "digitalCheckbox0_change");
   digitalCheckbox0.setText("0");
   digitalCheckbox0.setVisible(false);
   digitalCheckbox0.setEnabled(false);
 
-  digitalCheckbox1 = new GCheckbox(this, 32, 385, 28, 20);
+  digitalCheckbox1 = new GCheckbox(this, 32, 35, 28, 20);
   digitalCheckbox1.setOpaque(false);
   digitalCheckbox1.addEventHandler(this, "digitalCheckbox1_change");
   digitalCheckbox1.setText("1");
 
-  digitalCheckbox2 = new GCheckbox(this, 60, 385, 28, 20);
+  digitalCheckbox2 = new GCheckbox(this, 60, 35, 28, 20);
   digitalCheckbox2.setOpaque(false);
   digitalCheckbox2.addEventHandler(this, "digitalCheckbox2_change");
   digitalCheckbox2.setText("2");
 
-  digitalCheckbox3 = new GCheckbox(this, 88, 385, 28, 20);
+  digitalCheckbox3 = new GCheckbox(this, 88, 35, 28, 20);
   digitalCheckbox3.setOpaque(false);
   digitalCheckbox3.addEventHandler(this, "digitalCheckbox3_change");
   digitalCheckbox3.setText("3");
 
-  digitalCheckbox4 = new GCheckbox(this, 116, 385, 28, 20);
+  digitalCheckbox4 = new GCheckbox(this, 116, 35, 28, 20);
   digitalCheckbox4.setOpaque(false);
   digitalCheckbox4.addEventHandler(this, "digitalCheckbox4_change");
   digitalCheckbox4.setText("4");
 
-  digitalCheckbox5 = new GCheckbox(this, 144, 385, 28, 20);
+  digitalCheckbox5 = new GCheckbox(this, 144, 35, 28, 20);
   digitalCheckbox5.setOpaque(false);
   digitalCheckbox5.addEventHandler(this, "digitalCheckbox5_change");
   digitalCheckbox5.setText("5");
 
-  digitalCheckbox6 = new GCheckbox(this, 172, 385, 28, 20);
+  digitalCheckbox6 = new GCheckbox(this, 172, 35, 28, 20);
   digitalCheckbox6.setOpaque(false);
   digitalCheckbox6.addEventHandler(this, "digitalCheckbox6_change");
   digitalCheckbox6.setText("6");
 
-  digitalCheckbox7 = new GCheckbox(this, 200, 385, 28, 20);
+  digitalCheckbox7 = new GCheckbox(this, 200, 35, 28, 20);
   digitalCheckbox7.setOpaque(false);
   digitalCheckbox7.addEventHandler(this, "digitalCheckbox7_change");
   digitalCheckbox7.setText("7");
@@ -1801,66 +1874,95 @@ public void createGUI() {
 
 
 
-  digitalsLabel = new GLabel(this, 5, 400, 100, 14);
+  digitalsLabel = new GLabel(this, 5, 20, 100, 14);
   digitalsLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  digitalsLabel.setText("Digital Values");
+  digitalsLabel.setText("Digital Output");
   digitalsLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   digitalsLabel.setOpaque(false);
 
 
-  analogLabel[0] = new GLabel(this, 350, 400, 60, 14);
+
+
+  analogCheckbox = new GCheckbox(this, 86, 58, 80, 20);
+  analogCheckbox.setOpaque(false);
+  analogCheckbox.addEventHandler(this, "analogCheckbox_change");
+  analogCheckbox.setText("Enable:", GAlign.LEFT, GAlign.MIDDLE);
+
+  analogCheckbox.setVisible(true);
+  analogCheckbox.setEnabled(true);
+  
+  
+  
+  analogTextLabel = new GLabel(this, 5, 60, 100, 14);
+  analogTextLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  analogTextLabel.setText("Analog Input");
+  analogTextLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  analogTextLabel.setOpaque(false);
+
+
+
+
+  analogLabel[0] = new GLabel(this, 30, 80, 90, 14);
   analogLabel[0].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[0].setText("0");
   analogLabel[0].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[0].setOpaque(false);
+  analogLabel[0].setVisible(false);
 
-  analogLabel[1] = new GLabel(this, 380, 400, 60, 14);
+  analogLabel[1] = new GLabel(this, 80, 80, 60, 14);
   analogLabel[1].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[1].setText("1");
   analogLabel[1].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[1].setOpaque(false);
+  analogLabel[1].setVisible(false);
 
-  analogLabel[2] = new GLabel(this, 410, 400, 60, 14);
+  analogLabel[2] = new GLabel(this, 130, 80, 60, 14);
   analogLabel[2].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[2].setText("2");
   analogLabel[2].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[2].setOpaque(false);
+  analogLabel[2].setVisible(false);
 
-  analogLabel[3] = new GLabel(this, 440, 400, 60, 14);
+  analogLabel[3] = new GLabel(this, 180, 80, 60, 14);
   analogLabel[3].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[3].setText("3");
   analogLabel[3].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[3].setOpaque(false);
+  analogLabel[3].setVisible(false);
 
-  analogLabel[4] = new GLabel(this, 350, 420, 60, 14);
+  analogLabel[4] = new GLabel(this, 230, 80, 60, 14);
   analogLabel[4].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[4].setText("4");
   analogLabel[4].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[4].setOpaque(false);
+  analogLabel[4].setVisible(false);
 
-  analogLabel[5] = new GLabel(this, 380, 420, 60, 14);
+  analogLabel[5] = new GLabel(this, 280, 80, 60, 14);
   analogLabel[5].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[5].setText("5");
   analogLabel[5].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[5].setOpaque(false);
+  analogLabel[5].setVisible(false);
 
-  analogLabel[6] = new GLabel(this, 410, 420, 60, 14);
+  analogLabel[6] = new GLabel(this, 330, 80, 60, 14);
   analogLabel[6].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[6].setText("6");
   analogLabel[6].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[6].setOpaque(false);
+  analogLabel[6].setVisible(false);
 
-  analogLabel[7] = new GLabel(this, 440, 420, 60, 14);
+  analogLabel[7] = new GLabel(this, 380, 80, 60, 14);
   analogLabel[7].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[7].setText("7");
   analogLabel[7].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[7].setOpaque(false);
+  analogLabel[7].setVisible(false);
 
 
 
 
 
-  updateButton = new GButton(this, 5, 425, 100, 50);
+  updateButton = new GButton(this, 5, 390, 100, 50);
   updateButton.setText("Update");
   updateButton.addEventHandler(this, "updateButton_click");
   updateButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -1868,37 +1970,44 @@ public void createGUI() {
 
  
 
-  autoUpdateCheckbox = new GCheckbox(this, 105, 459, 100, 20);
+  autoUpdateCheckbox = new GCheckbox(this, 105, 424, 100, 20);
   autoUpdateCheckbox.setOpaque(false);
   autoUpdateCheckbox.addEventHandler(this, "autoUpdateCheckbox_change");
   autoUpdateCheckbox.setText("Auto Update");
  
  
   
-  gripperLeftSlider = new GCustomSlider(this, 180, 100, 150, 200, "gripperL");
+  //gripperLeftSlider = new GCustomSlider(this, 180, 100, 100, 200, "gripperL");
+  gripperLeftSlider = new GCustomSlider(this, 180, 65, 75, 200, "gripperL");
   gripperLeftSlider.setLimits(256.0, 512.0, 0.0);
   gripperLeftSlider.setShowDecor(false, true, false, false);
-  gripperLeftSlider.setShowLimits(true);
+  //gripperLeftSlider.setShowLimits(true);
   gripperLeftSlider.setEasing(0.0);
   gripperLeftSlider.setNumberFormat(G4P.INTEGER, 0);
   gripperLeftSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
-  gripperLeftSlider.setShowValue(true);
+  gripperLeftSlider.setShowValue(false);
   gripperLeftSlider.addEventHandler(this, "gripperLeftSlider_change");
-  
   gripperLeftSlider.setValue(256);
+  gripperLeftSlider.setShowTicks(false);
+  gripperLeftSlider.setRotation(PI/2,GControlMode.CENTER);
+  //gripperLeftSlider.moveTo(180,100);
   
-  gripperRightSlider = new GCustomSlider(this, 324, 100, 150, 200, "gripperR");
-  gripperRightSlider.setShowDecor(false, true, false, false);
+  
+  //gripperRightSlider = new GCustomSlider(this, 258, 100, 100, 200, "gripperR");
+  gripperRightSlider = new GCustomSlider(this, 180, 115, 75, 200, "gripperR");
   gripperRightSlider.setLimits(256.0, 0.0, 512.0);
+  gripperRightSlider.setShowDecor(false, true, false, false);
   gripperRightSlider.setShowDecor(false, true, false, false);
  // gripperRightSlider.setShowLimits(true);
   gripperRightSlider.setEasing(0.0);
   gripperRightSlider.setNumberFormat(G4P.INTEGER, 0);
   gripperRightSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
-  gripperRightSlider.setValue(256);
  // gripperRightSlider.setShowValue(true);
   gripperRightSlider.addEventHandler(this, "gripperRightSlider_change");
-  
+  gripperRightSlider.setValue(256);
+  gripperRightSlider.setShowTicks(false);
+  gripperRightSlider.setRotation(PI/2,GControlMode.CENTER);
+  //gripperRightSlider.moveTo(258,100);
   
 
   poses = new ArrayList<GPanel>();
@@ -1911,41 +2020,41 @@ public void createGUI() {
   poses.get(0).setCollapsed(true);
   poses.get(0).setLocalColorScheme(0);
 
-  movePosesUp = new GButton(this, 700, 26, 80, 30);
-  movePosesUp.setText("upt");
+  movePosesUp = new GButton(this, 5, 26, 80, 30);
+  movePosesUp.setText("Scroll Up");
   movePosesUp.addEventHandler(this, "movePosesUp_click");
   
-  newPose = new GButton(this, 700, 120, 80, 30);
+  newPose = new GButton(this, 5, 120, 80, 30);
   newPose.setText("new");
   newPose.addEventHandler(this, "newPose_click");
   
   
-  movePosesDown = new GButton(this, 700, 73, 80, 30);
-  movePosesDown.setText("Down");
+  movePosesDown = new GButton(this, 5, 73, 80, 30);
+  movePosesDown.setText("Sccroll Down");
   movePosesDown.addEventHandler(this, "movePosesDown_click");
   
-  workspaceToPose = new GButton(this, 700, 180, 80, 30);
+  workspaceToPose = new GButton(this, 5, 180, 80, 30);
   workspaceToPose.setText("-->");
   workspaceToPose.addEventHandler(this, "workspaceToPose_click");
   
-  poseToWorkspace = new GButton(this, 700, 210, 80, 30);
+  poseToWorkspace = new GButton(this, 5, 210, 80, 30);
   poseToWorkspace.setText("<--");
   poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
   
   
-  analog1 = new GButton(this, 700, 150, 80, 30);
+  analog1 = new GButton(this, 5, 150, 80, 30);
   analog1.setText("a1");
   analog1.addEventHandler(this, "a1_click");
  
 
 
-  controlPanel.addControl(movePosesDown);
-  controlPanel.addControl(newPose);
-  controlPanel.addControl(movePosesUp);
-  controlPanel.addControl(poseToWorkspace);
-  controlPanel.addControl(workspaceToPose);
-  controlPanel.addControl(analog1);
-  controlPanel.addControl(poses.get(0));
+  sequencePanel.addControl(movePosesDown);
+  sequencePanel.addControl(newPose);
+  sequencePanel.addControl(movePosesUp);
+  sequencePanel.addControl(poseToWorkspace);
+  sequencePanel.addControl(workspaceToPose);
+  //sequencePanel.addControl(analog1);
+  sequencePanel.addControl(poses.get(0));
   
   
   controlPanel.addControl(xTextField);
@@ -1971,15 +2080,6 @@ public void createGUI() {
   controlPanel.addControl(deltaLabel);
   controlPanel.addControl(extendedTextField);
   controlPanel.addControl(extendedLabel);
-  controlPanel.addControl(digitalsLabel);
-  controlPanel.addControl(digitalCheckbox0);
-  controlPanel.addControl(digitalCheckbox1);
-  controlPanel.addControl(digitalCheckbox2);
-  controlPanel.addControl(digitalCheckbox3);
-  controlPanel.addControl(digitalCheckbox4);
-  controlPanel.addControl(digitalCheckbox5);
-  controlPanel.addControl(digitalCheckbox6);
-  controlPanel.addControl(digitalCheckbox7);
   controlPanel.addControl(autoUpdateCheckbox);
   controlPanel.addControl(updateButton);
   controlPanel.addControl(baseKnob);
@@ -1990,15 +2090,32 @@ public void createGUI() {
   controlPanel.addControl(gripperLeftSlider);
   controlPanel.addControl(gripperRightSlider);
   //controlPanel.addControl(waitingButton);
-  controlPanel.addControl(analogLabel[0]);
-  controlPanel.addControl(analogLabel[1]);
-  controlPanel.addControl(analogLabel[2]);
-  controlPanel.addControl(analogLabel[3]);
-  controlPanel.addControl(analogLabel[4]);
-  controlPanel.addControl(analogLabel[5]);
-  controlPanel.addControl(analogLabel[6]);
-  controlPanel.addControl(analogLabel[7]);
   
+  
+  ioPanel.addControl(digitalsLabel);
+  ioPanel.addControl(digitalCheckbox0);
+  ioPanel.addControl(digitalCheckbox1);
+  ioPanel.addControl(digitalCheckbox2);
+  ioPanel.addControl(digitalCheckbox3);
+  ioPanel.addControl(digitalCheckbox4);
+  ioPanel.addControl(digitalCheckbox5);
+  ioPanel.addControl(digitalCheckbox6);
+  ioPanel.addControl(digitalCheckbox7);
+  
+  
+  ioPanel.addControl(analogTextLabel);
+  ioPanel.addControl(analogCheckbox);
+  ioPanel.addControl(analogLabel[0]);
+  ioPanel.addControl(analogLabel[1]);
+  ioPanel.addControl(analogLabel[2]);
+  ioPanel.addControl(analogLabel[3]);
+  ioPanel.addControl(analogLabel[4]);
+  ioPanel.addControl(analogLabel[5]);
+  ioPanel.addControl(analogLabel[6]);
+  ioPanel.addControl(analogLabel[7]);
+  
+  
+
   
   
 
@@ -2141,7 +2258,9 @@ void setPositionParameters()
   armParamBaseKnob = new int[][]{pincherBaseKnob,reactorBaseKnob,widowBaseKnob,widowBaseKnob, snapperBaseKnob};
   armParamElbowKnob = new int[][]{pincherShoulderKnob,reactorShoulderKnob,widowShoulderKnob,widowShoulderKnob,snapperShoulderKnob};
   armParamShoulderKnob = new int[][]{pincherElbowKnob,reactorElbowKnob,widowElbowKnob,widowElbowKnob,snapperElbowKnob}; 
-            
+  
+  //armParamDelta new int[][]{pincherElbowKnob,reactorElbowKnob,widowElbowKnob,widowElbowKnob,snapperElbowKnob}; 
+             
             
   switch(currentMode)
   {
@@ -2200,6 +2319,8 @@ void setPositionParameters()
            gripperLeftSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][2], armParamGripper[currentArm-1][1]);    
         gripperRightSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][1], armParamGripper[currentArm-1][2]); 
         arrayCopy(armParamGripper[currentArm-1], gripperParameters);
+        
+        
         
         break;
   
@@ -2470,6 +2591,32 @@ void setPositionParameters()
     wristRotateLabel.setVisible(false);
     
   }
+  
+  //reset deltas
+
+  deltaTextField.setText("125");
+  deltaTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  deltaTextField.setOpaque(true);
+  deltaTextField.addEventHandler(this, "deltaTextField_change");
+
+
+
+  deltaSlider.setShowValue(true);
+  deltaSlider.setShowLimits(true);
+  deltaSlider.setLimits(125.0, 0.0, 255.0);
+  deltaSlider.setEasing(0.0);
+  deltaSlider.setNumberFormat(G4P.INTEGER, 0);
+  deltaSlider.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  deltaSlider.setOpaque(false);
+  deltaSlider.addEventHandler(this, "deltaSlider_change");
+
+
+
+  deltaLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  deltaLabel.setText("Delta");
+  deltaLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  deltaLabel.setOpaque(false);
+  
             
     
     
