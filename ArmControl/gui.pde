@@ -384,6 +384,7 @@ public void orient90Button_click(GButton source, GEvent event)
   currentOrientation = 2;
   setPositionParameters();
   changeArmMode();
+  updateFlag = true;//set update flag to signal sending an update on the next cycle
 } 
 
 
@@ -438,6 +439,7 @@ void setCartesian()
   currentMode = 1;//set mode data
   setPositionParameters();//set parameters in gui and working vars
   changeArmMode();//change arm mode
+  updateFlag = true;//set update flag to signal sending an update on the next cycle
 }
 
 
@@ -510,6 +512,11 @@ public void backhoeModeButton_click(GButton source, GEvent event)
   
   setPositionParameters();//set parameters in gui and working vars
   changeArmMode();//change arm mode
+  
+  updateFlag = true;//set update flag to signal sending an update on the next cycle
+
+
+
 }
 //process when manual update button is pressed
 public void updateButton_click(GButton source, GEvent event) 
@@ -625,7 +632,7 @@ public void wristRotateTextField_change(GTextField source, GEvent event)
 public void gripperTextField_change(GTextField source, GEvent event) 
 {
   printlnDebug("gripperTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
-  gripperCurrent = armTextFieldChange(source, event, gripperSlider, gripperParameters[1], gripperParameters[2], gripperCurrent);
+  gripperCurrent = armTextFieldChange(source, event, gripperLeftSlider, gripperParameters[1], gripperParameters[2], gripperCurrent);
 }
 
 
@@ -1513,7 +1520,7 @@ public void createGUI() {
 
 
 //mode
-  modePanel = new GPanel(this, 5, 60, 240, 39, "Mode Panel");
+  modePanel = new GPanel(this, 5, 60, 240, 38, "Mode Panel");
   modePanel.setText("Mode Panel");
   modePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   modePanel.setOpaque(true);
@@ -1525,7 +1532,7 @@ public void createGUI() {
   //modePanel.setEnabled(false);
 
 //wrist angle
-  wristPanel = new GPanel(this, 260, 60, 210, 39, "Wrist Panel");
+  wristPanel = new GPanel(this, 310, 60, 160, 38, "Wrist Panel");
   wristPanel.setText("Wrist Panel");
   wristPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristPanel.setOpaque(true);
@@ -1590,7 +1597,7 @@ public void createGUI() {
 
 
 //control
-  controlPanel = new GPanel(this, 5, 220, 295, 450, "Control Panel");
+  controlPanel = new GPanel(this, 5, 220, 265, 525, "Control Panel");
   controlPanel.setText("Control Panel");
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
@@ -1603,7 +1610,7 @@ public void createGUI() {
   
   
   
-  sequencePanel = new GPanel(this, 305, 220, 160, 450, "Sequence Panel");
+  sequencePanel = new GPanel(this, 310, 220, 160, 525, "Sequence Panel");
   sequencePanel.setText("Sequence Panel");
   sequencePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   sequencePanel.setOpaque(true);
@@ -1644,7 +1651,7 @@ public void createGUI() {
   elbowKnob.addEventHandler(this, "elbowKnob_change");//set event listener
   elbowKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
 
-  wristAngleKnob = new GKnob(this, 250, 30, 50, 50, 1); 
+  wristAngleKnob = new GKnob(this, 5, 320, 50, 50, 1); 
   wristAngleKnob.setTurnRange(270.0, 90.0); //set angle limits start/finish
   wristAngleKnob.setLimits(512.0, 0, 1023.0);//set value limits
   wristAngleKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
@@ -1654,14 +1661,14 @@ public void createGUI() {
   wristAngleKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
   //wristAngleKnob.setVisible(false);
 
-  wristRotateKnob = new GKnob(this, 5, 30, 50, 50, 1); 
+  wristRotateKnob = new GKnob(this, 105, 320, 50, 50, 1); 
   wristRotateKnob.setTurnRange(120.0, 60.0); //set angle limits start/finish
   wristRotateKnob.setLimits(512.0, 0, 1023.0);//set value limits
   wristRotateKnob.setShowArcOnly(true);   //show arc, hide par of circle you cannot interct with
   wristRotateKnob.setStickToTicks(false);   //no need to stick to ticks
   wristRotateKnob.setTurnMode(1281); //???
   wristRotateKnob.addEventHandler(this, "wristRotateKnob_change");//set event listener
-  wristRotateKnob.setLocalColorScheme(10);//set color scheme just for knobs, custom color in /data
+  wristRotateKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
 
 
   xTextField = new GTextField(this, 5, 40, 60, 20, G4P.SCROLLBARS_NONE);
@@ -1744,18 +1751,18 @@ public void createGUI() {
 
 
 
-  wristAngleTextField = new GTextField(this, 185, 40, 60, 20, G4P.SCROLLBARS_NONE);
+  wristAngleTextField = new GTextField(this, 5, 280, 60, 20, G4P.SCROLLBARS_NONE);
   wristAngleTextField.setText(Integer.toString(wristAngleParameters[0]));
   wristAngleTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristAngleTextField.setOpaque(true);
   wristAngleTextField.addEventHandler(this, "wristAngleTextField_change");
 
-  wristAngleLabel = new GLabel(this, 185, 65, 70, 14);
+  wristAngleLabel = new GLabel(this, 5, 305, 70, 14);
   wristAngleLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   wristAngleLabel.setText("Wrist Angle");
-  wristAngleLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  //wristAngleLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristAngleLabel.setOpaque(false);
-  wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
+  //wristAngleLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
   wristAngleSlider = new GSlider(this, 75, 155, 145, 40, 10.0);
   wristAngleSlider.setShowLimits(true);
@@ -1773,18 +1780,18 @@ public void createGUI() {
 
 
 
-  wristRotateTextField = new GTextField(this, 5, 40, 60, 20, G4P.SCROLLBARS_NONE);
+  wristRotateTextField = new GTextField(this, 105, 280, 60, 20, G4P.SCROLLBARS_NONE);
   wristRotateTextField.setText(Integer.toString( wristRotateParameters[0]));
   wristRotateTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateTextField.setOpaque(true);
   wristRotateTextField.addEventHandler(this, "wristRotateTextField_change");
   
-  wristRotateLabel = new GLabel(this, 300, 65, 70, 14);
+  wristRotateLabel = new GLabel(this, 105, 305, 90, 14);
   wristRotateLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   wristRotateLabel.setText("Wrist Rotate");
-  wristRotateLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  //wristRotateLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristRotateLabel.setOpaque(false);
-  wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
+  //wristRotateLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
   wristRotateSlider = new GSlider(this, 75, 200, 145, 40, 10.0);
   wristRotateSlider.setShowLimits(true);
@@ -1829,14 +1836,14 @@ public void createGUI() {
 
 
 
-  deltaTextField = new GTextField(this, 5, 300, 60, 20, G4P.SCROLLBARS_NONE);
+  deltaTextField = new GTextField(this, 5, 380, 60, 20, G4P.SCROLLBARS_NONE);
   deltaTextField.setText("125");
   deltaTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   deltaTextField.setOpaque(true);
   deltaTextField.addEventHandler(this, "deltaTextField_change");
 
 
-  deltaSlider = new GSlider(this, 75, 290, 145, 40, 10.0);
+  deltaSlider = new GSlider(this, 75, 370, 145, 40, 10.0);
   deltaSlider.setShowValue(true);
   deltaSlider.setShowLimits(true);
   deltaSlider.setLimits(125.0, 0.0, 255.0);
@@ -1847,7 +1854,7 @@ public void createGUI() {
   deltaSlider.addEventHandler(this, "deltaSlider_change");
 
 
-  deltaLabel = new GLabel(this, 5, 320, 60, 14);
+  deltaLabel = new GLabel(this, 5, 400, 60, 14);
   deltaLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   deltaLabel.setText("Delta");
   deltaLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -1855,13 +1862,13 @@ public void createGUI() {
 
 
 
-  extendedTextField = new GTextField(this, 5, 345, 60, 20, G4P.SCROLLBARS_NONE);
+  extendedTextField = new GTextField(this, 5, 425, 60, 20, G4P.SCROLLBARS_NONE);
   extendedTextField.setText("0");
   extendedTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   extendedTextField.setOpaque(true);
   extendedTextField.addEventHandler(this, "extendedTextField_change");
 
-  extendedLabel = new GLabel(this, 5, 365, 100, 14);
+  extendedLabel = new GLabel(this, 5, 445, 100, 14);
   extendedLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   extendedLabel.setText("Extended Byte");
   extendedLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -2002,7 +2009,7 @@ public void createGUI() {
 
 
 
-  updateButton = new GButton(this, 5, 390, 100, 50);
+  updateButton = new GButton(this, 5, 470, 100, 50);
   updateButton.setText("Update");
   updateButton.addEventHandler(this, "updateButton_click");
   updateButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -2010,7 +2017,7 @@ public void createGUI() {
 
  
 
-  autoUpdateCheckbox = new GCheckbox(this, 105, 424, 100, 20);
+  autoUpdateCheckbox = new GCheckbox(this, 105, 504, 100, 20);
   autoUpdateCheckbox.setOpaque(false);
   autoUpdateCheckbox.addEventHandler(this, "autoUpdateCheckbox_change");
   autoUpdateCheckbox.setText("Auto Update");
@@ -2061,40 +2068,42 @@ public void createGUI() {
   poses.get(0).setCollapsed(true);
   poses.get(0).setLocalColorScheme(0);
 
-  movePosesUp = new GButton(this, 5, 26, 80, 30);
+  movePosesUp = new GButton(this, 5, 250, 80, 30);
   movePosesUp.setText("Scroll Up");
   movePosesUp.addEventHandler(this, "movePosesUp_click");
   
-  newPose = new GButton(this, 5, 120, 80, 30);
-  newPose.setText("new");
-  newPose.addEventHandler(this, "newPose_click");
-  
-  
-  movePosesDown = new GButton(this, 5, 73, 80, 30);
+ 
+  movePosesDown = new GButton(this, 5, 280, 80, 30);
   movePosesDown.setText("Sccroll Down");
   movePosesDown.addEventHandler(this, "movePosesDown_click");
   
-  workspaceToPose = new GButton(this, 5, 180, 80, 30);
-  workspaceToPose.setText("-->");
-  workspaceToPose.addEventHandler(this, "workspaceToPose_click");
-  
-  poseToWorkspace = new GButton(this, 5, 210, 80, 30);
-  poseToWorkspace.setText("<--");
-  poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
+  newPose = new GButton(this, 5, 25, 80, 30);
+  newPose.setText("New Pose");
+  newPose.addEventHandler(this, "newPose_click");
   
   
-  analog1 = new GButton(this, 5, 150, 80, 30);
-  analog1.setText("a1");
-  analog1.addEventHandler(this, "a1_click");
- 
-  playButton = new GButton(this, 5, 150, 80, 30);
-  playButton.setText("play");
+  playButton = new GButton(this, 5, 55, 80, 30);
+  playButton.setText("Play Poses");
   playButton.addEventHandler(this, "playButton_click");
  
 
-  stopButton = new GButton(this, 5, 240, 80, 30);
-  stopButton.setText("Stop");
+  stopButton = new GButton(this, 5, 85, 80, 30);
+  stopButton.setText("Stop Poses");
   stopButton.addEventHandler(this, "stopButton_click");
+ 
+ 
+ 
+  workspaceToPose = new GButton(this, 5, 125, 80, 60);
+  workspaceToPose.setText("Save Pose    -->");
+  workspaceToPose.addEventHandler(this, "workspaceToPose_click");
+  
+  poseToWorkspace = new GButton(this, 5, 185, 80, 60);
+  poseToWorkspace.setText(" Load Pose    <--");
+  poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
+  
+  
+  
+  
  
 
 
@@ -2640,7 +2649,7 @@ void setPositionParameters()
     
     wristRotateTextField.setVisible(true);
     wristRotateKnob.setVisible(true);
-    wristRotateLabel.setVisible(false);
+    wristRotateLabel.setVisible(true);
     
   }
   

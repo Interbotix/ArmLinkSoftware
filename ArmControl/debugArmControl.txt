@@ -1,0 +1,226 @@
+Started at 6-8-2014 12:8-40-
+yTextField_change - GTextField event occured 4920841
+2 0 0 
+yTextField_change - GTextField event occured 4921251
+2 0 0 
+yTextField_change - GTextField event occured 4921251
+2 0 0 
+yTextField_change - GTextField event occured 4921273
+2 0 0 
+yTextField_change - GTextField event occured 4921290
+2 0 0 
+yTextField_change - GTextField event occured 4921312
+2 0 0 
+yTextField_change - GTextField event occured 4921360
+2 0 0 
+yTextField_change - GTextField event occured 4921378
+2 0 0 
+yTextField_change - GTextField event occured 4921414
+2 0 0 
+yTextField_change - GTextField event occured 4921449
+2 0 0 
+yTextField_change - GTextField event occured 4921506
+2 0 0 
+yTextField_change - GTextField event occured 4922429
+2 0 0 
+yTextField_change - GTextField event occured 4922430
+2 1 
+yTextField_change - GTextField event occured 4922554
+2 1 
+yTextField_change - GTextField event occured 4922762
+2 1 0 
+yTextField_change - GTextField event occured 4924161
+2 1 0 
+ySlider_change - GSlider event occured 4924174
+backhoeModeButton - GButton event occured 4924266
+X:512 Y:210 Z:210 Wrist Angle:90 Wrist Rotate:512 Gripper:256 Delta:125
+Packet Sent: 0xFF 0x02 0x00 0x00 0xD2 0x00 0xD2 0x00 0x5A 0x02 0x00 0x01 0x00 0x7D 0x00 0x00 0x7F
+cylindricalModeButton - GButton event occured 4928426
+Packet Sent: 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x30 0xCF
+Setting Arm to Cylindrical IK mode, Gripper Angle Straight - Incoming Raw Packet from readFromArm():FF-02-02-00-FB- 
+Begin Packet Verification of :-1:2:2:0:-5:verifyPacket Success!
+Response succesful! Arm mode changed
+cartesianModeButton - GButton event occured 4932347
+Packet Sent: 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x20 0xDF
+Setting Arm to Cartesian IK mode, Gripper Angle Straight - Incoming Raw Packet from readFromArm():FF-02-00-00-FD- 
+Begin Packet Verification of :-1:2:0:0:-3:verifyPacket Success!
+Response succesful! Arm mode changed
+yTextField_change - GTextField event occured 4934827
+1 7 0 
+yTextField_change - GTextField event occured 4934982
+1 7 0 
+yTextField_change - GTextField event occured 4935001
+1 7 0 
+yTextField_change - GTextField event occured 4935018
+1 7 0 
+yTextField_change - GTextField event occured 4935038
+1 7 0 
+yTextField_change - GTextField event occured 4935054
+1 7 0 
+yTextField_change - GTextField event occured 4935075
+1 7 0 
+yTextField_change - GTextField event occured 4935109
+1 7 0 
+yTextField_change - GTextField event occured 4935128
+1 7 0 
+yTextField_change - GTextField event occured 4935128
+1 7 0 
+yTextField_change - GTextField event occured 4935161
+1 7 0 
+yTextField_change - GTextField event occured 4935179
+1 7 0 
+yTextField_change - GTextField event occured 4935196
+1 7 0 
+yTextField_change - GTextField event occured 4935214
+1 7 0 
+yTextField_change - GTextField event occured 4935232
+1 7 0 
+yTextField_change - GTextField event occured 4935248
+1 7 0 
+yTextField_change - GTextField event occured 4935282
+1 7 0 
+yTextField_change - GTextField event occured 4935316
+1 7 0 
+yTextField_change - GTextField event occured 4935352
+1 7 0 
+yTextField_change - GTextField event occured 4935392
+1 7 0 
+yTextField_change - GTextField event occured 4935426
+1 7 0 
+yTextField_change - GTextField event occured 4935476
+1 7 0 
+yTextField_change - GTextField event occured 4935527
+1 7 0 
+yTextField_change - GTextField event occured 4939600
+1 7 0 
+yTextField_change - GTextField event occured 4939601
+2 
+yTextField_change - GTextField event occured 4939709
+2 
+yTextField_change - GTextField event occured 4939862
+2 2 
+yTextField_change - GTextField event occured 4940163
+2 2 0 
+yTextField_change - GTextField event occured 4941745
+2 2 0 
+ySlider_change - GSlider event occured 4941759
+backhoeModeButton - GButton event occured 4941869
+X:512 Y:220 Z:210 Wrist Angle:90 Wrist Rotate:512 Gripper:256 Delta:125
+Packet Sent: 0xFF 0x02 0x00 0x00 0xDC 0x00 0xD2 0x00 0x5A 0x02 0x00 0x01 0x00 0x7D 0x00 0x00 0x75
+cylindricalModeButton - GButton event occured 4946693
+Packet Sent: 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x30 0xCF
+Setting Arm to Cylindrical IK mode, Gripper Angle Straight - Incoming Raw Packet from readFromArm():FF-02-02-00-FB- 
+Begin Packet Verification of :-1:2:2:0:-5:verifyPacket Success!
+Response succesful! Arm mode changed
+yTextField_change - GTextField event occured 4949160
+1 7 0 
+yTextField_change - GTextField event occured 4949318
+1 7 0 
+yTextField_change - GTextField event occured 4949343
+1 7 0 
+yTextField_change - GTextField event occured 4949343
+1 7 0 
+yTextField_change - GTextField event occured 4949360
+1 7 0 
+yTextField_change - GTextField event occured 4949378
+1 7 0 
+yTextField_change - GTextField event occured 4949395
+1 7 0 
+yTextField_change - GTextField event occured 4949414
+1 7 0 
+yTextField_change - GTextField event occured 4949434
+1 7 0 
+yTextField_change - GTextField event occured 4949452
+1 7 0 
+yTextField_change - GTextField event occured 4949476
+1 7 0 
+yTextField_change - GTextField event occured 4949476
+1 7 0 
+yTextField_change - GTextField event occured 4949493
+1 7 0 
+yTextField_change - GTextField event occured 4949511
+1 7 0 
+yTextField_change - GTextField event occured 4949529
+1 7 0 
+yTextField_change - GTextField event occured 4949548
+1 7 0 
+yTextField_change - GTextField event occured 4949568
+1 7 0 
+yTextField_change - GTextField event occured 4950079
+1 7 0 
+yTextField_change - GTextField event occured 4950079
+2 
+yTextField_change - GTextField event occured 4950180
+2 
+yTextField_change - GTextField event occured 4950280
+2 3 
+yTextField_change - GTextField event occured 4950464
+2 3 0 
+yTextField_change - GTextField event occured 4951795
+2 3 0 
+ySlider_change - GSlider event occured 4951808
+backhoeModeButton - GButton event occured 4951898
+X:512 Y:230 Z:210 Wrist Angle:90 Wrist Rotate:512 Gripper:256 Delta:125
+Packet Sent: 0xFF 0x02 0x00 0x00 0xE6 0x00 0xD2 0x00 0x5A 0x02 0x00 0x01 0x00 0x7D 0x00 0x00 0x6B
+cartesianModeButton - GButton event occured 4958810
+Packet Sent: 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x20 0xDF
+Setting Arm to Cartesian IK mode, Gripper Angle Straight - Incoming Raw Packet from readFromArm():FF-02-00-00-FD- 
+Begin Packet Verification of :-1:2:0:0:-3:verifyPacket Success!
+Response succesful! Arm mode changed
+yTextField_change - GTextField event occured 4962677
+1 7 0 
+yTextField_change - GTextField event occured 4962677
+1 7 0 
+autoUpdateCheckbox_change - GCheckbox event occured 4963028
+yTextField_change - GTextField event occured 4965677
+1 7 0 
+yTextField_change - GTextField event occured 4965677
+1 7 0 
+yTextField_change - GTextField event occured 4966482
+1 7 0 
+yTextField_change - GTextField event occured 4966482
+1 7 0 
+autoUpdateCheckbox_change - GCheckbox event occured 4966598
+yTextField_change - GTextField event occured 4967879
+1 7 0 
+yTextField_change - GTextField event occured 4968682
+1 7 0 
+yTextField_change - GTextField event occured 4968682
+1 7 0 
+yTextField_change - GTextField event occured 4968716
+1 7 0 
+yTextField_change - GTextField event occured 4968733
+1 7 0 
+yTextField_change - GTextField event occured 4968733
+1 7 0 
+yTextField_change - GTextField event occured 4968754
+1 7 0 
+yTextField_change - GTextField event occured 4968770
+1 7 0 
+yTextField_change - GTextField event occured 4968793
+1 7 0 
+yTextField_change - GTextField event occured 4968810
+1 7 0 
+yTextField_change - GTextField event occured 4968828
+1 7 0 
+yTextField_change - GTextField event occured 4968845
+1 7 0 
+yTextField_change - GTextField event occured 4968915
+1 7 0 
+yTextField_change - GTextField event occured 4968948
+1 7 0 
+yTextField_change - GTextField event occured 4969678
+1 7 0 
+yTextField_change - GTextField event occured 4969679
+2 
+yTextField_change - GTextField event occured 4969794
+2 
+yTextField_change - GTextField event occured 4969896
+2 3 
+yTextField_change - GTextField event occured 4970098
+2 3 5 
+yTextField_change - GTextField event occured 4971348
+2 3 5 
+ySlider_change - GSlider event occured 4971364
+backhoeModeButton - GButton event occured 4971461
+X:512 Y:235 Z:210 Wrist Angle:90 Wrist Rotate:512 Gripper:256 Delta

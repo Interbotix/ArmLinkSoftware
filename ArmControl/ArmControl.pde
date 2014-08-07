@@ -153,7 +153,7 @@ int lastPose;
 /***********/
 
 public void setup(){
-  size(900, 700, JAVA2D);  //draw initial screen
+  size(900, 750, JAVA2D);  //draw initial screen
   poseData = new ArrayList<int[]>();
    
   createGUI();   //draw GUI components defined in gui.pde

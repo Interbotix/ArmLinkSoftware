@@ -108,8 +108,8 @@ int[][] armParamShoulderKnob = new int[3][2];
 //default values for the phantomX pincher. These will be loaded into the working position variables 
 //when the pincher is connected, and when modes are changed.
 int[] pincherNormalX = {0,-200,200};
-int[] pincherNormalY = {200,50,240};
-int[] pincherNormalZ = {200,20,250};
+int[] pincherNormalY = {170,50,240};
+int[] pincherNormalZ = {210,20,250};
 int[] pincherNormalWristAngle = {0,-90,90};
 int[] pincherWristRotate = {0,0,0};//not implemented in hardware
 int[] pincherGripper = {256,0,512};
@@ -126,7 +126,7 @@ int[] pincherBHWristRot = {512,0,1023};
 int[] pincherBHWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] pincherBHWristAngle90Knob = {90,45};//angle data for knob limits
 
-int[] pincherWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] pincherWristAngleBHKnob = {90,270};//angle data for knob limits
 int[] pincherWristRotKnob = {120,60};
 
 int[] pincherBaseKnob = {120,60};
@@ -138,8 +138,8 @@ int[] pincherElbowKnob = {180,0};
 //default values for the phantomX reactor. These will be loaded into the working position variables 
 //when the reactor is connected, and when modes are changed.
 int[] reactorNormalX = {0,-300,300};
-int[] reactorNormalY = {200,50,350};
-int[] reactorNormalZ = {200,20,250};
+int[] reactorNormalY = {235,50,350};
+int[] reactorNormalZ = {210,20,250};
 int[] reactorNormalWristAngle = {0,-90,90};
 int[] reactorWristRotate = {0,-512,511};
 int[] reactorGripper = {256,0,512};
@@ -155,7 +155,7 @@ int[] reactorBHWristRot = {512,0,1023};
 
 int[] reactorWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] reactorWristAngle90Knob = {90,135};//angle data for knob limits
-int[] reactorWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] reactorWristAngleBHKnob = {90,270};//angle data for knob limits
 int[] reactorWristRotKnob = {120,60};
 int[] reactorBaseKnob = {120,60};
 int[] reactorShoulderKnob = {120,60};
@@ -166,8 +166,8 @@ int[] reactorElbowKnob = {120,60};
 //default values for the widowx. These will be loaded into the working position variables 
 //when the widowx is connected, and when modes are changed.
 int[] widowNormalX = {0,-300,300};
-int[] widowNormalY = {200,50,400};
-int[] widowNormalZ = {200,20,350};
+int[] widowNormalY = {250,50,400};
+int[] widowNormalZ = {225,20,350};
 int[] widowNormalWristAngle = {0,-90,90};
 int[] widowWristRotate = {0,-512,511};
 int[] widowGripper = {256,0,512};
@@ -184,7 +184,7 @@ int[] widowBHWristRot = {512,0,1023};
 int[] widowBHWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] widowBHWristAngle90Knob = {90,135};//angle data for knob limits
 
-int[] widowWristAngleBHKnob = {270,90};//angle data for knob limits
+int[] widowWristAngleBHKnob = {90,270};//angle data for knob limits
 int[] widowWristRotKnob = {120,60};
 
 int[] widowBaseKnob = {90,90};
