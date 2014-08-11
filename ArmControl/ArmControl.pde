@@ -104,6 +104,7 @@ boolean zkey = false;
 boolean wangkey = false;
 boolean wrotkey = false;
 boolean gkey = false;
+boolean dkey = false;
 
 int startupWaitTime = 10000;    //time in ms for the program to wait for a response from the ArbotiX
 Serial[] sPorts = new Serial[numSerialPorts];  //array of serial ports, one for each avaialable serial port.
@@ -147,6 +148,7 @@ int[] defaultPose = {0, 200, 200, 0, 512, 256, 125, 0}; //blank pose : x, y, z, 
 
 
 boolean playSequence = false;
+//boolean waitForResponse = false;
 int lastTime;
 int lastPose;
 
@@ -203,19 +205,22 @@ public void draw()
         //send commander packet with the current global currentOffset coordinatges
         sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
      
-
-      /*//use this code to enable return packet checking for positional commands
-        byte[] responseBytes = new byte[5];    //byte array to hold response data
-        responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
-  
-        if(verifyPacket(responseBytes) == true)
-        {
-          printlnDebug("Moved!"); 
-        }
-        else
-        {
-          printlnDebug("No Arm Found"); 
-        }*/
+        //if a sequence is playing, wait for the arm response before moving on
+//        if(playSequence ==true)
+//        {
+//          //use this code to enable return packet checking for positional commands
+//          byte[] responseBytes = new byte[5];    //byte array to hold response data
+//          //responseBytes = readFromArm(5);//read raw data from arm, complete with wait time
+//          responseBytes = readFromArmFast(5);
+//        }
+//        if(verifyPacket(responseBytes) == true)
+//        {
+//          printlnDebug("Moved!"); 
+//        }
+//        else
+//        {
+//          printlnDebug("No Arm Found"); 
+//        }
           
       }
       
@@ -370,7 +375,7 @@ public void draw()
   
   if(playSequence == true)
   {
-   if(millis() - lastTime > 1000)
+   if(millis() - lastTime > 20 * deltaCurrent)
    {
      println("50 millis");
      for(int i = 0; i < poses.size();i++)
@@ -627,103 +632,192 @@ void keyPressed()
   {
    zkey=true; 
   }
-  if(key =='4')
+  if(key =='5')
   {
    wangkey=true; 
   }
-  if(key =='5')
+  if(key =='6')
   {
    wrotkey=true; 
   }
-  if(key =='6')
+  if(key =='4')
   {
    gkey=true; 
   }
-  
-  //check for up/down keys
-  if (key==CODED)
+  if(key =='7')
   {
+   dkey=true; 
+  }
+
+
+
+
+    if(key == ' ')
+    {
+      
+      playSequence = !playSequence;
+
+    }
+
+
+
+
+  //check for up/down keys
+  if (key == CODED)
+  {
+    
+    
+
+
+
+    if(keyCode == LEFT)
+    {
+      
+      poseToWorkspaceInternal(currentPose);
+
+    }
+    if(keyCode == RIGHT)
+    {
+      workspaceToPoseInternal();
+      
+    }
+    
+    
+    
+    
+    
+    
+    
+    
    //if up AND a number 1-6 are being pressed, increment the appropriate field
    if (keyCode == UP)
    {
-     if(xkey==true)
+     if(xkey == true)
      {
-       xCurrent = xCurrent + 1;
-       xTextField.setText(Integer.toString(xCurrent));
-       xSlider.setValue(xCurrent);
+       println(xCurrent);
+       xCurrent = xCurrent + 1;      
+       
      }
-     if(ykey==true)
+     if(ykey == true)
      {
        yCurrent = yCurrent + 1;
-       yTextField.setText(Integer.toString(yCurrent));
-       ySlider.setValue(yCurrent);
+       
+       
      }
-     if(zkey==true)
+     if(zkey == true)
      {
        zCurrent = zCurrent + 1;
-       zTextField.setText(Integer.toString(zCurrent));
-       zSlider.setValue(zCurrent);
+       
+       
      }
-     if(wangkey==true)
+     if(wangkey == true)
      {
        wristAngleCurrent = wristAngleCurrent + 1;
-       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
-       wristAngleSlider.setValue(wristAngleCurrent);
+       
      }
-     if(wrotkey==true)
+     if(wrotkey == true)
      {
        wristRotateCurrent = wristRotateCurrent + 1;
-       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
-       wristRotateSlider.setValue(wristRotateCurrent);
+       
      }
-     if(gkey==true)
+     if(gkey == true)
      {
        gripperCurrent = gripperCurrent + 1;
-       gripperTextField.setText(Integer.toString(gripperCurrent));
-        gripperSlider.setValue(gripperCurrent);
+       
+     }
+     if(dkey == true)
+     {
+       deltaCurrent = deltaCurrent + 1;
+       
      }
    }
      
    //if down AND a number 1-6 are being pressed, increment the appropriate field
    if (keyCode == DOWN)
    {
-     if(xkey==true)
+     if(xkey == true)
      {
        xCurrent = xCurrent - 1;
-       xTextField.setText(Integer.toString(xCurrent));
-       xSlider.setValue(xCurrent);
+       
      }
-     if(ykey==true)
+     if(ykey == true)
      {
        yCurrent = yCurrent - 1;
-       yTextField.setText(Integer.toString(yCurrent));
-       ySlider.setValue(yCurrent);
+       
      }
-     if(zkey==true)
+     if(zkey == true)
      {
        zCurrent = zCurrent - 1;
-       zTextField.setText(Integer.toString(zCurrent));
-       zSlider.setValue(zCurrent);
+       
      }
-     if(wangkey==true)
+     if(wangkey == true)
      {
        wristAngleCurrent = wristAngleCurrent - 1;
-       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
-       wristAngleSlider.setValue(wristAngleCurrent);
+       
      }
-     if(wrotkey==true)
+     if(wrotkey == true)
      {
        wristRotateCurrent = wristRotateCurrent - 1;
-       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
-       wristRotateSlider.setValue(wristRotateCurrent);
+
      }
-     if(gkey==true)
+     if(dkey == true)
      {
-       gripperCurrent = gripperCurrent - 1;
-       gripperTextField.setText(Integer.toString(gripperCurrent));
-        gripperSlider.setValue(gripperCurrent);
+       deltaCurrent = deltaCurrent - 1;
+       
      }
    }
+   
+   
+       
+       xTextField.setText(Integer.toString(xCurrent));
+       yTextField.setText(Integer.toString(yCurrent));
+       zTextField.setText(Integer.toString(zCurrent));
+       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+       gripperTextField.setText(Integer.toString(gripperCurrent));
+
+       if(currentMode == 1)
+       {  
+         xSlider.setValue(xCurrent);
+         ySlider.setValue(yCurrent);
+         zSlider.setValue(zCurrent);
+         wristRotateKnob.setValue(wristRotateCurrent);
+         wristAngleKnob.setValue(wristAngleCurrent);
+         gripperLeftSlider.setValue(gripperCurrent);
+         gripperRightSlider.setValue(gripperCurrent);
+         deltaSlider.setValue(deltaCurrent);
+         
+       }
+       else if (currentMode == 2 )
+       {
+         baseKnob.setValue(xCurrent);
+         ySlider.setValue(yCurrent);
+         zSlider.setValue(zCurrent);
+         wristRotateKnob.setValue(wristRotateCurrent);
+         wristAngleKnob.setValue(wristAngleCurrent);
+         gripperLeftSlider.setValue(gripperCurrent);
+         gripperRightSlider.setValue(gripperCurrent);
+         deltaSlider.setValue(deltaCurrent);
+         
+         
+       }
+   
+       else if (currentMode == 3)
+       {
+         baseKnob.setValue(xCurrent);
+         shoulderKnob.setValue(yCurrent);
+         elbowKnob.setValue(zCurrent);
+         wristRotateKnob.setValue(wristRotateCurrent);
+         wristAngleKnob.setValue(wristAngleCurrent);
+         gripperLeftSlider.setValue(gripperCurrent);
+         gripperRightSlider.setValue(gripperCurrent);
+         deltaSlider.setValue(deltaCurrent);
+         
+       }
+   
+   
+   
+   
    
      
   } 
@@ -745,17 +839,21 @@ void keyReleased()
   {
    zkey=false; 
   }
-  if(key =='4')
+  if(key =='5')
   {
    wangkey=false; 
   }
-  if(key =='5')
+  if(key =='6')
   {
    wrotkey=false; 
   }
-  if(key =='6')
+  if(key =='4')
   {
    gkey=false; 
+  }
+  if(key =='7')
+  {
+   dkey = false; 
   }
   
   

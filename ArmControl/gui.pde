@@ -160,6 +160,8 @@ public void connectButton_click(GButton source, GEvent event)
       controlPanel.setEnabled(true);
       sequencePanel.setVisible(true);
       sequencePanel.setEnabled(true);
+      ioPanel.setVisible(true);
+      ioPanel.setEnabled(true);
       delayMs(100);//short delay 
       setCartesian();
     }
@@ -208,6 +210,10 @@ public void disconnectButton_click(GButton source, GEvent event)
   sequencePanel.setEnabled(false);    
   modePanel.setVisible(false);
   modePanel.setEnabled(false);
+  ioPanel.setVisible(false);
+  ioPanel.setEnabled(false);
+  wristPanel.setVisible(false);
+  wristPanel.setEnabled(false);
   
   //uncheck all checkboxes to reset
   autoUpdateCheckbox.setSelected(false);
@@ -286,6 +292,8 @@ public void autoConnectButton_click(GButton source, GEvent event)
     controlPanel.setEnabled(true);
     sequencePanel.setVisible(true);
     sequencePanel.setEnabled(true);
+    ioPanel.setVisible(true);
+    ioPanel.setEnabled(true);
     disconnectButton.setEnabled(true);
     delayMs(200);//shot delay 
     setCartesian();
@@ -1058,6 +1066,22 @@ public void movePosesDown_click(GButton source, GEvent event)
 //save current workspace to the selected pose
 public void workspaceToPose_click(GButton source, GEvent event) 
 {
+  workspaceToPoseInternal();
+  
+}
+//load selected pose to workspace
+public void poseToWorkspace_click(GButton source, GEvent event) 
+{
+//  poses.get(currentPose)[0];
+
+poseToWorkspaceInternal(currentPose);
+  
+}
+
+
+public void workspaceToPoseInternal()
+{  
+
   int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte  };
   
   poseData.set(currentPose, tempPose);
@@ -1068,14 +1092,6 @@ public void workspaceToPose_click(GButton source, GEvent event)
     
   }
   
-  
-}
-//load selected pose to workspace
-public void poseToWorkspace_click(GButton source, GEvent event) 
-{
-//  poses.get(currentPose)[0];
-
-poseToWorkspaceInternal(currentPose);
   
 }
 
@@ -1478,15 +1494,6 @@ public void createGUI() {
   setupPanel.setCollapsible(false);
   
   
-  ioPanel = new GPanel(this, 5, 105, 465, 100, "I/O Panel");
-  ioPanel.setText("I/O Panel");
-  ioPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
-  ioPanel.setOpaque(true);
-  ioPanel.addEventHandler(this, "ioPanel_click");
-  //setupPanel.setDraggable(false);
-  ioPanel.setCollapsible(false);
-  
-  
   
 
 
@@ -1588,16 +1595,23 @@ public void createGUI() {
   modePanel.addControl(cartesianModeButton);
   modePanel.addControl(cylindricalModeButton);
   modePanel.addControl(backhoeModeButton);
+  
+  modePanel.setVisible(false);
+  modePanel.setEnabled(false);
+  
+  
   //modePanel.addControl(arm90Button);
   //modePanel.addControl(armStraightButton);
 
   wristPanel.addControl(orientStraightButton);
   wristPanel.addControl(orient90Button);
+  wristPanel.setVisible(false);
+  wristPanel.setEnabled(false);
 
 
 
 //control
-  controlPanel = new GPanel(this, 5, 220, 265, 525, "Control Panel");
+  controlPanel = new GPanel(this, 5, 105, 265, 525, "Control Panel");
   controlPanel.setText("Control Panel");
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
@@ -1610,7 +1624,7 @@ public void createGUI() {
   
   
   
-  sequencePanel = new GPanel(this, 310, 220, 160, 525, "Sequence Panel");
+  sequencePanel = new GPanel(this, 310, 105, 160, 525, "Sequence Panel");
   sequencePanel.setText("Sequence Panel");
   sequencePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   sequencePanel.setOpaque(true);
@@ -1621,6 +1635,21 @@ public void createGUI() {
   sequencePanel.setVisible(false);
   sequencePanel.setEnabled(false);
 
+
+
+  
+  
+  ioPanel = new GPanel(this, 5, 635, 465, 100, "I/O Panel");
+  ioPanel.setText("I/O Panel");
+  ioPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  ioPanel.setOpaque(true);
+  ioPanel.addEventHandler(this, "ioPanel_click");
+  //setupPanel.setDraggable(false);
+  ioPanel.setCollapsible(false);
+  ioPanel.setVisible(false);
+  ioPanel.setEnabled(false);
+  
+  
 
 
   baseKnob = new GKnob(this, 100, 30, 50, 50, 1); 
@@ -1650,7 +1679,9 @@ public void createGUI() {
   elbowKnob.setTurnMode(1281); //???
   elbowKnob.addEventHandler(this, "elbowKnob_change");//set event listener
   elbowKnob.setLocalColorScheme(9);//set color scheme just for knobs, custom color in /data
-
+  elbowKnob.setRotation(-PI*1/3,GControlMode.CENTER);
+  
+  
   wristAngleKnob = new GKnob(this, 5, 320, 50, 50, 1); 
   wristAngleKnob.setTurnRange(270.0, 90.0); //set angle limits start/finish
   wristAngleKnob.setLimits(512.0, 0, 1023.0);//set value limits
@@ -2723,7 +2754,15 @@ void setPositionParameters()
     gripperCurrent = gripperParameters[0]; 
     deltaCurrent = deltaParameters[0]; 
     extendedTextField.setText("0");
+    updateOffsetCoordinates();
 
+println(xCurrent);
+println(xParameters[0]);
+println(yCurrent);
+println(zCurrent);
+println(wristAngleCurrent);
+println(wristRotateCurrent);
+println(gripperCurrent);
 }//end set postiion parameters
 
 
