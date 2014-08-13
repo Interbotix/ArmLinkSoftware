@@ -112,7 +112,7 @@ float[] armParamElbowKnobRotation = new float[numberOfArms];
 int[] pincherNormalX = {0,-200,200};
 int[] pincherNormalY = {170,50,240};
 int[] pincherNormalZ = {210,20,250};
-int[] pincherNormalWristAngle = {0,-90,90};
+int[] pincherNormalWristAngle = {0,-30,30};
 int[] pincherWristRotate = {0,0,0};//not implemented in hardware
 int[] pincherGripper = {256,0,512};
 int[] pincher90X = {0,-200,200};
@@ -125,7 +125,7 @@ int[] pincherBHElbow = {512,1023,205};
 int[] pincherBHWristAngle = {512,815,205};
 int[] pincherBHWristRot = {512,0,1023};
 
-int[] pincherBHWristAngleNormalKnob = {90,270};//angle data for knob limits
+int[] pincherBHWristAngleNormalKnob = {150,210};//angle data for knob limits
 int[] pincherBHWristAngle90Knob = {90,45};//angle data for knob limits
 
 int[] pincherWristAngleBHKnob = {90,270};//angle data for knob limits
@@ -143,7 +143,7 @@ float pincherElbowKnobRotation = -PI*1/3;
 int[] reactorNormalX = {0,-300,300};
 int[] reactorNormalY = {235,50,350};
 int[] reactorNormalZ = {210,20,250};
-int[] reactorNormalWristAngle = {0,-90,90};
+int[] reactorNormalWristAngle = {0,-30,30};
 int[] reactorWristRotate = {0,511,-512};
 int[] reactorGripper = {256,0,512};
 int[] reactor90X = {0,-300,300};
@@ -156,7 +156,7 @@ int[] reactorBHElbow = {512,210,900};
 int[] reactorBHWristAngle = {512,200,830};
 int[] reactorBHWristRot = {512,1023,0};
 
-int[] reactorWristAngleNormalKnob = {90,270};//angle data for knob limits
+int[] reactorWristAngleNormalKnob = {150,210};//angle data for knob limits
 int[] reactorWristAngle90Knob = {90,135};//angle data for knob limits
 int[] reactorWristAngleBHKnob = {90,270};//angle data for knob limits
 int[] reactorWristRotKnob = {120,60};
@@ -172,7 +172,7 @@ float reactorElbowKnobRotation = 0;
 int[] widowNormalX = {0,-300,300};
 int[] widowNormalY = {250,50,400};
 int[] widowNormalZ = {225,20,350};
-int[] widowNormalWristAngle = {0,-90,90};
+int[] widowNormalWristAngle = {0,-30,30};
 int[] widowWristRotate = {0,511,-512};
 int[] widowGripper = {256,0,512};
 int[] widow90X = {0,-300,300};
@@ -185,7 +185,7 @@ int[] widowBHElbow = {2048,1024,3072};
 int[] widowBHWristAngle = {2048,1024,3072};
 int[] widowBHWristRot = {512,1023,0};
 
-int[] widowBHWristAngleNormalKnob = {90,270};//angle data for knob limits
+int[] widowBHWristAngleNormalKnob = {150,210};//angle data for knob limits
 int[] widowBHWristAngle90Knob = {90,135};//angle data for knob limits
 
 int[] widowWristAngleBHKnob = {90,270};//angle data for knob limits

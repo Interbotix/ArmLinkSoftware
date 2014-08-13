@@ -152,10 +152,16 @@ boolean playSequence = false;
 int lastTime;
 int lastPose;
 
+
+
+int connectFlag = 0;
+int disconnectFlag = 0;
+int autoConnectFlag = 0;
+
 /***********/
 
 public void setup(){
-  size(900, 750, JAVA2D);  //draw initial screen
+  size(475, 733, JAVA2D);  //draw initial screen
   poseData = new ArrayList<int[]>();
    
   createGUI();   //draw GUI components defined in gui.pde
@@ -179,10 +185,245 @@ public void setup(){
 public void draw()
 {
   background(128);//draw background color
-  image(logoImg, 505, 5, 230, 78);  //draw logo image
+  image(logoImg, 5, 0, 280, 50);  //draw logo image
   image(footerImg, 15, 770);      //draw footer image
 
   currentTime = millis();  //get current timestamp
+  
+  if(connectFlag ==1)
+  {
+    
+
+    //check to make sure serialPortSelected is not -1, -1 means no serial port was selected. Valid port indexes are 0+
+    if (selectedSerialPort > -1)
+    {    
+    
+      //try to connect to the port at 38400bps, otherwise show an error message
+      try
+      {
+        sPorts[selectedSerialPort] =  new Serial(this, Serial.list()[selectedSerialPort], 38400);
+      }
+      catch(Exception e)
+      {
+        printlnDebug("Error Opening Serial Port"+serialList.getSelectedText());
+        sPorts[selectedSerialPort] = null;
+        displayError("Unable to open selected serial port" + serialList.getSelectedText() +". See link for possible solutions.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
+      }
+    }
+      
+    //check to see if the serial port connection has been made
+    if (sPorts[selectedSerialPort] != null)
+    {
+      
+      //try to communicate with arm
+      if (checkArmStartup() == true)
+      {       
+        //disable connect button and serial list
+        connectButton.setEnabled(false);
+        connectButton.setAlpha(128);
+        serialList.setEnabled(false);
+        serialList.setAlpha(128);
+        autoConnectButton.setEnabled(false);
+        autoConnectButton.setAlpha(128);
+        //enable disconnect button
+        disconnectButton.setEnabled(true);
+        disconnectButton.setAlpha(255);
+      
+        //enable & set visible control and mode panel
+        modePanel.setVisible(true);
+        modePanel.setEnabled(true);
+        controlPanel.setVisible(true);
+        controlPanel.setEnabled(true);
+        sequencePanel.setVisible(true);
+        sequencePanel.setEnabled(true);
+        ioPanel.setVisible(true);
+        ioPanel.setEnabled(true);
+        delayMs(100);//short delay 
+        setCartesian();
+         statusLabel.setText("Connected");
+
+      }
+      
+      //if arm is not found return an error
+      else  
+      {
+        sPorts[selectedSerialPort].stop();
+  //      sPorts.get(selectedSerialPort) = null;
+        sPorts[selectedSerialPort] = null;
+        printlnDebug("No Arm Found on port "+serialList.getSelectedText()) ;
+      
+        displayError("No Arm found on serial port" + serialList.getSelectedText() +". Make sure power is on and the arm is connected to the computer.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
+     
+         statusLabel.setText("Not Connected");
+      }
+    }
+   
+   connectFlag = 0;
+  
+    
+  }
+  
+  
+  if(disconnectFlag == 1)
+  {
+        putArmToSleep();
+    //TODO: call response & check
+    
+    ///stop/disconnect the serial port and set sPort to null for future checks
+    sPorts[armPortIndex].stop();   
+    sPorts[armPortIndex] = null;
+    
+    //enable connect button and serial port 
+    connectButton.setEnabled(true);
+    connectButton.setAlpha(255);
+    serialList.setEnabled(true);
+    serialList.setAlpha(255); 
+    autoConnectButton.setEnabled(true);
+    autoConnectButton.setAlpha(255);
+    
+    //disable disconnect button
+    disconnectButton.setEnabled(false);
+    disconnectButton.setAlpha(128);
+    //disable & set invisible control and mode panel
+    controlPanel.setVisible(false);
+    controlPanel.setEnabled(false); 
+    sequencePanel.setVisible(false);
+    sequencePanel.setEnabled(false);    
+    modePanel.setVisible(false);
+    modePanel.setEnabled(false);
+    ioPanel.setVisible(false);
+    ioPanel.setEnabled(false);
+    wristPanel.setVisible(false);
+    wristPanel.setEnabled(false);
+    
+    //uncheck all checkboxes to reset
+    autoUpdateCheckbox.setSelected(false);
+    //digitalCheckbox0.setSelected(false);
+    digitalCheckbox1.setSelected(false);
+    digitalCheckbox2.setSelected(false);
+    digitalCheckbox3.setSelected(false);
+    digitalCheckbox4.setSelected(false);
+    digitalCheckbox5.setSelected(false);
+    digitalCheckbox6.setSelected(false);
+    digitalCheckbox7.setSelected(false);
+    
+    analogCheckbox.setSelected(false);
+    
+    //set arm/mode/orientation to default
+    currentMode = 0;
+    currentArm = 0;
+    currentOrientation = 0;
+    
+    //reset button color mode
+    cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+    cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+    backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+    
+    //reset alpha trapsnparency on orientation buttons
+    //DEPRECATED armStraightButton.setAlpha(128);
+    //DEPRECATEDarm90Button.setAlpha(128);
+    
+    
+    disconnectFlag = 0;
+    statusLabel.setText("Not Connected");
+    
+  }
+  
+  
+  
+  if(autoConnectFlag == 1)
+  {
+    
+    
+    //disable connect button and serial list
+    connectButton.setEnabled(false);
+    connectButton.setAlpha(128);
+    serialList.setEnabled(false);
+    serialList.setAlpha(128);
+    autoConnectButton.setEnabled(false);
+    autoConnectButton.setAlpha(128);
+    //enable disconnect button
+    disconnectButton.setEnabled(true);
+    disconnectButton.setAlpha(255);
+  
+    //for (int i=0;i<Serial.list().length;i++) //scan from bottom to top
+    //scan from the top of the list to the bottom, for most users the ArbotiX will be the most recently added ftdi device
+    for (int i=Serial.list().length-1;i>=0;i--) 
+    {
+      println("port"+i);
+      //try to connect to the port at 38400bps, otherwise show an error message
+      try
+      {
+        sPorts[i] = new Serial(this, Serial.list()[i], 38400);
+      }
+      catch(Exception e)
+      {
+        printlnDebug("Error Opening Serial Port "+Serial.list()[i] + " for auto search");
+        sPorts[i] = null;
+      }
+    }//end interating through serial list
+    
+    //try to communicate with arm
+    if (checkArmStartup() == true)
+    {
+      printlnDebug("Arm Found from auto search on port "+Serial.list()[armPortIndex]) ;
+    
+      //enable & set visible control and mode panel, enable disconnect button
+      modePanel.setVisible(true);
+      modePanel.setEnabled(true);
+      controlPanel.setVisible(true);
+      controlPanel.setEnabled(true);
+      sequencePanel.setVisible(true);
+      sequencePanel.setEnabled(true);
+      ioPanel.setVisible(true);
+      ioPanel.setEnabled(true);
+      disconnectButton.setEnabled(true);
+      delayMs(200);//shot delay 
+      setCartesian();
+      
+      statusLabel.setText("Connected");
+         
+      //break;
+    }
+    
+    //if arm is not found return an error
+    else  
+    {
+      //enable connect button and serial port 
+      connectButton.setEnabled(true);
+      connectButton.setAlpha(255);
+      serialList.setEnabled(true);
+      serialList.setAlpha(255); 
+      autoConnectButton.setEnabled(true);
+      autoConnectButton.setAlpha(255);
+  
+      //disable disconnect button
+      disconnectButton.setEnabled(false);
+      disconnectButton.setAlpha(128);
+      //disable & set invisible control and mode panel
+  
+      displayError("No Arm found using auto seach. Please check power and connections", "");
+      statusLabel.setText("Not Connected");
+    }
+       //stop all serial ports without an arm connected 
+    for (int i=0;i<numSerialPorts;i++) 
+    {      
+      //if the index being scanned is not the index of an port with an arm connected, stop/null the port
+      //if the port is already null, then it was never opened
+      if (armPortIndex != i & sPorts[i] != null)
+      {
+        printlnDebug("Stopping port "+Serial.list()[i]) ;
+        sPorts[i].stop();
+        sPorts[i] = null;
+      }
+    }
+    
+  
+    autoConnectFlag = 0;
+  }
+  
+  
+  
   
   //check if
   //  -update flag is true, and a packet needs to be sent
@@ -619,215 +860,220 @@ void printDebug(String message)
  ******************************************************/
 void keyPressed()
 {
-  //change 'updageFlag' variable if 'enter' is pressed
-  if(key ==ENTER)
-  {
-    updateFlag = true;
-    updateOffsetCoordinates();
-  }
   
-  //if any of the numbers 1-6 are currently being pressed, change the state of the variable
-  if(key =='1')
+  if(currentArm != 0)
   {
-   xkey=true; 
-  }
-  if(key =='2')
-  {
-   ykey=true; 
-  }
-  if(key =='3')
-  {
-   zkey=true; 
-  }
-  if(key =='5')
-  {
-   wangkey=true; 
-  }
-  if(key =='6')
-  {
-   wrotkey=true; 
-  }
-  if(key =='4')
-  {
-   gkey=true; 
-  }
-  if(key =='7')
-  {
-   dkey=true; 
-  }
-
-
-
-
-    if(key == ' ')
+    //change 'updageFlag' variable if 'enter' is pressed
+    if(key ==ENTER)
+    {
+      updateFlag = true;
+      updateOffsetCoordinates();
+    }
+    
+    //if any of the numbers 1-6 are currently being pressed, change the state of the variable
+    if(key =='1')
+    {
+     xkey=true; 
+    }
+    if(key =='2')
+    {
+     ykey=true; 
+    }
+    if(key =='3')
+    {
+     zkey=true; 
+    }
+    if(key =='5')
+    {
+     wangkey=true; 
+    }
+    if(key =='6')
+    {
+     wrotkey=true; 
+    }
+    if(key =='4')
+    {
+     gkey=true; 
+    }
+    if(key =='7')
+    {
+     dkey=true; 
+    }
+  
+  
+  
+  
+      if(key == ' ')
+      {
+        
+        playSequence = !playSequence;
+  
+      }
+  
+  
+  
+  
+  
+      if(key == ',')
+      {
+        
+        poseToWorkspaceInternal(currentPose);
+  
+      }
+      if(key == '.')
+      {
+        workspaceToPoseInternal();
+        
+      }
+  
+  
+    //check for up/down keys
+    if (key == CODED)
     {
       
-      playSequence = !playSequence;
-
-    }
-
-
-
-
-
-    if(key == ',')
-    {
       
-      poseToWorkspaceInternal(currentPose);
-
-    }
-    if(key == '.')
-    {
-      workspaceToPoseInternal();
       
-    }
-
-
-  //check for up/down keys
-  if (key == CODED)
-  {
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-   //if up AND a number 1-6 are being pressed, increment the appropriate field
-   if (keyCode == UP)
-   {
-     if(xkey == true)
+      
+      
+      
+      
+      
+      
+      
+     //if up AND a number 1-6 are being pressed, increment the appropriate field
+     if (keyCode == UP)
      {
-       println(xCurrent);
-       xCurrent = xCurrent + 1;      
-       
-     }
-     if(ykey == true)
-     {
-       yCurrent = yCurrent + 1;
-       
-       
-     }
-     if(zkey == true)
-     {
-       zCurrent = zCurrent + 1;
-       
-       
-     }
-     if(wangkey == true)
-     {
-       wristAngleCurrent = wristAngleCurrent + 1;
-       
-     }
-     if(wrotkey == true)
-     {
-       wristRotateCurrent = wristRotateCurrent + 1;
-       
-     }
-     if(gkey == true)
-     {
-       gripperCurrent = gripperCurrent + 1;
-       
-     }
-     if(dkey == true)
-     {
-       deltaCurrent = deltaCurrent + 1;
-       
-     }
-   }
-     
-   //if down AND a number 1-6 are being pressed, increment the appropriate field
-   if (keyCode == DOWN)
-   {
-     if(xkey == true)
-     {
-       xCurrent = xCurrent - 1;
-       
-     }
-     if(ykey == true)
-     {
-       yCurrent = yCurrent - 1;
-       
-     }
-     if(zkey == true)
-     {
-       zCurrent = zCurrent - 1;
-       
-     }
-     if(wangkey == true)
-     {
-       wristAngleCurrent = wristAngleCurrent - 1;
-       
-     }
-     if(wrotkey == true)
-     {
-       wristRotateCurrent = wristRotateCurrent - 1;
-
-     }
-     if(dkey == true)
-     {
-       deltaCurrent = deltaCurrent - 1;
-       
-     }
-   }
-   
-   
-       
-       xTextField.setText(Integer.toString(xCurrent));
-       yTextField.setText(Integer.toString(yCurrent));
-       zTextField.setText(Integer.toString(zCurrent));
-       wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
-       wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
-       gripperTextField.setText(Integer.toString(gripperCurrent));
-
-       if(currentMode == 1)
-       {  
-         xSlider.setValue(xCurrent);
-         ySlider.setValue(yCurrent);
-         zSlider.setValue(zCurrent);
-         wristRotateKnob.setValue(wristRotateCurrent);
-         wristAngleKnob.setValue(wristAngleCurrent);
-         gripperLeftSlider.setValue(gripperCurrent);
-         gripperRightSlider.setValue(gripperCurrent);
-         deltaSlider.setValue(deltaCurrent);
-         
-       }
-       else if (currentMode == 2 )
+       if(xkey == true)
        {
-         baseKnob.setValue(xCurrent);
-         ySlider.setValue(yCurrent);
-         zSlider.setValue(zCurrent);
-         wristRotateKnob.setValue(wristRotateCurrent);
-         wristAngleKnob.setValue(wristAngleCurrent);
-         gripperLeftSlider.setValue(gripperCurrent);
-         gripperRightSlider.setValue(gripperCurrent);
-         deltaSlider.setValue(deltaCurrent);
-         
+         println(xCurrent);
+         xCurrent = xCurrent + 1;      
          
        }
-   
-       else if (currentMode == 3)
+       if(ykey == true)
        {
-         baseKnob.setValue(xCurrent);
-         shoulderKnob.setValue(yCurrent);
-         elbowKnob.setValue(zCurrent);
-         wristRotateKnob.setValue(wristRotateCurrent);
-         wristAngleKnob.setValue(wristAngleCurrent);
-         gripperLeftSlider.setValue(gripperCurrent);
-         gripperRightSlider.setValue(gripperCurrent);
-         deltaSlider.setValue(deltaCurrent);
+         yCurrent = yCurrent + 1;
+         
          
        }
-   
-   
-   
-   
-   
+       if(zkey == true)
+       {
+         zCurrent = zCurrent + 1;
+         
+         
+       }
+       if(wangkey == true)
+       {
+         wristAngleCurrent = wristAngleCurrent + 1;
+         
+       }
+       if(wrotkey == true)
+       {
+         wristRotateCurrent = wristRotateCurrent + 1;
+         
+       }
+       if(gkey == true)
+       {
+         gripperCurrent = gripperCurrent + 1;
+         
+       }
+       if(dkey == true)
+       {
+         deltaCurrent = deltaCurrent + 1;
+         
+       }
+     }
+       
+     //if down AND a number 1-6 are being pressed, increment the appropriate field
+     if (keyCode == DOWN)
+     {
+       if(xkey == true)
+       {
+         xCurrent = xCurrent - 1;
+         
+       }
+       if(ykey == true)
+       {
+         yCurrent = yCurrent - 1;
+         
+       }
+       if(zkey == true)
+       {
+         zCurrent = zCurrent - 1;
+         
+       }
+       if(wangkey == true)
+       {
+         wristAngleCurrent = wristAngleCurrent - 1;
+         
+       }
+       if(wrotkey == true)
+       {
+         wristRotateCurrent = wristRotateCurrent - 1;
+  
+       }
+       if(dkey == true)
+       {
+         deltaCurrent = deltaCurrent - 1;
+         
+       }
+     }
      
-  } 
+     
+         
+         xTextField.setText(Integer.toString(xCurrent));
+         yTextField.setText(Integer.toString(yCurrent));
+         zTextField.setText(Integer.toString(zCurrent));
+         wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+         wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+         gripperTextField.setText(Integer.toString(gripperCurrent));
+  
+         if(currentMode == 1)
+         {  
+           xSlider.setValue(xCurrent);
+           ySlider.setValue(yCurrent);
+           zSlider.setValue(zCurrent);
+           wristRotateKnob.setValue(wristRotateCurrent);
+           wristAngleKnob.setValue(wristAngleCurrent);
+           gripperLeftSlider.setValue(gripperCurrent);
+           gripperRightSlider.setValue(gripperCurrent);
+           deltaSlider.setValue(deltaCurrent);
+           
+         }
+         else if (currentMode == 2 )
+         {
+           baseKnob.setValue(xCurrent);
+           ySlider.setValue(yCurrent);
+           zSlider.setValue(zCurrent);
+           wristRotateKnob.setValue(wristRotateCurrent);
+           wristAngleKnob.setValue(wristAngleCurrent);
+           gripperLeftSlider.setValue(gripperCurrent);
+           gripperRightSlider.setValue(gripperCurrent);
+           deltaSlider.setValue(deltaCurrent);
+           
+           
+         }
+     
+         else if (currentMode == 3)
+         {
+           baseKnob.setValue(xCurrent);
+           shoulderKnob.setValue(yCurrent);
+           elbowKnob.setValue(zCurrent);
+           wristRotateKnob.setValue(wristRotateCurrent);
+           wristAngleKnob.setValue(wristAngleCurrent);
+           gripperLeftSlider.setValue(gripperCurrent);
+           gripperRightSlider.setValue(gripperCurrent);
+           deltaSlider.setValue(deltaCurrent);
+           
+         }
+     
+     
+     
+     
+     
+       
+    } 
+    
+  }  
 }
 void keyReleased()
 {

@@ -46,6 +46,7 @@ GButton cartesianModeButton, cylindricalModeButton, backhoeModeButton,orient90Bu
 GPanel controlPanel; 
 //text fields for positional data/delta/extended
 GTextField xTextField, yTextField, zTextField, wristAngleTextField, wristRotateTextField, gripperTextField, deltaTextField, extendedTextField;
+
 //sliders for positional data/delta
 GSlider xSlider, ySlider, zSlider, wristAngleSlider, wristRotateSlider, gripperSlider, deltaSlider; 
 //text labels for positional data/delta/extended
@@ -63,6 +64,7 @@ GPanel errorPanel;//panel to warn users of errros
 GButton errorOkButton;   //button to dismiss error panel
 GButton errorLinkButton; //help link button
 GLabel errorLabel;       //error text
+GLabel statusLabel;
 
 //settings panel
 GPanel settingsPanel;//various settings for the program
@@ -118,65 +120,10 @@ public void connectButton_click(GButton source, GEvent event)
 {
   printlnDebug("connectButton - GButton event occured " + System.currentTimeMillis()%10000000, 1);
  
-  //check to make sure serialPortSelected is not -1, -1 means no serial port was selected. Valid port indexes are 0+
-  if (selectedSerialPort > -1)
-  {    
-  
-    //try to connect to the port at 38400bps, otherwise show an error message
-    try
-    {
-      sPorts[selectedSerialPort] =  new Serial(this, Serial.list()[selectedSerialPort], 38400);
-    }
-    catch(Exception e)
-    {
-      printlnDebug("Error Opening Serial Port"+serialList.getSelectedText());
-      sPorts[selectedSerialPort] = null;
-      displayError("Unable to open selected serial port" + serialList.getSelectedText() +". See link for possible solutions.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
-    }
-  }
-    
-  //check to see if the serial port connection has been made
-  if (sPorts[selectedSerialPort] != null)
-  {
-    
-    //try to communicate with arm
-    if (checkArmStartup() == true)
-    {       
-      //disable connect button and serial list
-      connectButton.setEnabled(false);
-      connectButton.setAlpha(128);
-      serialList.setEnabled(false);
-      serialList.setAlpha(128);
-      autoConnectButton.setEnabled(false);
-      autoConnectButton.setAlpha(128);
-      //enable disconnect button
-      disconnectButton.setEnabled(true);
-      disconnectButton.setAlpha(255);
-    
-      //enable & set visible control and mode panel
-      modePanel.setVisible(true);
-      modePanel.setEnabled(true);
-      controlPanel.setVisible(true);
-      controlPanel.setEnabled(true);
-      sequencePanel.setVisible(true);
-      sequencePanel.setEnabled(true);
-      ioPanel.setVisible(true);
-      ioPanel.setEnabled(true);
-      delayMs(100);//short delay 
-      setCartesian();
-    }
-    
-    //if arm is not found return an error
-    else  
-    {
-      sPorts[selectedSerialPort].stop();
-//      sPorts.get(selectedSerialPort) = null;
-      sPorts[selectedSerialPort] = null;
-      printlnDebug("No Arm Found on port "+serialList.getSelectedText()) ;
-    
-      displayError("No Arm found on serial port" + serialList.getSelectedText() +". Make sure power is on and the arm is connected to the computer.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
-    }
-  }
+
+
+    statusLabel.setText("Connecting...");
+  connectFlag = 1;
 } 
 
 //disconnect from current serial port and set GUI element states appropriatley
@@ -185,62 +132,8 @@ public void disconnectButton_click(GButton source, GEvent event)
   printlnDebug("disconnectButton - GButton event occured " + System.currentTimeMillis()%10000000, 1);
   
   
-  putArmToSleep();
-  //TODO: call response & check
-  
-  ///stop/disconnect the serial port and set sPort to null for future checks
-  sPorts[armPortIndex].stop();   
-  sPorts[armPortIndex] = null;
-  
-  //enable connect button and serial port 
-  connectButton.setEnabled(true);
-  connectButton.setAlpha(255);
-  serialList.setEnabled(true);
-  serialList.setAlpha(255); 
-  autoConnectButton.setEnabled(true);
-  autoConnectButton.setAlpha(255);
-  
-  //disable disconnect button
-  disconnectButton.setEnabled(false);
-  disconnectButton.setAlpha(128);
-  //disable & set invisible control and mode panel
-  controlPanel.setVisible(false);
-  controlPanel.setEnabled(false); 
-  sequencePanel.setVisible(false);
-  sequencePanel.setEnabled(false);    
-  modePanel.setVisible(false);
-  modePanel.setEnabled(false);
-  ioPanel.setVisible(false);
-  ioPanel.setEnabled(false);
-  wristPanel.setVisible(false);
-  wristPanel.setEnabled(false);
-  
-  //uncheck all checkboxes to reset
-  autoUpdateCheckbox.setSelected(false);
-  //digitalCheckbox0.setSelected(false);
-  digitalCheckbox1.setSelected(false);
-  digitalCheckbox2.setSelected(false);
-  digitalCheckbox3.setSelected(false);
-  digitalCheckbox4.setSelected(false);
-  digitalCheckbox5.setSelected(false);
-  digitalCheckbox6.setSelected(false);
-  digitalCheckbox7.setSelected(false);
-  
-  analogCheckbox.setSelected(false);
-  
-  //set arm/mode/orientation to default
-  currentMode = 0;
-  currentArm = 0;
-  currentOrientation = 0;
-  
-  //reset button color mode
-  cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
-  cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
-  backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
-  
-  //reset alpha trapsnparency on orientation buttons
-  //DEPRECATED armStraightButton.setAlpha(128);
-  //DEPRECATEDarm90Button.setAlpha(128);
+    statusLabel.setText("Disconnecting...");
+  disconnectFlag = 1;
 } 
 
 
@@ -252,84 +145,8 @@ public void autoConnectButton_click(GButton source, GEvent event)
   printlnDebug("autoConnectButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
 
 
-  //disable connect button and serial list
-  connectButton.setEnabled(false);
-  connectButton.setAlpha(128);
-  serialList.setEnabled(false);
-  serialList.setAlpha(128);
-  autoConnectButton.setEnabled(false);
-  autoConnectButton.setAlpha(128);
-  //enable disconnect button
-  disconnectButton.setEnabled(true);
-  disconnectButton.setAlpha(255);
-
-  //for (int i=0;i<Serial.list().length;i++) //scan from bottom to top
-  //scan from the top of the list to the bottom, for most users the ArbotiX will be the most recently added ftdi device
-  for (int i=Serial.list().length-1;i>=0;i--) 
-  {
-    println("port"+i);
-    //try to connect to the port at 38400bps, otherwise show an error message
-    try
-    {
-      sPorts[i] = new Serial(this, Serial.list()[i], 38400);
-    }
-    catch(Exception e)
-    {
-      printlnDebug("Error Opening Serial Port "+Serial.list()[i] + " for auto search");
-      sPorts[i] = null;
-    }
-  }//end interating through serial list
-  
-  //try to communicate with arm
-  if (checkArmStartup() == true)
-  {
-    printlnDebug("Arm Found from auto search on port "+Serial.list()[armPortIndex]) ;
-  
-    //enable & set visible control and mode panel, enable disconnect button
-    modePanel.setVisible(true);
-    modePanel.setEnabled(true);
-    controlPanel.setVisible(true);
-    controlPanel.setEnabled(true);
-    sequencePanel.setVisible(true);
-    sequencePanel.setEnabled(true);
-    ioPanel.setVisible(true);
-    ioPanel.setEnabled(true);
-    disconnectButton.setEnabled(true);
-    delayMs(200);//shot delay 
-    setCartesian();
-    //break;
-  }
-  
-  //if arm is not found return an error
-  else  
-  {
-    //enable connect button and serial port 
-    connectButton.setEnabled(true);
-    connectButton.setAlpha(255);
-    serialList.setEnabled(true);
-    serialList.setAlpha(255); 
-    autoConnectButton.setEnabled(true);
-    autoConnectButton.setAlpha(255);
-
-    //disable disconnect button
-    disconnectButton.setEnabled(false);
-    disconnectButton.setAlpha(128);
-    //disable & set invisible control and mode panel
-
-    displayError("No Arm found using auto seach. Please check power and connections", "");
-  }
-     //stop all serial ports without an arm connected 
-  for (int i=0;i<numSerialPorts;i++) 
-  {      
-    //if the index being scanned is not the index of an port with an arm connected, stop/null the port
-    //if the port is already null, then it was never opened
-    if (armPortIndex != i & sPorts[i] != null)
-    {
-      printlnDebug("Stopping port "+Serial.list()[i]) ;
-      sPorts[i].stop();
-      sPorts[i] = null;
-    }
-  }
+    statusLabel.setText("Scanning...");
+  autoConnectFlag = 1;
 }
 
 
@@ -1490,6 +1307,22 @@ public void createGUI() {
     frame.setTitle("InterbotiX Arm Control");
 
 
+
+
+
+  statusLabel = new GLabel(this, 310, 25, 160, 25);
+  statusLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+ // statusLabel.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  statusLabel.setText("Not Connected");
+  statusLabel.setFont(new Font("Dialog", Font.PLAIN, 20)); 
+//  statusLabel.setOpaque(false);
+
+
+
+
+
+
+
   helpButton = new GButton(this, 10, 775, 40, 20);
   helpButton.setText("More");
   helpButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
@@ -1500,7 +1333,7 @@ public void createGUI() {
 
 //Setup
 
-  setupPanel = new GPanel(this, 5, 5, 465, 50, "Setup Panel");
+  setupPanel = new GPanel(this, 5, 50, 465, 50, "Setup Panel");
   setupPanel.setText("Setup Panel");
   setupPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   setupPanel.setOpaque(true);
@@ -1542,7 +1375,7 @@ public void createGUI() {
 
 
 //mode
-  modePanel = new GPanel(this, 5, 60, 240, 38, "Mode Panel");
+  modePanel = new GPanel(this, 5, 690, 240, 38, "Mode Panel");
   modePanel.setText("Mode Panel");
   modePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   modePanel.setOpaque(true);
@@ -1554,7 +1387,7 @@ public void createGUI() {
   //modePanel.setEnabled(false);
 
 //wrist angle
-  wristPanel = new GPanel(this, 310, 60, 160, 38, "Wrist Panel");
+  wristPanel = new GPanel(this, 310, 690, 160, 38, "Wrist Panel");
   wristPanel.setText("Wrist Panel");
   wristPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   wristPanel.setOpaque(true);
@@ -1626,7 +1459,7 @@ public void createGUI() {
 
 
 //control
-  controlPanel = new GPanel(this, 5, 105, 265, 525, "Control Panel");
+  controlPanel = new GPanel(this, 5, 105, 265, 475, "Control Panel");
   controlPanel.setText("Control Panel");
   controlPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   controlPanel.setOpaque(true);
@@ -1639,7 +1472,7 @@ public void createGUI() {
   
   
   
-  sequencePanel = new GPanel(this, 310, 105, 160, 525, "Sequence Panel");
+  sequencePanel = new GPanel(this, 310, 105, 160, 475, "Sequence Panel");
   sequencePanel.setText("Sequence Panel");
   sequencePanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   sequencePanel.setOpaque(true);
@@ -1654,7 +1487,7 @@ public void createGUI() {
 
   
   
-  ioPanel = new GPanel(this, 5, 635, 465, 100, "I/O Panel");
+  ioPanel = new GPanel(this, 5, 585, 465, 100, "I/O Panel");
   ioPanel.setText("I/O Panel");
   ioPanel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   ioPanel.setOpaque(true);
@@ -1906,15 +1739,13 @@ public void createGUI() {
   deltaLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   deltaLabel.setOpaque(false);
 
-
-
-  extendedTextField = new GTextField(this, 5, 425, 60, 20, G4P.SCROLLBARS_NONE);
+  extendedTextField = new GTextField(this, 190, 280, 60, 20, G4P.SCROLLBARS_NONE);
   extendedTextField.setText("0");
   extendedTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   extendedTextField.setOpaque(true);
   extendedTextField.addEventHandler(this, "extendedTextField_change");
 
-  extendedLabel = new GLabel(this, 5, 445, 100, 14);
+  extendedLabel = new GLabel(this, 190, 300, 100, 14);
   extendedLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   extendedLabel.setText("Extended Byte");
   extendedLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -2054,8 +1885,8 @@ public void createGUI() {
 
 
 
-
-  updateButton = new GButton(this, 5, 470, 100, 50);
+//400 470
+  updateButton = new GButton(this, 5, 420, 100, 50);
   updateButton.setText("Update");
   updateButton.addEventHandler(this, "updateButton_click");
   updateButton.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -2063,7 +1894,7 @@ public void createGUI() {
 
  
 
-  autoUpdateCheckbox = new GCheckbox(this, 105, 504, 100, 20);
+  autoUpdateCheckbox = new GCheckbox(this, 105, 454, 100, 20);
   autoUpdateCheckbox.setOpaque(false);
   autoUpdateCheckbox.addEventHandler(this, "autoUpdateCheckbox_change");
   autoUpdateCheckbox.setText("Auto Update");
@@ -2296,7 +2127,7 @@ public void createGUI() {
 
 
 
-  logoImg = loadImage("logo.png");  // Load the image into the program  
+  logoImg = loadImage("logo1.png");  // Load the image into the program  
   footerImg = loadImage("footer.png");  // Load the image into the program  
 
 
