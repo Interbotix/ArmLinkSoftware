@@ -553,6 +553,15 @@ public void controlPanel_click(GPanel source, GEvent event) { //_CODE_:controlPa
 //-
 public int armTextFieldChange(GTextField source, GEvent event, GValueControl targetSlider, int minVal, int maxVal, int currentVal )
 {
+   //swap min/max when needed
+  if(minVal > maxVal)
+  {
+     int tempVal = minVal;
+     minVal = maxVal;
+     maxVal = tempVal; 
+  }
+  
+  
   String textFieldString = source.getText();//string value from textField
   int textFieldValue;//converted integer from textField
 
@@ -611,18 +620,21 @@ public void xTextField_change(GTextField source, GEvent event)
 {
   printlnDebug("xTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
   xCurrent = armTextFieldChange(source, event, xSlider, xParameters[1], xParameters[2], xCurrent);
+  xCurrent = armTextFieldChange(source, event, baseKnob, xParameters[1], xParameters[2], xCurrent);
 }
 
 public void yTextField_change(GTextField source, GEvent event) 
 {
   printlnDebug("yTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
   yCurrent = armTextFieldChange(source, event, ySlider, yParameters[1], yParameters[2], yCurrent);
+  yCurrent = armTextFieldChange(source, event, shoulderKnob, yParameters[1], yParameters[2], yCurrent);
 }
 
 public void zTextField_change(GTextField source, GEvent event) 
 {
   printlnDebug("zTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
   zCurrent = armTextFieldChange(source, event, zSlider, zParameters[1], zParameters[2], zCurrent);
+  zCurrent = armTextFieldChange(source, event, elbowKnob, zParameters[1], zParameters[2], zCurrent);
 }
 
 public void wristAngleTextField_change(GTextField source, GEvent event) 
@@ -641,6 +653,7 @@ public void gripperTextField_change(GTextField source, GEvent event)
 {
   printlnDebug("gripperTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
   gripperCurrent = armTextFieldChange(source, event, gripperLeftSlider, gripperParameters[1], gripperParameters[2], gripperCurrent);
+  gripperCurrent = armTextFieldChange(source, event, gripperRightSlider, gripperParameters[1], gripperParameters[2], gripperCurrent);
 }
 
 
@@ -792,34 +805,34 @@ public void zSlider_change(GSlider source, GEvent event)
 //update text field and working var based on slider change 
 public void wristAngleSlider_change(GSlider source, GEvent event) 
 {
-  printlnDebug("wristAngleSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
-  if (event == GEvent.VALUE_STEADY)
-  {
-    wristAngleTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
-    wristAngleCurrent = source.getValueI();
-  }
+//  printlnDebug("wristAngleSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+//  if (event == GEvent.VALUE_STEADY)
+//  {
+//    wristAngleTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+//    wristAngleCurrent = source.getValueI();
+//  }
 }
 
 //update text field and working var based on slider change 
 public void wristRotateSlider_change(GSlider source, GEvent event) 
 {
-  printlnDebug("wristRotateSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
-  if (event == GEvent.VALUE_STEADY)
-  {
-    wristRotateTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
-    wristRotateCurrent = source.getValueI();
-  }
+//  printlnDebug("wristRotateSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+//  if (event == GEvent.VALUE_STEADY)
+//  {
+//    wristRotateTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+//    wristRotateCurrent = source.getValueI();
+//  }
 }
 
 //update text field and working var based on slider change 
 public void gripperSlider_change(GSlider source, GEvent event) 
 {
-  printlnDebug("gripperSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
-  if (event == GEvent.VALUE_STEADY)
-  {
-    gripperTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
-    gripperCurrent = source.getValueI();
-  }
+//  printlnDebug("gripperSlider_change - GSlider event occured " + System.currentTimeMillis()%10000000, 1 );
+//  if (event == GEvent.VALUE_STEADY)
+//  {
+//    gripperTextField.setText(Integer.toString(source.getValueI()));//append a "" for easy string conversion 
+//    gripperCurrent = source.getValueI();
+//  }
 }
 
 
@@ -1127,6 +1140,8 @@ wristRotateKnob.setValue(wristRotateCurrent);//set gui elemeent to same value
 gripperCurrent = poseData.get(pose)[5];//set the value that will be sent
 gripperTextField.setText(Integer.toString(gripperCurrent));//set the text field
 gripperSlider.setValue(gripperCurrent);//set gui elemeent to same value
+gripperLeftSlider.setValue(gripperCurrent);//set gui elemeent to same value
+gripperRightSlider.setValue(gripperCurrent);//set gui elemeent to same value
 
 
 
@@ -1497,7 +1512,7 @@ public void createGUI() {
   
 
 
-  serialList = new GDropList(this, 5, 24, 200, 132, 6);
+  serialList = new GDropList(this, 5, 24, 200, 200, 10);
   //serialList.setItems(loadStrings("list_700876"), 0);
   serialList.addEventHandler(this, "serialList_click");
   serialList.setFont(new Font("Dialog", Font.PLAIN, 9));  
@@ -1914,37 +1929,37 @@ public void createGUI() {
   digitalCheckbox0.setVisible(false);
   digitalCheckbox0.setEnabled(false);
 
-  digitalCheckbox1 = new GCheckbox(this, 32, 35, 28, 20);
+  digitalCheckbox1 = new GCheckbox(this, 30, 35, 50, 20);
   digitalCheckbox1.setOpaque(false);
   digitalCheckbox1.addEventHandler(this, "digitalCheckbox1_change");
   digitalCheckbox1.setText("1");
 
-  digitalCheckbox2 = new GCheckbox(this, 60, 35, 28, 20);
+  digitalCheckbox2 = new GCheckbox(this, 70, 35, 50, 20);
   digitalCheckbox2.setOpaque(false);
   digitalCheckbox2.addEventHandler(this, "digitalCheckbox2_change");
   digitalCheckbox2.setText("2");
 
-  digitalCheckbox3 = new GCheckbox(this, 88, 35, 28, 20);
+  digitalCheckbox3 = new GCheckbox(this, 110, 35, 50, 20);
   digitalCheckbox3.setOpaque(false);
   digitalCheckbox3.addEventHandler(this, "digitalCheckbox3_change");
   digitalCheckbox3.setText("3");
 
-  digitalCheckbox4 = new GCheckbox(this, 116, 35, 28, 20);
+  digitalCheckbox4 = new GCheckbox(this, 150, 35, 50, 20);
   digitalCheckbox4.setOpaque(false);
   digitalCheckbox4.addEventHandler(this, "digitalCheckbox4_change");
   digitalCheckbox4.setText("4");
 
-  digitalCheckbox5 = new GCheckbox(this, 144, 35, 28, 20);
+  digitalCheckbox5 = new GCheckbox(this, 190, 35, 50, 20);
   digitalCheckbox5.setOpaque(false);
   digitalCheckbox5.addEventHandler(this, "digitalCheckbox5_change");
   digitalCheckbox5.setText("5");
 
-  digitalCheckbox6 = new GCheckbox(this, 172, 35, 28, 20);
+  digitalCheckbox6 = new GCheckbox(this, 230, 35, 50, 20);
   digitalCheckbox6.setOpaque(false);
   digitalCheckbox6.addEventHandler(this, "digitalCheckbox6_change");
   digitalCheckbox6.setText("6");
 
-  digitalCheckbox7 = new GCheckbox(this, 200, 35, 28, 20);
+  digitalCheckbox7 = new GCheckbox(this, 270, 35, 50, 20);
   digitalCheckbox7.setOpaque(false);
   digitalCheckbox7.addEventHandler(this, "digitalCheckbox7_change");
   digitalCheckbox7.setText("7");
@@ -2348,9 +2363,14 @@ void setPositionParameters()
   armParamWristAngleBHKnob = new int[][]{pincherWristAngleBHKnob,reactorWristAngleBHKnob,widowWristAngleBHKnob,widowWristAngleBHKnob, snapperWristAngleBHKnob};
   armParamWristRotKnob = new int[][]{pincherWristRotKnob,reactorWristRotKnob,widowWristRotKnob,widowWristRotKnob, snapperWristRotKnob};
   armParamBaseKnob = new int[][]{pincherBaseKnob,reactorBaseKnob,widowBaseKnob,widowBaseKnob, snapperBaseKnob};
-  armParamElbowKnob = new int[][]{pincherShoulderKnob,reactorShoulderKnob,widowShoulderKnob,widowShoulderKnob,snapperShoulderKnob};
-  armParamShoulderKnob = new int[][]{pincherElbowKnob,reactorElbowKnob,widowElbowKnob,widowElbowKnob,snapperElbowKnob}; 
+  armParamShoulderKnob = new int[][]{pincherShoulderKnob,reactorShoulderKnob,widowShoulderKnob,widowShoulderKnob,snapperShoulderKnob};
+  armParamElbowKnob = new int[][]{pincherElbowKnob,reactorElbowKnob,widowElbowKnob,widowElbowKnob,snapperElbowKnob}; 
+  armParamElbowKnobRotation = new float[]{pincherElbowKnobRotation,reactorElbowKnobRotation,widowElbowKnobRotation,widowElbowKnobRotation,snapperElbowKnobRotation}; 
   
+  
+
+
+
   //armParamDelta new int[][]{pincherElbowKnob,reactorElbowKnob,widowElbowKnob,widowElbowKnob,snapperElbowKnob}; 
              
             
@@ -2496,6 +2516,11 @@ void setPositionParameters()
         xLabel.setText("Base");
         arrayCopy(armParamBase[currentArm-1], xParameters);
     
+    
+    
+      
+        xSlider.setLimits( armParamBase[currentArm-1][0], armParamBase[currentArm-1][1], armParamBase[currentArm-1][2]);    
+        
         ySlider.setLimits( armParam0Y[currentArm-1][0], armParam0Y[currentArm-1][1], armParam0Y[currentArm-1][2]) ; 
         yTextField.setText(Integer.toString(armParam0Y[currentArm-1][0]));
         yLabel.setText("Y Coord");
@@ -2526,7 +2551,7 @@ void setPositionParameters()
         gripperTextField.setText(Integer.toString(armParamGripper[currentArm-1][0]));
         gripperLabel.setText("Gripper");
         arrayCopy(armParamGripper[currentArm-1], gripperParameters);
-       gripperLeftSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][2], armParamGripper[currentArm-1][1]);    
+        gripperLeftSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][2], armParamGripper[currentArm-1][1]);    
         gripperRightSlider.setLimits( armParamGripper[currentArm-1][0], armParamGripper[currentArm-1][1], armParamGripper[currentArm-1][2]); 
         arrayCopy(armParamGripper[currentArm-1], gripperParameters);
         
@@ -2538,7 +2563,26 @@ void setPositionParameters()
         wristAngleKnob.setTurnRange(armParamWristAngle90Knob[currentArm-1][0], armParamWristAngle90Knob[currentArm-1][1]); //set angle limits start/finish
         wristAngleKnob.setLimits(armParam90WristAngle[currentArm-1][0], armParam90WristAngle[currentArm-1][1], armParam90WristAngle[currentArm-1][2]);//set value limits
               
-  
+        xTextField.setText(Integer.toString(armParamBase[currentArm-1][0]));
+        xLabel.setText("Base");
+        arrayCopy(armParamBase[currentArm-1], xParameters);
+    
+        ySlider.setLimits( armParam90Y[currentArm-1][0], armParam90Y[currentArm-1][1], armParam90Y[currentArm-1][2]) ; 
+        yTextField.setText(Integer.toString(armParam90Y
+        [currentArm-1][0]));
+        yLabel.setText("Y Coord");
+        arrayCopy(armParam90Y[currentArm-1], yParameters);
+    
+    
+        zSlider.setLimits( armParam90Z[currentArm-1][0], armParam90Z[currentArm-1][1], armParam90Z[currentArm-1][2]) ;   
+        zTextField.setText(Integer.toString(armParam90Z[currentArm-1][0]));
+        zLabel.setText("Z Coord");
+        arrayCopy(armParam90Z[currentArm-1], zParameters);
+    
+    
+    
+    
+      
         xSlider.setLimits( armParamBase[currentArm-1][0], armParamBase[currentArm-1][1], armParamBase[currentArm-1][2]);    
         xTextField.setText(Integer.toString(armParamBase[currentArm-1][0]));
         xLabel.setText("X Coord");
@@ -2613,6 +2657,9 @@ void setPositionParameters()
   
         elbowKnob.setTurnRange(armParamElbowKnob[currentArm-1][0], armParamElbowKnob[currentArm-1][1]); //set angle limits start/finish
         elbowKnob.setLimits(armParamBHElbow[currentArm-1][0], armParamBHElbow[currentArm-1][1], armParamBHElbow[currentArm-1][2]);//set value limits
+        elbowKnob.setRotation(armParamElbowKnobRotation[currentArm-1],GControlMode.CENTER);
+
+      
       
         zTextField.setText(Integer.toString(armParamBHElbow[currentArm-1][0]));
         zLabel.setText("Elbow");
@@ -2662,6 +2709,27 @@ void setPositionParameters()
         gripperTextField.setText(Integer.toString(armParamGripper[currentArm-1][0]));
         gripperLabel.setText("Gripper");
         arrayCopy(armParamGripper[currentArm-1], gripperParameters);
+        
+        
+        
+        
+          xSlider.setLimits( armParamBase[currentArm-1][0], armParamBase[currentArm-1][1], armParamBase[currentArm-1][2]);    
+          ySlider.setLimits( armParamBHShoulder[currentArm-1][0], armParamBHShoulder[currentArm-1][1], armParamBHShoulder[currentArm-1][2]);    
+          zSlider.setLimits( armParamBHElbow[currentArm-1][0], armParamBHElbow[currentArm-1][1], armParamBHElbow[currentArm-1][2]);    
+
+//        xSlider.setLimits( armParamBase[currentArm-1][0], armParamBase[currentArm-1][1], armParamBase[currentArm-1][2]);    
+//        
+//    
+//        ySlider.setLimits( armParamShoulder[currentArm-1][0], armParamShoulderKnob[currentArm-1][1], armParamShoulderKnob[currentArm-1][2]) ; 
+//        
+//    
+//        zSlider.setLimits( armParamElbowKnob[currentArm-1][0], armParamElbowKnob[currentArm-1][1], armParamElbowKnob[currentArm-1][2]) ;  
+//       
+
+    
+    
+    
+    
         break;
       }
   
@@ -2716,17 +2784,44 @@ void setPositionParameters()
   {
     modePanel.setVisible(false);
     wristPanel.setVisible(false);
+  
+
+  digitalCheckbox1.setText("2");
+  digitalCheckbox2.setText("4");
+  digitalCheckbox3.setText("7");
+  digitalCheckbox4.setText("8");
+  digitalCheckbox5.setText("11");
+  digitalCheckbox6.setText("12");
+  digitalCheckbox7.setText("13");
+  
+//  digitalCheckbox5.moveTo(154,35);
+//  digitalCheckbox6.moveTo(192,35);
+//  digitalCheckbox7.moveTo(230,35);
   }
   
   else
   {
     modePanel.setVisible(true);
     wristPanel.setVisible(true);
-    
+  
+
+  digitalCheckbox1.setText("1");
+  digitalCheckbox2.setText("2");
+  digitalCheckbox3.setText("3");
+  digitalCheckbox4.setText("4");
+  digitalCheckbox5.setText("5");
+  digitalCheckbox6.setText("6");
+  digitalCheckbox7.setText("7");
+  
+//  digitalCheckbox5.moveTo(144,35);
+//  digitalCheckbox6.moveTo(172,53);
+//  digitalCheckbox7.moveTo(200,35);
+//    
   }
   
   
-  
+
+
   
   
   

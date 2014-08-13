@@ -137,7 +137,7 @@ float draggingY = 0;
   
   GPanel tempPanel;
 
-int currentPose = -1;  //current pose that has been selected. 
+int currentPose = 0;  //current pose that has been selected. 
 
 
 ArrayList<int[]> poseData;
@@ -190,9 +190,42 @@ public void draw()
   if(currentTime - prevCommandTime > updatePeriod )
   {
     
+    
+    
+    //check if
+    //--analog retrieval is enabled
+    //it has been long enough since the last sample
+    if(currentTime - lastAnalogSample > analogSampleTime && (true == enableAnalog))
+    {
+      if( currentArm != 0)
+      {
+        println("analog");
+        
+        analogValues[nextAnalog] = analogRead(nextAnalog);
+        analogLabel[nextAnalog].setText(
+        Integer.toString(nextAnalog) + ":" + Integer.toString(analogValues[nextAnalog]));
+
+        nextAnalog = nextAnalog+1;
+        if(nextAnalog > 7)
+        {
+          nextAnalog = 0;
+          lastAnalogSample = millis();
+        }
+        
+      }
+        
+        
+      
+    }
+
+
+
+
+
+    
     //check if
     //  -update flag is true, and a packet needs to be sent
-    if(updateFlag == true)
+    else if(updateFlag == true)
     {
       updateOffsetCoordinates();     //prepare the currentOffset coordinates for the program to send
       updateButtonByte();  //conver the current 'digital button' checkboxes into a value to be sent to the arbotix/arm
@@ -243,32 +276,6 @@ public void draw()
       }
     }//end command code
     
-
-    //check if
-    //--analog retrieval is enabled
-    //it has been long enough since the last sample
-    else if(currentTime - lastAnalogSample > analogSampleTime && (true == enableAnalog))
-    {
-      if( currentArm != 0)
-      {
-        println("analog");
-        
-        analogValues[nextAnalog] = analogRead(nextAnalog);
-        analogLabel[nextAnalog].setText(
-        Integer.toString(nextAnalog) + ":" + Integer.toString(analogValues[nextAnalog]));
-
-        nextAnalog = nextAnalog+1;
-        if(nextAnalog > 7)
-        {
-          nextAnalog = 0;
-          lastAnalogSample = millis();
-        }
-        
-      }
-        
-        
-      
-    }
 
   }
   
@@ -662,25 +669,25 @@ void keyPressed()
 
 
 
-  //check for up/down keys
-  if (key == CODED)
-  {
-    
-    
 
-
-
-    if(keyCode == LEFT)
+    if(key == ',')
     {
       
       poseToWorkspaceInternal(currentPose);
 
     }
-    if(keyCode == RIGHT)
+    if(key == '.')
     {
       workspaceToPoseInternal();
       
     }
+
+
+  //check for up/down keys
+  if (key == CODED)
+  {
+    
+    
     
     
     

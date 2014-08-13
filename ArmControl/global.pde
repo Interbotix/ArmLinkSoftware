@@ -69,40 +69,42 @@ int extendedByte = 0;  //extended byte for special instructions
 
 //DEFAULT ARM PARAMETERS 
 
+int numberOfArms = 5;
 
  //XYZ 
-int[][] armParam0X = new int[3][3];
-int[][] armParam0Y = new int[3][3];
-int[][] armParam0Z = new int[3][3];
-int[][] armParam0WristAngle = new int[3][3];
-int[][] armParam0WristRotate = new int[3][3];
+int[][] armParam0X = new int[numberOfArms][3];
+int[][] armParam0Y = new int[numberOfArms][3];
+int[][] armParam0Z = new int[numberOfArms][3];
+int[][] armParam0WristAngle = new int[numberOfArms][3];
+int[][] armParam0WristRotate = new int[numberOfArms][3];
 
-int[][] armParam90X = new int[3][3];
-int[][] armParam90Y = new int[3][3];
-int[][] armParam90Z = new int[3][3];
-int[][] armParam90WristAngle = new int[3][3];
-int[][] armParam90WristRotate = new int[3][3];
-
-
-
-int[][] armParamBase = new int[3][3];
-int[][] armParamBHShoulder = new int[3][3];
-int[][] armParamBHElbow = new int[3][3];
-int[][] armParamBHWristAngle = new int[3][3];
-int[][] armParamBHWristRot = new int[3][3];
+int[][] armParam90X = new int[numberOfArms][3];
+int[][] armParam90Y = new int[numberOfArms][3];
+int[][] armParam90Z = new int[numberOfArms][3];
+int[][] armParam90WristAngle = new int[numberOfArms][3];
+int[][] armParam90WristRotate = new int[numberOfArms][3];
 
 
-int[][] armParamGripper = new int[3][3];
+
+int[][] armParamBase = new int[numberOfArms][3];
+int[][] armParamBHShoulder = new int[numberOfArms][3];
+int[][] armParamBHElbow = new int[numberOfArms][3];
+int[][] armParamBHWristAngle = new int[numberOfArms][3];
+int[][] armParamBHWristRot = new int[numberOfArms][3];
 
 
-int[][] armParamWristAngle0Knob = new int[3][2];
-int[][] armParamWristAngle90Knob = new int[3][2];
-int[][] armParamWristAngleBHKnob = new int[3][2];
-int[][] armParamWristRotKnob= new int[3][2];
+int[][] armParamGripper = new int[numberOfArms][3];
 
-int[][] armParamBaseKnob = new int[3][2];
-int[][] armParamElbowKnob = new int[3][2];
-int[][] armParamShoulderKnob = new int[3][2];
+
+int[][] armParamWristAngle0Knob = new int[numberOfArms][2];
+int[][] armParamWristAngle90Knob = new int[numberOfArms][2];
+int[][] armParamWristAngleBHKnob = new int[numberOfArms][2];
+int[][] armParamWristRotKnob= new int[numberOfArms][2];
+
+int[][] armParamBaseKnob = new int[numberOfArms][2];
+int[][] armParamElbowKnob = new int[numberOfArms][2];
+int[][] armParamShoulderKnob = new int[numberOfArms][2];
+float[] armParamElbowKnobRotation = new float[numberOfArms];
 
 
 //default values for the phantomX pincher. These will be loaded into the working position variables 
@@ -130,8 +132,9 @@ int[] pincherWristAngleBHKnob = {90,270};//angle data for knob limits
 int[] pincherWristRotKnob = {120,60};
 
 int[] pincherBaseKnob = {120,60};
-int[] pincherShoulderKnob = {180,60};
-int[] pincherElbowKnob = {180,0};
+int[] pincherShoulderKnob = {180,0};
+int[] pincherElbowKnob = {180,60};
+float pincherElbowKnobRotation = -PI*1/3;
 
 
 
@@ -141,7 +144,7 @@ int[] reactorNormalX = {0,-300,300};
 int[] reactorNormalY = {235,50,350};
 int[] reactorNormalZ = {210,20,250};
 int[] reactorNormalWristAngle = {0,-90,90};
-int[] reactorWristRotate = {0,-512,511};
+int[] reactorWristRotate = {0,511,-512};
 int[] reactorGripper = {256,0,512};
 int[] reactor90X = {0,-300,300};
 int[] reactor90Y = {150,20,140};
@@ -151,15 +154,16 @@ int[] reactorBase = {512,1023,0};
 int[] reactorBHShoulder = {512,810,205};
 int[] reactorBHElbow = {512,210,900};
 int[] reactorBHWristAngle = {512,200,830};
-int[] reactorBHWristRot = {512,0,1023};
+int[] reactorBHWristRot = {512,1023,0};
 
 int[] reactorWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] reactorWristAngle90Knob = {90,135};//angle data for knob limits
 int[] reactorWristAngleBHKnob = {90,270};//angle data for knob limits
 int[] reactorWristRotKnob = {120,60};
 int[] reactorBaseKnob = {120,60};
-int[] reactorShoulderKnob = {120,60};
-int[] reactorElbowKnob = {120,60};
+int[] reactorShoulderKnob = {180,0};
+int[] reactorElbowKnob = {180,30};
+float reactorElbowKnobRotation = 0;
 
 
 
@@ -169,17 +173,17 @@ int[] widowNormalX = {0,-300,300};
 int[] widowNormalY = {250,50,400};
 int[] widowNormalZ = {225,20,350};
 int[] widowNormalWristAngle = {0,-90,90};
-int[] widowWristRotate = {0,-512,511};
+int[] widowWristRotate = {0,511,-512};
 int[] widowGripper = {256,0,512};
 int[] widow90X = {0,-300,300};
 int[] widow90Y = {150,20,250};
 int[] widow90Z = {30,10,200};
 int[] widow90WristAngle = {-90,-90,-45};
-int[] widowBase = {2048,4095,};
-int[] widowBHShoulder = {2048,1024,3072};
+int[] widowBase = {2048,4095,0};
+int[] widowBHShoulder = {2048,3072,1024};
 int[] widowBHElbow = {2048,1024,3072};
 int[] widowBHWristAngle = {2048,1024,3072};
-int[] widowBHWristRot = {512,0,1023};
+int[] widowBHWristRot = {512,1023,0};
 
 int[] widowBHWristAngleNormalKnob = {90,270};//angle data for knob limits
 int[] widowBHWristAngle90Knob = {90,135};//angle data for knob limits
@@ -188,8 +192,9 @@ int[] widowWristAngleBHKnob = {90,270};//angle data for knob limits
 int[] widowWristRotKnob = {120,60};
 
 int[] widowBaseKnob = {90,90};
-int[] widowShoulderKnob = {90,90};
-int[] widowElbowKnob = {90,90};
+int[] widowShoulderKnob = {180,0};
+int[] widowElbowKnob =  {180,0};
+float widowElbowKnobRotation = 0;//-PI*1/3;
 
 
 
@@ -222,6 +227,7 @@ int[] snapperWristRotKnob = {120,60};
 int[] snapperBaseKnob = {120,60};
 int[] snapperShoulderKnob = {120,60};
 int[] snapperElbowKnob = {120,60};
+float snapperElbowKnobRotation = -PI*1/3;
 
 
 
