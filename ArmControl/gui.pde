@@ -50,9 +50,9 @@ GTextField xTextField, yTextField, zTextField, wristAngleTextField, wristRotateT
 //sliders for positional data/delta
 GSlider xSlider, ySlider, zSlider, wristAngleSlider, wristRotateSlider, gripperSlider, deltaSlider; 
 //text labels for positional data/delta/extended
-GLabel xLabel, yLabel, zLabel, wristAngleLabel, wristRotateLabel, gripperLabel, deltaLabel, extendedLabel,digitalsLabel,analogTextLabel;
+GLabel xLabel, yLabel, zLabel, wristAngleLabel, wristRotateLabel, gripperLabel, deltaLabel, extendedLabel,digitalsLabel,analogTextLabel, cameraLabel;
 //checkboxes for digital output values
-GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox; 
+GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox, cameraCheckbox; 
 GCheckbox autoUpdateCheckbox;   //checkbox to enable auto-update mode
 GButton updateButton;           //button to manually update
 GImageButton waitingButton;    //waiting button, unused
@@ -759,6 +759,28 @@ public void digitalCheckbox7_change(GCheckbox source, GEvent event)
   digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
+public void cameraCheckbox_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("cameraCheckbox_change - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+    
+    if(source.isSelected())
+    {
+     cameraFlag = 1;
+    }
+    else
+    {
+      cameraFlag = 0;
+      
+    }
+ // digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+} 
+
+
+
+
+
+
+
 public void analogCheckbox_change(GCheckbox source, GEvent event) 
 {
   printlnDebug("analogCheckbox - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
@@ -797,6 +819,9 @@ public void errorPanel_Click(GPanel source, GEvent event)
 
 public void handlePanelEvents(GPanel source, GEvent event) 
 { 
+    println("handlePanelEvents - GButton event occured " + System.currentTimeMillis()%10000000 );
+
+
   if(dragFlag == -1)
   {
      dragFlag = int(source.getText());
@@ -1797,6 +1822,19 @@ public void createGUI() {
 
 
 
+  cameraCheckbox = new GCheckbox(this, 330, 35, 150, 20);
+  cameraCheckbox.setOpaque(false);
+  cameraCheckbox.addEventHandler(this, "cameraCheckbox_change");
+  cameraCheckbox.setText("Activate Camera");
+  
+  cameraLabel = new GLabel(this, 330, 50, 100, 14);
+  cameraLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  cameraLabel.setText("Experimental");
+  cameraLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  cameraLabel.setOpaque(false);
+
+
+
 
   digitalsLabel = new GLabel(this, 5, 20, 100, 14);
   digitalsLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
@@ -2039,6 +2077,9 @@ public void createGUI() {
   ioPanel.addControl(digitalCheckbox5);
   ioPanel.addControl(digitalCheckbox6);
   ioPanel.addControl(digitalCheckbox7);
+  
+  ioPanel.addControl(cameraCheckbox);
+  ioPanel.addControl(cameraLabel);
   
   
   ioPanel.addControl(analogTextLabel);

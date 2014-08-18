@@ -144,7 +144,10 @@ ArrayList<int[]> poseData;
 int[] blankPose = new int[8]; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
 
 
-int[] defaultPose = {0, 200, 200, 0, 512, 256, 125, 0}; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
+int[] defaultPose = {0, 200, 200, 0, 0, 256, 125, 0}; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
+
+
+
 
 
 boolean playSequence = false;
@@ -157,11 +160,15 @@ int lastPose;
 int connectFlag = 0;
 int disconnectFlag = 0;
 int autoConnectFlag = 0;
+int cameraFlag = 2;
+import processing.video.*;
+
+Capture cam;
 
 /***********/
 
 public void setup(){
-  size(475, 733, JAVA2D);  //draw initial screen
+  size(475, 733, JAVA2D);  //draw initial screen //475
   poseData = new ArrayList<int[]>();
    
   createGUI();   //draw GUI components defined in gui.pde
@@ -179,11 +186,14 @@ public void setup(){
   
  
 
+
+  
 }
 
 //Main Loop
 public void draw()
 {
+  
   background(128);//draw background color
   image(logoImg, 5, 0, 280, 50);  //draw logo image
   image(footerImg, 15, 770);      //draw footer image
@@ -533,7 +543,7 @@ public void draw()
       
       int newPanelPlacement = floor((dragPanelY - panelsYStart)/25);//determine the panel #(relative to panels being shown) that the dragged panel should displace
    
-      //set bounds for dradding panels too high/low
+      //set bounds for dragging panels too high/low
       newPanelPlacement = max(0,newPanelPlacement);//for negative numbers (i.e. dragged above first panel) set new panel to '0'
       newPanelPlacement = min(min(numberPanelsDisplay-1,poses.size())-1,newPanelPlacement);//for numbers that are too high (i.e. dragged below the last panel) set to the # of panels to display, or the size of the array list, whichever is smaller
       println(newPanelPlacement);
@@ -552,7 +562,7 @@ public void draw()
       {
         
         poses.get(lastDraggedOverId).setLocalColorScheme(lastDraggedOverColor);
-        println("change!" + lastDraggedOverColor+ currentTopPanel);
+        println("change! " +" " + lastDraggedOverColor+ " " + currentTopPanel);
         
         lastDraggedOverId = newPanelPlacement + currentTopPanel;
         lastDraggedOverColor =   poses.get(newPanelPlacement + currentTopPanel).getLocalColorScheme();
@@ -587,9 +597,14 @@ public void draw()
       
       
       //array list management
-      tempPanel0 = poses.get(dragFlag);//copy the panel that was being dragged to a temporary object
-      poses.remove(dragFlag);//remove the panel from the array list
+      tempPanel0 = poses.get(dragPanelNumber);//copy the panel that was being dragged to a temporary object
+      poses.remove(dragPanelNumber);//remove the panel from the array list
       poses.add(newPanelPlacement,tempPanel0);//add the panel into the array list at the position of the displaced panel
+
+      int[] tempPoseData0 = poseData.get(dragPanelNumber);//copy the panel that was being dragged to a temporary object
+      poseData.remove(dragPanelNumber);
+      poseData.add(newPanelPlacement,tempPoseData0);//add the panel into the array list at the position of the displaced panel
+      
       
       //rebuild all of the list placement based on its correct array placement
       for(int i = lowestPanel; i < poses.size()-currentTopPanel;i++)
@@ -666,7 +681,45 @@ public void draw()
   }
   
   
-
+  
+  if(cameraFlag == 1)
+  {
+    
+    
+  try{  
+  cam = new Capture(this, 320, 240, 30);
+  cam.start();
+  frame.setResizable(true);
+  }
+  catch(Exception e)
+  {
+       
+  }
+     frame.setSize(850,750);
+    cameraFlag = 2;
+  
+  }
+  
+  if(cameraFlag == 0)
+  {
+    
+     frame.setSize(475,750);
+    cameraFlag = 2;
+  }
+  
+ try{
+    if(cam.available()) 
+    {
+      cam.read();
+    }
+    image(cam, 500,0);  }
+  catch(Exception e)
+  {
+       
+  }
+  
+    
+  
   
   
   
@@ -1010,6 +1063,11 @@ void keyPressed()
        {
          wristRotateCurrent = wristRotateCurrent - 1;
   
+       }
+       if(gkey == true)
+       {
+         gripperCurrent = gripperCurrent - 1;
+         
        }
        if(dkey == true)
        {
