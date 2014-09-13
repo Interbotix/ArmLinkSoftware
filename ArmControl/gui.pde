@@ -85,6 +85,8 @@ GButton analog1; //button3
 GButton playButton; //play sequence
 GButton stopButton; //stop sequence
 
+GButton savePosesButton;
+
 
 ArrayList<GPanel> poses;
 
@@ -1151,6 +1153,91 @@ public void stopButton_click(GButton source, GEvent event)
   playSequence = false;
 }
 
+public void savePosesButton_click(GButton source, GEvent event) 
+{
+  String ikMode = "";
+  if(currentMode == 1 && currentOrientation == 1)
+  {
+    ikMode = "IKM_IK3D_CARTESIAN";
+  }
+  
+  else if(currentMode == 1 && currentOrientation == 2)
+  {
+    ikMode = "IKM_IK3D_CARTESIAN_90";
+  }
+  else if(currentMode == 2 && currentOrientation == 1)
+  {
+    ikMode = "IKM_CYLINDRICAL";
+  }
+  else if(currentMode == 2 && currentOrientation == 2)
+  {
+    ikMode = "IKM_CYLINDRICAL_90";
+  }
+  else if(currentMode == 3)
+  {
+    ikMode = "IKM_BACKHOE";
+  }
+
+
+  PrintWriter poseOutput; //create printWriter object so the program can write to a file
+  
+  poseOutput = createWriter("poses.h"); //create a file in the same directory as the app - poses.h
+  
+  //set IK mode based on current IK mode
+  poseOutput.print("    g_bIKMode = ");
+  poseOutput.print(ikMode);
+  poseOutput.println(";");
+   
+  poseOutput.println("    playState = 1;  //set playState to 1 as the sequence is now playing ");
+   
+  //print pose data from current sequence to the file   
+  for(int i = 0; i < poseData.size();i++)
+  { 
+    poseOutput.println("    //###########################################################//");
+    poseOutput.print("    // SEQUENCE ");
+    poseOutput.print(i+1);
+    poseOutput.println("");
+    poseOutput.println("    //###########################################################// ");
+    // 100, 150, 200, 0, 1500, 1000, 1000);
+    poseOutput.print("    IKSequencingControl(");
+    
+    
+    for(int j = 0; j < 6;j++)
+    {
+       poseOutput.print(poseData.get(i)[j]); 
+       poseOutput.print(" , ");
+      
+    }
+    
+     poseOutput.print(16 * poseData.get(i)[6]); //compute delta time in milliseconds
+     poseOutput.print(" , ");
+     poseOutput.print("1000");//by defualt wait 1000ms between poses
+       
+    
+    poseOutput.println(");");
+    
+    poseOutput.println("    //###########################################################// ");
+    poseOutput.println("");
+   
+    
+  }
+  
+  
+  
+  
+  
+  
+  poseOutput.flush();
+  poseOutput.close();
+  
+
+
+}
+
+
+
+
+
 
 public void newPose_click(GButton source, GEvent event) 
 {
@@ -2005,6 +2092,12 @@ public void createGUI() {
   stopButton = new GButton(this, 5, 85, 80, 30);
   stopButton.setText("Stop Poses");
   stopButton.addEventHandler(this, "stopButton_click");
+  
+  
+  
+  savePosesButton = new GButton(this, 5, 400, 80, 30);
+  savePosesButton.setText("Save Poses");
+  savePosesButton.addEventHandler(this, "savePosesButton_click"); 
  
  
  
@@ -2031,6 +2124,8 @@ public void createGUI() {
   sequencePanel.addControl(playButton);
   sequencePanel.addControl(stopButton);
   sequencePanel.addControl(poses.get(0));
+  
+  sequencePanel.addControl(savePosesButton);
   
   
   controlPanel.addControl(xTextField);
