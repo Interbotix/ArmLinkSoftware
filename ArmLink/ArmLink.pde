@@ -1,29 +1,30 @@
 /***********************************************************************************
  *  }--\     InterbotiX     /--{
- *      |    ArmControl    |
+ *      |    Arm Link      |
  *   __/                    \__
  *  |__|                    |__|
  *
  *  The following software will allow you to control InterbotiX Robot Arms.
- *  ArmControl will send serial packets to the ArbotiX Robocontroller that
+ *  Arm Link will send serial packets to the ArbotiX Robocontroller that
  *  specify coordinates for that arm to move to. TheArbotiX robocontroller
  *  will then do the Inverse Kinematic calculations and send commands to the
  *  DYNAMIXEL servos to move in such a way that the end effector ends up at
  *  the specified coordinate.
  *
  *  Robot Arm Compatibilty:
- *    The ArmControl Software is desiged to work with InterbotiX Robot Arms
- *    running the ArmControl firmware. Currently supported arms are:
+ *    The Arm Link Software is desiged to work with InterbotiX Robot Arms
+ *    running the Arm Link firmware. Currently supported arms are:
  *      1)PhantomX Pincher Robot Arm
  *      2)PhantomX Reactor Robot Arm
  *      3)WidowX Robot Arm
+ *      4)RobotGeek Snapper
  *
  *  Computer Compatibility:
- *    ArmControl can be used on any system that supports
+ *    Arm Link can be used on any system that supports
  *      1)Java
  *      2)Processing 2.0
  *      3)Java serial library (Included for Mac/Windows/Linux with processing 2.0)
- *    ArmControl has been tested on the following systems
+ *    Arm Link has been tested on the following systems
  *      1)Windows XP, Vista, 7, 8
  *      2)Mac 10.6+
  *      3)Linux?
@@ -43,7 +44,7 @@
  *
  *
  *  External Resources
- *  Arm Control Setup & Documentation
+ *  Arm Link Setup & Documentation
  *    http://learn.trossenrobotics.com/arbotix/arbotix-communication-controllers/31-arm-control
  *
  *  PhantomX Pincher Robot Arm
@@ -79,13 +80,13 @@ boolean debugFileCreated  = false;  //flag to see if the debug file has been cre
 boolean enableAnalog = false; //flag to enable reading analog inputs from the Arbotix
 
 boolean updateFlag = false;     //trip flag, true when the program needs to send a serial packet at the next interval, used by both 'update' and 'autoUpdate' controls
-int updatePeriod = 33;          //minimum period between packet in Milliseconds , 33ms = 30Hz which is the standard for the commander/arm control protocol
+int updatePeriod = 33;          //minimum period between packet in Milliseconds , 33ms = 30Hz which is the standard for the commander/arm link protocol
 
 long prevCommandTime = 0;       //timestamp for the last time that the program sent a serial packet
 long heartbeatTime = 0;         //timestamp for the last time that the program received a serial packet from the Arm
 long currentTime = 0;           //timestamp for currrent time
 
-int packetRepsonseTimeout = 5000;      //time to wait for a response from the ArbotiX Robocontroller / Arm Control Protocol
+int packetRepsonseTimeout = 5000;      //time to wait for a response from the ArbotiX Robocontroller / Arm Link Protocol
 
 int currentArm = 0;          //ID of current arm. 1 = pincher, 2 = reactor, 3 = widowX, 5 = snapper
 int currentMode = 0;         //Current IK mode, 1=Cartesian, 2 = cylindrical, 3= backhoe
@@ -802,7 +803,7 @@ void printlnDebug(String message, int type)
         
         if(debugFileCreated == false)
         {
-          debugOutput = createWriter("debugArmControl.txt");
+          debugOutput = createWriter("debugArmLink.txt");
           debugOutput.println("Started at "+ day() +"-"+ month() +"-"+ year() +" "+ hour() +":"+ minute() +"-"+ second() +"-"); 
           debugFileCreated = true;
         }
@@ -868,7 +869,7 @@ void printDebug(String message, int type)
         
         if(debugFileCreated == false)
         {
-          debugOutput = createWriter("debugArmControl.txt");
+          debugOutput = createWriter("debugArmLink.txt");
           
           debugOutput.println("Started at "+ day() +"-"+ month() +"-"+ year() +" "+ hour() +":"+ minute() +"-"+ second() ); 
         

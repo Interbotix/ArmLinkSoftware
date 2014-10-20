@@ -1,6 +1,6 @@
 /***********************************************************************************
  *  }--\     InterbotiX     /--{
- *      |    ArmControl    |
+ *      |    Arm Link      |
  *   __/                    \__
  *  |__|                    |__|
  *
@@ -2263,7 +2263,7 @@ public void createGUI() {
 
 
 
-  logoImg = loadImage("logo1.png");  // Load the image into the program  
+  logoImg = loadImage("armLinkLogo.png");  // Load the image into the program  
   footerImg = loadImage("footer.png");  // Load the image into the program  
 
 

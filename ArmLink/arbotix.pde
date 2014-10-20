@@ -1,14 +1,14 @@
 /***********************************************************************************
  *  }--\     InterbotiX     /--{
- *      |    ArmControl    |
+ *      |    Arm Link      |
  *   __/                    \__
  *  |__|                    |__|
  *
  *  arbotix.pde
  *	
  *	This file has several functions for interfacing with the ArbotiX robocontroller
- *	using the ArmControl protocol. 
- *	See 'ArmControl.pde' for building this application.
+ *	using the ArmLink protocol. 
+ *	See 'ArmLnk.pde' for building this application.
  *
  ***********************************************************************************/
 
@@ -576,7 +576,7 @@ int bytesToInt(byte[] convertBytes)
  *  modifies the current global coordinate
  *  with an appropriate offset
  *
- *  As the armControl software communicates in
+ *  As the Arm Link software communicates in
  *  unsigned bytes, any value that has negative
  *  values in the GUI must be offset. This function
  *  will add the approprate offsets based on the 
