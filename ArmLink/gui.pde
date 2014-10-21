@@ -85,7 +85,7 @@ GButton analog1; //button3
 GButton playButton; //play sequence
 GButton stopButton; //stop sequence
 
-GButton savePosesButton;
+GButton savePosesButton, emergencyStopButton;
 
 
 ArrayList<GPanel> poses;
@@ -169,7 +169,7 @@ public void orientStraightButton_click(GButton source, GEvent event)
 { 
   printlnDebug("armstraight - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
   
-  
+  clearPoses();
   if (currentMode == 0)
   {
   currentMode =1;
@@ -193,7 +193,8 @@ public void orientStraightButton_click(GButton source, GEvent event)
 public void orient90Button_click(GButton source, GEvent event) 
 {
   printlnDebug("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
-  
+ clearPoses();
+ 
   //set default mode if none has been set
   if (currentMode == 0)
   {
@@ -228,6 +229,8 @@ public void cartesianModeButton_click(GButton source, GEvent event)
 
 void setCartesian()
 {
+  clearPoses();
+  
     //set ik mode buttons to correct colors
   cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
@@ -274,7 +277,8 @@ void setCartesian()
 //change ik mode to cylindrical
 public void cylindricalModeButton_click(GButton source, GEvent event) 
 { 
-  printlnDebug("cylindricalModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
+  clearPoses();
+   printlnDebug("cylindricalModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
   
   //set ik mode buttons to correct colors
   source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
@@ -312,9 +316,27 @@ public void cylindricalModeButton_click(GButton source, GEvent event)
   changeArmMode();//change arm mode
 } 
 
+
+public void clearPoses()
+{
+   for(int i = 0; i<poses.size(); i++)
+  {
+    poses.get(i).dispose();
+    
+  }
+  poses.clear();
+  poseData.clear();
+  numPanels = 0;
+
+
+  
+}
+
+
 //change ik mode to backhoe
 public void backhoeModeButton_click(GButton source, GEvent event) 
 { 
+  clearPoses();
   printlnDebug("backhoeModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
 
   //set ik mode buttons to correct colors
@@ -963,15 +985,18 @@ int mask = 0;
 xCurrent = poseData.get(pose)[0];//set the value that will be sent
 xTextField.setText(Integer.toString(xCurrent));//set the text field
 xSlider.setValue(xCurrent);//set gui elemeent to same value
+baseKnob.setValue(xCurrent);
+
 
 yCurrent = poseData.get(pose)[1];//set the value that will be sent
 yTextField.setText(Integer.toString(yCurrent));//set the text field
 ySlider.setValue(yCurrent);//set gui elemeent to same value
-
+shoulderKnob.setValue(yCurrent);
 
 zCurrent = poseData.get(pose)[2];//set the value that will be sent
 zTextField.setText(Integer.toString(zCurrent));//set the text field
 zSlider.setValue(zCurrent);//set gui elemeent to same value
+elbowKnob.setValue(zCurrent);
 
 wristAngleCurrent = poseData.get(pose)[3];//set the value that will be sent
 wristAngleTextField.setText(Integer.toString(wristAngleCurrent));//set the text field
@@ -993,6 +1018,9 @@ gripperRightSlider.setValue(gripperCurrent);//set gui elemeent to same value
 deltaCurrent = poseData.get(pose)[6];//set the value that will be sent
 deltaTextField.setText(Integer.toString(deltaCurrent));//set the text field
 deltaSlider.setValue(deltaCurrent);//set gui elemeent to same value
+
+
+
 
 
 
@@ -1153,85 +1181,202 @@ public void stopButton_click(GButton source, GEvent event)
   playSequence = false;
 }
 
+
+
+
+
+public void emergencyStopButton_click(GButton source, GEvent event) 
+{
+  sendCommanderPacket(0, 0, 0, 0, 0, 0, 0, 0, 17);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '17' is the extended byte that will stop the arm
+  updateFlag = false;
+  autoUpdateCheckbox.setSelected(false);
+  
+}
+
+
 public void savePosesButton_click(GButton source, GEvent event) 
 {
-  String ikMode = "";
-  if(currentMode == 1 && currentOrientation == 1)
-  {
-    ikMode = "IKM_IK3D_CARTESIAN";
-  }
-  
-  else if(currentMode == 1 && currentOrientation == 2)
-  {
-    ikMode = "IKM_IK3D_CARTESIAN_90";
-  }
-  else if(currentMode == 2 && currentOrientation == 1)
-  {
-    ikMode = "IKM_CYLINDRICAL";
-  }
-  else if(currentMode == 2 && currentOrientation == 2)
-  {
-    ikMode = "IKM_CYLINDRICAL_90";
-  }
-  else if(currentMode == 3)
-  {
-    ikMode = "IKM_BACKHOE";
-  }
 
 
-  PrintWriter poseOutput; //create printWriter object so the program can write to a file
-  
-  poseOutput = createWriter("poses.h"); //create a file in the same directory as the app - poses.h
-  
-  //set IK mode based on current IK mode
-  poseOutput.print("    g_bIKMode = ");
-  poseOutput.print(ikMode);
-  poseOutput.println(";");
-   
-  poseOutput.println("    playState = 1;  //set playState to 1 as the sequence is now playing ");
-   
-  //print pose data from current sequence to the file   
-  for(int i = 0; i < poseData.size();i++)
-  { 
-    poseOutput.println("    //###########################################################//");
-    poseOutput.print("    // SEQUENCE ");
-    poseOutput.print(i+1);
-    poseOutput.println("");
-    poseOutput.println("    //###########################################################// ");
-    // 100, 150, 200, 0, 1500, 1000, 1000);
-    poseOutput.print("    IKSequencingControl(");
+
     
+    File testFile = new File(sketchPath(""));
+selectFolder("Select a folder to save poses.h in", "savePoseToFile", testFile);
+
+}
+
+
+public void savePoseToFile(File selection)
+{
+ if(selection == null)
+  {
+   
+  } 
+ 
+  else
+  {
+ 
+  
     
-    for(int j = 0; j < 6;j++)
+      String ikMode = "";
+    if(currentMode == 1 && currentOrientation == 1)
     {
-       poseOutput.print(poseData.get(i)[j]); 
+      ikMode = "IKM_IK3D_CARTESIAN";
+    }
+    
+    else if(currentMode == 1 && currentOrientation == 2)
+    {
+      ikMode = "IKM_IK3D_CARTESIAN_90";
+    }
+    else if(currentMode == 2 && currentOrientation == 1)
+    {
+      ikMode = "IKM_CYLINDRICAL";
+    }
+    else if(currentMode == 2 && currentOrientation == 2)
+    {
+      ikMode = "IKM_CYLINDRICAL_90";
+    }
+    else if(currentMode == 3)
+    {
+      ikMode = "IKM_BACKHOE";
+    }
+  
+  
+    switch(currentMode)
+    {
+       case 1:        
+         //x, wrist angle, and wrist rotate must be offset, all others are normal
+         xCurrentOffset = xCurrent + 512;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent + 90;
+         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+         break;
+        
+       case 2:
+       
+         //wrist angle, and wrist rotate must be offset, all others are normal
+         xCurrentOffset = xCurrent;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent + 90;
+         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+         break;
+        
+       case 3:
+       
+         //no offsets needed
+         xCurrentOffset = xCurrent;
+         yCurrentOffset = yCurrent;
+         zCurrentOffset = zCurrent;
+         wristAngleCurrentOffset =  wristAngleCurrent;
+         wristRotateCurrentOffset = wristRotateCurrent;
+         gripperCurrentOffset = gripperCurrent;
+         deltaCurrentOffset = deltaCurrent;
+        break; 
+    }  
+    
+    
+  
+  
+  
+    PrintWriter poseOutput; //create printWriter object so the program can write to a file
+    
+   // poseOutput = createWriter("poses.h"); //create a file in the same directory as the app - poses.h
+    poseOutput = createWriter(selection.getAbsolutePath()+ "/poses.h");
+    
+    
+    //set IK mode based on current IK mode
+    poseOutput.print("    g_bIKMode = ");
+    poseOutput.print(ikMode);
+    poseOutput.println(";");
+     
+    poseOutput.println("    playState = 1;  //set playState to 1 as the sequence is now playing ");
+     
+    //print pose data from current sequence to the file   
+    for(int i = 0; i < poseData.size();i++)
+    {     
+      
+      
+      poseOutput.println("    //###########################################################//");
+      poseOutput.print("    // SEQUENCE ");
+      poseOutput.print(i+1);
+      poseOutput.println("");
+      poseOutput.println("    //###########################################################// ");
+      // 100, 150, 200, 0, 1500, 1000, 1000);
+      poseOutput.print("    IKSequencingControl(");
+      
+      
+      for(int j = 0; j < 6;j++)
+      {
+        
+        int tempPoseData = poseData.get(i)[j]; //get single pose data out of pose
+        
+        //check if the pose data needs to be offset
+        if(currentMode == 1)
+        {
+          if(j == 0 )
+          {  
+            tempPoseData = tempPoseData + 512;
+          }
+          else if(j == 3)
+          {
+            tempPoseData = tempPoseData + 90;
+          }
+          else if(j == 4)
+          {
+            tempPoseData = tempPoseData + 512;
+          }
+        }
+        
+        else if(currentMode == 2)
+        {
+          
+          if(j == 3)
+          {
+            tempPoseData = tempPoseData + 90;
+          }
+          else if(j == 4)
+          {
+            tempPoseData = tempPoseData + 512;
+          }
+        }
+        
+      
+      
+      
+         poseOutput.print(tempPoseData); 
+         poseOutput.print(" , ");
+        
+      }
+      
+       poseOutput.print(16 * poseData.get(i)[6]); //compute delta time in milliseconds
        poseOutput.print(" , ");
+       poseOutput.print("1000");//by defualt wait 1000ms between poses
+         
+      
+      poseOutput.println(");");
+      
+      poseOutput.println("    //###########################################################// ");
+      poseOutput.println("");
+     
       
     }
     
-     poseOutput.print(16 * poseData.get(i)[6]); //compute delta time in milliseconds
-     poseOutput.print(" , ");
-     poseOutput.print("1000");//by defualt wait 1000ms between poses
-       
     
-    poseOutput.println(");");
     
-    poseOutput.println("    //###########################################################// ");
-    poseOutput.println("");
-   
+    poseOutput.flush();
+    poseOutput.close();
     
-  }
+    
+  
+  } 
   
   
-  
-  
-  
-  
-  poseOutput.flush();
-  poseOutput.close();
-  
-
-
 }
 
 
@@ -1243,9 +1388,28 @@ public void newPose_click(GButton source, GEvent event)
 {
   println("button2 - GButton event occured " + System.currentTimeMillis()%10000000 );
   
+        println("after " + System.currentTimeMillis()%10000000 );
+        println(poses.size());
+
+
+
+  //to figure out the placement we need to get the 'y' coordinate of the latest pose panel. 
+  //However if the first button is being created, the panel offset is all that is needed
   
-  float newY = poses.get(poses.size()-1).getY() + panelYOffset ;
+  float newY;
+  if(poses.size() == 0)
+  {
+    newY =  panelYOffset ;
+    
+    
+  }
   
+  else
+  {
+    newY = poses.get(poses.size()-1).getY() + panelYOffset ;
+    
+  }
+
   poseData.add(blankPose);
   
   poses.add(new GPanel(this, panelsX, newY, 50, 18, numPanels + ""));
@@ -1263,7 +1427,7 @@ public void newPose_click(GButton source, GEvent event)
   
   
   
-  
+
      if(currentTopPanel > poses.size()-1)
    {
      poses.get(poses.size()-1).setVisible(false);
@@ -1422,7 +1586,7 @@ public void createGUI() {
 
 
 
-  statusLabel = new GLabel(this, 310, 25, 160, 25);
+  statusLabel = new GLabel(this, 300, 25, 170, 25);
   statusLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
  // statusLabel.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   statusLabel.setText("Not Connected");
@@ -2064,11 +2228,11 @@ public void createGUI() {
   //poseData.add(blankPose);  
   poseData.add(defaultPose);
   
-  poses.add(new GPanel(this, panelsX, panelsYStart, 50, 18, "0"));
-  numPanels++;
-  poses.get(0).setCollapsible(true);
-  poses.get(0).setCollapsed(true);
-  poses.get(0).setLocalColorScheme(0);
+  //poses.add(new GPanel(this, panelsX, panelsYStart, 50, 18, "0"));
+  //numPanels++;
+  //poses.get(0).setCollapsible(true);
+  //poses.get(0).setCollapsed(true);
+  //poses.get(0).setLocalColorScheme(0);
 
   movePosesUp = new GButton(this, 5, 250, 80, 30);
   movePosesUp.setText("Scroll Up");
@@ -2095,9 +2259,18 @@ public void createGUI() {
   
   
   
-  savePosesButton = new GButton(this, 5, 400, 80, 30);
-  savePosesButton.setText("Save Poses");
+  savePosesButton = new GButton(this, 5, 350, 80, 30);
+  savePosesButton.setText("Save poses.h");
   savePosesButton.addEventHandler(this, "savePosesButton_click"); 
+ 
+ 
+ 
+  
+  
+  emergencyStopButton = new GButton(this, 5, 440, 150, 30);
+  emergencyStopButton.setText("EMERGENCY STOP");
+  emergencyStopButton.addEventHandler(this, "emergencyStopButton_click"); 
+  emergencyStopButton.setLocalColorScheme(GCScheme.RED_SCHEME);
  
  
  
@@ -2123,9 +2296,10 @@ public void createGUI() {
   //sequencePanel.addControl(analog1);
   sequencePanel.addControl(playButton);
   sequencePanel.addControl(stopButton);
-  sequencePanel.addControl(poses.get(0));
+  //sequencePanel.addControl(poses.get(0));
   
   sequencePanel.addControl(savePosesButton);
+  sequencePanel.addControl(emergencyStopButton);
   
   
   controlPanel.addControl(xTextField);
