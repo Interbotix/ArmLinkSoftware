@@ -179,13 +179,9 @@ boolean verifyPacket(byte[] returnPacket)
  *  checkArmStartup()
  *
  *  function used to check for the presense of a 
- *  ArbotiX/Arm on a serial port. This function should
- *  be called directly after a serial port has opened -
- *  opening a serial port over a USB-FTDI device will
- *  reset the ArbotiX, and the first thing the ArbotiX
- *  will do is send a standard Arm ID packet. This function
- *  looks specifically for that packet
- *  This function also sets the initial Global 'currenArm'
+ *  ArbotiX/Arm on a serial port. 
+ 
+ *  This function also sets the initial Global 'currentArm'
  *
  *  Parameters:
  *    None

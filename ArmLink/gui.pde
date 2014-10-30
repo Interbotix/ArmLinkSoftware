@@ -124,7 +124,7 @@ public void connectButton_click(GButton source, GEvent event)
  
 
 
-    statusLabel.setText("Connecting...");
+  statusLabel.setText("Connecting...");
   connectFlag = 1;
 } 
 
@@ -193,7 +193,10 @@ public void orientStraightButton_click(GButton source, GEvent event)
 public void orient90Button_click(GButton source, GEvent event) 
 {
   printlnDebug("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
- clearPoses();
+  
+  //statusLabel.setText("Changing Mode...");
+  
+  clearPoses();
  
   //set default mode if none has been set
   if (currentMode == 0)
@@ -2234,15 +2237,6 @@ public void createGUI() {
   //poses.get(0).setCollapsed(true);
   //poses.get(0).setLocalColorScheme(0);
 
-  movePosesUp = new GButton(this, 5, 250, 80, 30);
-  movePosesUp.setText("Scroll Up");
-  movePosesUp.addEventHandler(this, "movePosesUp_click");
-  
- 
-  movePosesDown = new GButton(this, 5, 280, 80, 30);
-  movePosesDown.setText("Sccroll Down");
-  movePosesDown.addEventHandler(this, "movePosesDown_click");
-  
   newPose = new GButton(this, 5, 25, 80, 30);
   newPose.setText("New Pose");
   newPose.addEventHandler(this, "newPose_click");
@@ -2259,12 +2253,16 @@ public void createGUI() {
   
   
   
-  savePosesButton = new GButton(this, 5, 350, 80, 30);
-  savePosesButton.setText("Save poses.h");
-  savePosesButton.addEventHandler(this, "savePosesButton_click"); 
  
+  movePosesUp = new GButton(this, 5, 255, 80, 30);
+  movePosesUp.setText("Scroll Up");
+  movePosesUp.addEventHandler(this, "movePosesUp_click");
+  
  
- 
+  movePosesDown = new GButton(this, 5, 280, 80, 30);
+  movePosesDown.setText("Sccroll Down");
+  movePosesDown.addEventHandler(this, "movePosesDown_click");
+  
   
   
   emergencyStopButton = new GButton(this, 5, 440, 150, 30);
@@ -2283,6 +2281,11 @@ public void createGUI() {
   poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
   
   
+  savePosesButton = new GButton(this, 5, 320, 80, 30);
+  savePosesButton.setText("Save poses.h");
+  savePosesButton.addEventHandler(this, "savePosesButton_click"); 
+ 
+ 
   
   
  
