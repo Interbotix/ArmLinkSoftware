@@ -1290,15 +1290,33 @@ public void savePoseToFile(File selection)
     PrintWriter poseOutput; //create printWriter object so the program can write to a file
     
    // poseOutput = createWriter("poses.h"); //create a file in the same directory as the app - poses.h
-    poseOutput = createWriter(selection.getAbsolutePath()+ "/poses.h");
+    poseOutput = createWriter(selection.getAbsolutePath()+ "/armSequence.h");
     
     
     //set IK mode based on current IK mode
+    poseOutput.println("#include \"Kinematics.h\"");
+    poseOutput.println("#include \"GlobalArm.h\"");
+
+    poseOutput.println("extern void IKSequencingControl(float X, float Y, float Z, float GA, float WR, int grip, int interpolate, int pause, int enable);");
+    poseOutput.println("// We need to declare the data exchange");
+    poseOutput.println("// variable to be volatile - the value is");
+    poseOutput.println("// read from memory.");
+    poseOutput.println("volatile int playState = 0; // 0 = stopped 1 = playing");
+    poseOutput.println("");
+    poseOutput.println("void SequenceLoop()");
+    poseOutput.println("{");
+    poseOutput.println("  delay(500);");
+    poseOutput.println("  Serial.println(\"Sequencing Mode Active.\"); ");
+    poseOutput.println("  Serial.println(\"Send '1' or press Button 1 to pause and return to menu.\");");
+    poseOutput.println("  playState = 1;  //set playState to 1 as the sequence is now playing");
+    poseOutput.println("  do");
+    poseOutput.println(" {");
+    
     poseOutput.print("    g_bIKMode = ");
     poseOutput.print(ikMode);
     poseOutput.println(";");
      
-    poseOutput.println("    playState = 1;  //set playState to 1 as the sequence is now playing ");
+    //poseOutput.println("    playState = 1;  //set playState to 1 as the sequence is now playing ");
      
     //print pose data from current sequence to the file   
     for(int i = 0; i < poseData.size();i++)
@@ -1319,37 +1337,7 @@ public void savePoseToFile(File selection)
         
         int tempPoseData = poseData.get(i)[j]; //get single pose data out of pose
         
-        //check if the pose data needs to be offset
-        if(currentMode == 1)
-        {
-          if(j == 0 )
-          {  
-            tempPoseData = tempPoseData + 512;
-          }
-          else if(j == 3)
-          {
-            tempPoseData = tempPoseData + 90;
-          }
-          else if(j == 4)
-          {
-            tempPoseData = tempPoseData + 512;
-          }
-        }
         
-        else if(currentMode == 2)
-        {
-          
-          if(j == 3)
-          {
-            tempPoseData = tempPoseData + 90;
-          }
-          else if(j == 4)
-          {
-            tempPoseData = tempPoseData + 512;
-          }
-        }
-        
-      
       
       
          poseOutput.print(tempPoseData); 
@@ -1362,7 +1350,7 @@ public void savePoseToFile(File selection)
        poseOutput.print("1000");//by defualt wait 1000ms between poses
          
       
-      poseOutput.println(");");
+      poseOutput.println(", playState);");
       
       poseOutput.println("    //###########################################################// ");
       poseOutput.println("");
@@ -1370,6 +1358,15 @@ public void savePoseToFile(File selection)
       
     }
     
+    poseOutput.println(" }");
+    poseOutput.println(" while((Serial.available() == 0) && (playState == 1));  //if a serial command is received or the playState variable changes via intterupt), stop the loop");
+    poseOutput.println("     ");
+    poseOutput.println(" Serial.read(); // Read & discard the character that got us out of the loop.");
+    poseOutput.println(" delay(100);");
+    poseOutput.println(" Serial.println(\"Pausing Sequencing Mode.\"); ");
+    poseOutput.println(" delay(500);");
+    poseOutput.println("}");
+
     
     
     poseOutput.flush();
@@ -2081,7 +2078,7 @@ public void createGUI() {
   cameraCheckbox.addEventHandler(this, "cameraCheckbox_change");
   cameraCheckbox.setText("Activate Camera");
   
-  cameraLabel = new GLabel(this, 330, 50, 100, 14);
+  cameraLabel = new GLabel(this, 330, 60, 100, 14);
   cameraLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   cameraLabel.setText("Experimental");
   cameraLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -2282,7 +2279,7 @@ public void createGUI() {
   
   
   savePosesButton = new GButton(this, 5, 320, 80, 30);
-  savePosesButton.setText("Save poses.h");
+  savePosesButton.setText("Save to File");
   savePosesButton.addEventHandler(this, "savePosesButton_click"); 
  
  

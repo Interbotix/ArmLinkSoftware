@@ -960,6 +960,16 @@ void keyPressed()
       if(key == ' ')
       {
         
+        sendCommanderPacket(0, 0, 0, 0, 0, 0, 0, 0, 17);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '17' is the extended byte that will stop the arm
+        updateFlag = false;
+        autoUpdateCheckbox.setSelected(false);
+
+  
+      }  
+  
+      if(key == 'p')
+      {
+        
         playSequence = !playSequence;
   
       }

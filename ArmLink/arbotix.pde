@@ -598,7 +598,8 @@ void  updateOffsetCoordinates()
          yCurrentOffset = yCurrent;
          zCurrentOffset = zCurrent;
          wristAngleCurrentOffset =  wristAngleCurrent + 90;
-         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         //wristRotateCurrentOffset = wristRotateCurrent + 512;
+         wristRotateCurrentOffset = wristRotateCurrent;
          gripperCurrentOffset = gripperCurrent;
          deltaCurrentOffset = deltaCurrent;
          break;
@@ -610,7 +611,8 @@ void  updateOffsetCoordinates()
          yCurrentOffset = yCurrent;
          zCurrentOffset = zCurrent;
          wristAngleCurrentOffset =  wristAngleCurrent + 90;
-         wristRotateCurrentOffset = wristRotateCurrent + 512;
+         //wristRotateCurrentOffset = wristRotateCurrent + 512;
+         wristRotateCurrentOffset = wristRotateCurrent;
          gripperCurrentOffset = gripperCurrent;
          deltaCurrentOffset = deltaCurrent;
          break;
