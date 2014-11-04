@@ -166,6 +166,9 @@ import processing.video.*;
 
 Capture cam;
 
+
+int pauseTime = 1000;
+
 /***********/
 
 public void setup(){
@@ -639,7 +642,9 @@ public void draw()
   
   if(playSequence == true)
   {
-   if(millis() - lastTime > 20 * deltaCurrent)
+   pauseTime = int(pauseTextField.getText());
+    
+   if(millis() - lastTime > (20 * deltaCurrent + pauseTime))
    {
      println("50 millis");
      for(int i = 0; i < poses.size();i++)

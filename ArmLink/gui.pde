@@ -46,11 +46,12 @@ GButton cartesianModeButton, cylindricalModeButton, backhoeModeButton,orient90Bu
 GPanel controlPanel; 
 //text fields for positional data/delta/extended
 GTextField xTextField, yTextField, zTextField, wristAngleTextField, wristRotateTextField, gripperTextField, deltaTextField, extendedTextField;
-
+GTextField pauseTextField;
 //sliders for positional data/delta
 GSlider xSlider, ySlider, zSlider, wristAngleSlider, wristRotateSlider, gripperSlider, deltaSlider; 
 //text labels for positional data/delta/extended
 GLabel xLabel, yLabel, zLabel, wristAngleLabel, wristRotateLabel, gripperLabel, deltaLabel, extendedLabel,digitalsLabel,analogTextLabel, cameraLabel;
+GLabel pauseLabel;
 //checkboxes for digital output values
 GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox, cameraCheckbox; 
 GCheckbox autoUpdateCheckbox;   //checkbox to enable auto-update mode
@@ -555,6 +556,13 @@ public void extendedTextField_change(GTextField source, GEvent event)
       extendedByte = 0;
     }
   }
+}
+
+
+
+//text field to hold pause time between poses
+public void pauseTextField_change(GTextField source, GEvent event) 
+{
 }
 
 public void baseKnob_change(GKnob source, GEvent event) 
@@ -1211,6 +1219,8 @@ selectFolder("Select a folder to save poses.h in", "savePoseToFile", testFile);
 
 public void savePoseToFile(File selection)
 {
+  
+  
  if(selection == null)
   {
    
@@ -1220,6 +1230,7 @@ public void savePoseToFile(File selection)
   {
  
   
+     pauseTime = int(pauseTextField.getText());
     
       String ikMode = "";
     if(currentMode == 1 && currentOrientation == 1)
@@ -1347,7 +1358,8 @@ public void savePoseToFile(File selection)
       
        poseOutput.print(16 * poseData.get(i)[6]); //compute delta time in milliseconds
        poseOutput.print(" , ");
-       poseOutput.print("1000");//by defualt wait 1000ms between poses
+       //poseOutput.print("1000");//by defualt wait 1000ms between poses
+       poseOutput.print(pauseTime);//by defualt wait 1000ms between poses
          
       
       poseOutput.println(", playState);");
@@ -2008,7 +2020,6 @@ public void createGUI() {
   deltaSlider.setOpaque(false);
   deltaSlider.addEventHandler(this, "deltaSlider_change");
 
-
   deltaLabel = new GLabel(this, 5, 400, 60, 14);
   deltaLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   deltaLabel.setText("Delta");
@@ -2278,7 +2289,22 @@ public void createGUI() {
   poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
   
   
-  savePosesButton = new GButton(this, 5, 320, 80, 30);
+  pauseTextField = new GTextField(this, 5, 320, 80, 20, G4P.SCROLLBARS_NONE);
+  pauseTextField.setText("1000");
+  pauseTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  pauseTextField.setOpaque(true);
+  pauseTextField.addEventHandler(this, "pauseTextField_change");
+
+
+
+  pauseLabel = new GLabel(this, 5, 340, 150, 14);
+  pauseLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  pauseLabel.setText("Pause Time (Ms)");
+  pauseLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  pauseLabel.setOpaque(false);
+
+
+  savePosesButton = new GButton(this, 5, 365, 80, 30);
   savePosesButton.setText("Save to File");
   savePosesButton.addEventHandler(this, "savePosesButton_click"); 
  
@@ -2300,6 +2326,13 @@ public void createGUI() {
   
   sequencePanel.addControl(savePosesButton);
   sequencePanel.addControl(emergencyStopButton);
+  
+  sequencePanel.addControl(pauseTextField);
+  sequencePanel.addControl(pauseLabel);
+  
+  
+
+  
   
   
   controlPanel.addControl(xTextField);
