@@ -1184,6 +1184,20 @@ public void a1_click(GButton source, GEvent event)
 
 public void playButton_click(GButton source, GEvent event) 
 {
+  
+  
+  lastPose = 0;//set lastPose to 0 - if nothing is selected, the playback will start with the 0th pose
+  
+  //scan the poses and set lastPose to the selected pose
+  for (int i = 0; i < poses.size (); i++)
+  {
+    if(poses.get(i).isCollapsed() == false)
+    {
+       lastPose = i; 
+    }
+  }
+    
+      
   playSequence = true;
 }
 
@@ -1212,7 +1226,7 @@ public void savePosesButton_click(GButton source, GEvent event)
 
     
     File testFile = new File(sketchPath(""));
-selectFolder("Select a folder to save poses.h in", "savePoseToFile", testFile);
+selectFolder("Select a folder to save armSequence.h in", "savePoseToFile", testFile);
 
 }
 
