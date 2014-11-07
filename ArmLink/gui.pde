@@ -1328,14 +1328,13 @@ public void savePoseToFile(File selection)
     poseOutput.println("// read from memory.");
     poseOutput.println("volatile int playState = 0; // 0 = stopped 1 = playing");
     poseOutput.println("");
-    poseOutput.println("void SequenceLoop()");
+    poseOutput.println("void playSequence()");
     poseOutput.println("{");
     poseOutput.println("  delay(500);");
     poseOutput.println("  Serial.println(\"Sequencing Mode Active.\"); ");
-    poseOutput.println("  Serial.println(\"Send '1' or press Button 1 to pause and return to menu.\");");
+    poseOutput.println("  Serial.println(\"Press Pushbutton  to stop\");");
     poseOutput.println("  playState = 1;  //set playState to 1 as the sequence is now playing");
-    poseOutput.println("  do");
-    poseOutput.println(" {");
+
     
     poseOutput.print("    g_bIKMode = ");
     poseOutput.print(ikMode);
@@ -1384,13 +1383,12 @@ public void savePoseToFile(File selection)
       
     }
     
-    poseOutput.println(" }");
-    poseOutput.println(" while((Serial.available() == 0) && (playState == 1));  //if a serial command is received or the playState variable changes via intterupt), stop the loop");
-    poseOutput.println("     ");
-    poseOutput.println(" Serial.read(); // Read & discard the character that got us out of the loop.");
+  
     poseOutput.println(" delay(100);");
     poseOutput.println(" Serial.println(\"Pausing Sequencing Mode.\"); ");
     poseOutput.println(" delay(500);");
+    poseOutput.println(" //uncomment this to  put the arm in sleep position after a sequence");
+    poseOutput.println(" //PutArmToSleep();");
     poseOutput.println("}");
 
     
