@@ -217,3 +217,7 @@ pip-log.txt
 
 build-tmp/
 poses.h
+binaries
+ArmLink/build-tmp/
+ArmLink/poses.h
+ArmLink/binaries/
