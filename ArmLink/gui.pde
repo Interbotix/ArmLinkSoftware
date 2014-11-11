@@ -1334,12 +1334,16 @@ public void savePoseToFile(File selection)
     poseOutput.println("  Serial.println(\"Sequencing Mode Active.\"); ");
     poseOutput.println("  Serial.println(\"Press Pushbutton  to stop\");");
     poseOutput.println("  playState = 1;  //set playState to 1 as the sequence is now playing");
-
+  
+    //only add the g_bIKMode variable if the arm is NOT the snapper
+    if(currentArm != 5)
+      {
+        poseOutput.print("    g_bIKMode = ");
+        poseOutput.print(ikMode);
+        poseOutput.println(";");
+      }
     
-    poseOutput.print("    g_bIKMode = ");
-    poseOutput.print(ikMode);
-    poseOutput.println(";");
-     
+    
     //poseOutput.println("    playState = 1;  //set playState to 1 as the sequence is now playing ");
      
     //print pose data from current sequence to the file   
@@ -2059,37 +2063,37 @@ public void createGUI() {
   digitalCheckbox0.setVisible(false);
   digitalCheckbox0.setEnabled(false);
 
-  digitalCheckbox1 = new GCheckbox(this, 30, 35, 50, 20);
+  digitalCheckbox1 = new GCheckbox(this, 30, 35, 40, 20);
   digitalCheckbox1.setOpaque(false);
   digitalCheckbox1.addEventHandler(this, "digitalCheckbox1_change");
   digitalCheckbox1.setText("1");
 
-  digitalCheckbox2 = new GCheckbox(this, 70, 35, 50, 20);
+  digitalCheckbox2 = new GCheckbox(this, 70, 35, 40, 20);
   digitalCheckbox2.setOpaque(false);
   digitalCheckbox2.addEventHandler(this, "digitalCheckbox2_change");
   digitalCheckbox2.setText("2");
 
-  digitalCheckbox3 = new GCheckbox(this, 110, 35, 50, 20);
+  digitalCheckbox3 = new GCheckbox(this, 110, 35, 40, 20);
   digitalCheckbox3.setOpaque(false);
   digitalCheckbox3.addEventHandler(this, "digitalCheckbox3_change");
   digitalCheckbox3.setText("3");
 
-  digitalCheckbox4 = new GCheckbox(this, 150, 35, 50, 20);
+  digitalCheckbox4 = new GCheckbox(this, 150, 35, 40, 20);
   digitalCheckbox4.setOpaque(false);
   digitalCheckbox4.addEventHandler(this, "digitalCheckbox4_change");
   digitalCheckbox4.setText("4");
 
-  digitalCheckbox5 = new GCheckbox(this, 190, 35, 50, 20);
+  digitalCheckbox5 = new GCheckbox(this, 190, 35, 40, 20);
   digitalCheckbox5.setOpaque(false);
   digitalCheckbox5.addEventHandler(this, "digitalCheckbox5_change");
   digitalCheckbox5.setText("5");
 
-  digitalCheckbox6 = new GCheckbox(this, 230, 35, 50, 20);
+  digitalCheckbox6 = new GCheckbox(this, 230, 35, 40, 20);
   digitalCheckbox6.setOpaque(false);
   digitalCheckbox6.addEventHandler(this, "digitalCheckbox6_change");
   digitalCheckbox6.setText("6");
 
-  digitalCheckbox7 = new GCheckbox(this, 270, 35, 50, 20);
+  digitalCheckbox7 = new GCheckbox(this, 270, 35, 40, 20);
   digitalCheckbox7.setOpaque(false);
   digitalCheckbox7.addEventHandler(this, "digitalCheckbox7_change");
   digitalCheckbox7.setText("7");
@@ -2922,7 +2926,7 @@ void setPositionParameters()
     
     
     
-  //show or hide wrist angle -if all the WR parameters are 0 then hide wrist angle 
+  //show or hide wrist rotate -if all the WR parameters are 0 then hide wrist angle 
   if(armParam0WristRotate[currentArm-1][0] == 0 && armParam0WristRotate[currentArm-1][1] == 0 && armParam0WristRotate[currentArm-1][2] == 0)
   {
     wristRotateTextField.setVisible(false);
@@ -2970,7 +2974,7 @@ void setPositionParameters()
   {
     modePanel.setVisible(false);
     wristPanel.setVisible(false);
-  
+    emergencyStopButton.setVisible(false);
 
   digitalCheckbox1.setText("2");
   digitalCheckbox2.setText("4");
