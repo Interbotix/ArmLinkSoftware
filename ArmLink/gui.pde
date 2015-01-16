@@ -504,8 +504,8 @@ public void gripperTextField_change(GTextField source, GEvent event)
 
 public void deltaTextField_change(GTextField source, GEvent event) 
 {
-  printlnDebug("gripperTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
-  gripperCurrent = armTextFieldChange(source, event, deltaSlider, deltaParameters[1], deltaParameters[2], deltaCurrent);
+  printlnDebug("deltaTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
+  deltaCurrent = armTextFieldChange(source, event, deltaSlider, deltaParameters[1], deltaParameters[2], deltaCurrent);
 }
 
 
@@ -3049,5 +3049,3 @@ println(wristAngleCurrent);
 println(wristRotateCurrent);
 println(gripperCurrent);
 }//end set postiion parameters
-
-

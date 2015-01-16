@@ -274,6 +274,8 @@ public void draw()
 
   if (disconnectFlag == 1)
   {
+    
+    autoUpdateCheckbox.setSelected(false);
     putArmToSleep();
     //TODO: call response & check
 
@@ -945,16 +947,7 @@ void keyPressed()
     //check for up/down keys
     if (key == CODED)
     {
-
-
-
-
-
-
-
-
-
-
+      
       //if up AND a number 1-6 are being pressed, increment the appropriate field
       if (keyCode == UP)
       {
@@ -987,6 +980,48 @@ void keyPressed()
         {
           deltaCurrent = deltaCurrent + 1;
         }
+        
+        
+
+        xTextField.setText(Integer.toString(xCurrent));
+        yTextField.setText(Integer.toString(yCurrent));
+        zTextField.setText(Integer.toString(zCurrent));
+        wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+        wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+        gripperTextField.setText(Integer.toString(gripperCurrent));
+  
+        if (currentMode == 1)
+        {  
+          xSlider.setValue(xCurrent);
+          ySlider.setValue(yCurrent);
+          zSlider.setValue(zCurrent);
+          wristRotateKnob.setValue(wristRotateCurrent);
+          wristAngleKnob.setValue(wristAngleCurrent);
+          gripperLeftSlider.setValue(gripperCurrent);
+          gripperRightSlider.setValue(gripperCurrent);
+          deltaSlider.setValue(deltaCurrent);
+        } else if (currentMode == 2 )
+        {
+          baseKnob.setValue(xCurrent);
+          ySlider.setValue(yCurrent);
+          zSlider.setValue(zCurrent);
+          wristRotateKnob.setValue(wristRotateCurrent);
+          wristAngleKnob.setValue(wristAngleCurrent);
+          gripperLeftSlider.setValue(gripperCurrent);
+          gripperRightSlider.setValue(gripperCurrent);
+          deltaSlider.setValue(deltaCurrent);
+        } else if (currentMode == 3)
+        {
+          baseKnob.setValue(xCurrent);
+          shoulderKnob.setValue(yCurrent);
+          elbowKnob.setValue(zCurrent);
+          wristRotateKnob.setValue(wristRotateCurrent);
+          wristAngleKnob.setValue(wristAngleCurrent);
+          gripperLeftSlider.setValue(gripperCurrent);
+          gripperRightSlider.setValue(gripperCurrent);
+          deltaSlider.setValue(deltaCurrent);
+        }
+      
       }
 
       //if down AND a number 1-6 are being pressed, increment the appropriate field
@@ -1020,48 +1055,50 @@ void keyPressed()
         {
           deltaCurrent = deltaCurrent - 1;
         }
+        
+  
+        xTextField.setText(Integer.toString(xCurrent));
+        yTextField.setText(Integer.toString(yCurrent));
+        zTextField.setText(Integer.toString(zCurrent));
+        wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
+        wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
+        gripperTextField.setText(Integer.toString(gripperCurrent));
+  
+        if (currentMode == 1)
+        {  
+          xSlider.setValue(xCurrent);
+          ySlider.setValue(yCurrent);
+          zSlider.setValue(zCurrent);
+          wristRotateKnob.setValue(wristRotateCurrent);
+          wristAngleKnob.setValue(wristAngleCurrent);
+          gripperLeftSlider.setValue(gripperCurrent);
+          gripperRightSlider.setValue(gripperCurrent);
+          deltaSlider.setValue(deltaCurrent);
+        } else if (currentMode == 2 )
+        {
+          baseKnob.setValue(xCurrent);
+          ySlider.setValue(yCurrent);
+          zSlider.setValue(zCurrent);
+          wristRotateKnob.setValue(wristRotateCurrent);
+          wristAngleKnob.setValue(wristAngleCurrent);
+          gripperLeftSlider.setValue(gripperCurrent);
+          gripperRightSlider.setValue(gripperCurrent);
+          deltaSlider.setValue(deltaCurrent);
+        } else if (currentMode == 3)
+        {
+          baseKnob.setValue(xCurrent);
+          shoulderKnob.setValue(yCurrent);
+          elbowKnob.setValue(zCurrent);
+          wristRotateKnob.setValue(wristRotateCurrent);
+          wristAngleKnob.setValue(wristAngleCurrent);
+          gripperLeftSlider.setValue(gripperCurrent);
+          gripperRightSlider.setValue(gripperCurrent);
+          deltaSlider.setValue(deltaCurrent);
+        }
+        
       }
 
 
-
-      xTextField.setText(Integer.toString(xCurrent));
-      yTextField.setText(Integer.toString(yCurrent));
-      zTextField.setText(Integer.toString(zCurrent));
-      wristAngleTextField.setText(Integer.toString(wristAngleCurrent));
-      wristRotateTextField.setText(Integer.toString(wristRotateCurrent));
-      gripperTextField.setText(Integer.toString(gripperCurrent));
-
-      if (currentMode == 1)
-      {  
-        xSlider.setValue(xCurrent);
-        ySlider.setValue(yCurrent);
-        zSlider.setValue(zCurrent);
-        wristRotateKnob.setValue(wristRotateCurrent);
-        wristAngleKnob.setValue(wristAngleCurrent);
-        gripperLeftSlider.setValue(gripperCurrent);
-        gripperRightSlider.setValue(gripperCurrent);
-        deltaSlider.setValue(deltaCurrent);
-      } else if (currentMode == 2 )
-      {
-        baseKnob.setValue(xCurrent);
-        ySlider.setValue(yCurrent);
-        zSlider.setValue(zCurrent);
-        wristRotateKnob.setValue(wristRotateCurrent);
-        wristAngleKnob.setValue(wristAngleCurrent);
-        gripperLeftSlider.setValue(gripperCurrent);
-        gripperRightSlider.setValue(gripperCurrent);
-        deltaSlider.setValue(deltaCurrent);
-      } else if (currentMode == 3)
-      {
-        baseKnob.setValue(xCurrent);
-        shoulderKnob.setValue(yCurrent);
-        elbowKnob.setValue(zCurrent);
-        wristRotateKnob.setValue(wristRotateCurrent);
-        wristAngleKnob.setValue(wristAngleCurrent);
-        gripperLeftSlider.setValue(gripperCurrent);
-        gripperRightSlider.setValue(gripperCurrent);
-        deltaSlider.setValue(deltaCurrent);
-      }
     }
   }
 }
@@ -1099,4 +1136,3 @@ void keyReleased()
     dkey = false;
   }
 }
-
