@@ -59,6 +59,8 @@
 import g4p_controls.*;      //import g4p library for GUI elements
 import processing.serial.*; //import serial library to communicate with the ArbotiX
 import java.awt.Font;       //import font
+import java.util.concurrent.CopyOnWriteArrayList;
+
 
 Serial sPort;               //serial port object, used to connect to a serial port and send data to the ArbotiX
 
@@ -126,10 +128,10 @@ int dragFlag = -1;
 int panelsX = 100;  //x coordinate for all panels
 int panelsYStart = 25;//distance between top of parent and first panel
 int panelYOffset = 25;//distance between panels
-int panelHeight = 18;//height of the panel
+int panelHeight = 15;//height of the panel
 int lastDraggedOverId = -1;
 int lastDraggedOverColor = -1;
-int numberPanelsDisplay = 17;
+int numberPanelsDisplay = 16;
 int draggingPosition = -1;
 float draggingY = 0;
 
@@ -141,7 +143,7 @@ GPanel tempPanel;
 int currentPose = 0;  //current pose that has been selected. 
 
 
-ArrayList<int[]> poseData;
+CopyOnWriteArrayList<int[]> poseData;
 int[] blankPose = new int[8]; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
 
 
@@ -175,7 +177,7 @@ int pauseTime = 1000;
 
 public void setup() {
   size(475, 733, JAVA2D);  //draw initial screen //475
-  poseData = new ArrayList<int[]>();
+  poseData = new CopyOnWriteArrayList<int[]>();
 
   createGUI();   //draw GUI components defined in gui.pde
 
@@ -697,7 +699,7 @@ public void draw()
 }//end draw()
 
 
-/******************************************************
+/*****************************************************
  *  stop()
  *
  *  Tasks to perform on end of program

@@ -86,10 +86,10 @@ GButton analog1; //button3
 GButton playButton; //play sequence
 GButton stopButton; //stop sequence
 
-GButton savePosesButton, emergencyStopButton;
+GButton savePosesButton, emergencyStopButton, loadPosesButton;
 
 
-ArrayList<GPanel> poses;
+CopyOnWriteArrayList<GPanel> poses;
 
 
 GLabel[] analogLabel = new GLabel[8];
@@ -170,7 +170,15 @@ public void orientStraightButton_click(GButton source, GEvent event)
 { 
   printlnDebug("armstraight - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
   
-  clearPoses();
+
+} 
+public void setOrientStraight()
+{  
+  if(currentOrientation != 1)
+  {
+   clearPoses();
+
+  }
   if (currentMode == 0)
   {
   currentMode =1;
@@ -187,24 +195,36 @@ public void orientStraightButton_click(GButton source, GEvent event)
   currentOrientation = 1;
   setPositionParameters();
   changeArmMode();
-} 
 
+}
 
 //change mode data when button to move  gripper angle to 90 degrees is pressed
 public void orient90Button_click(GButton source, GEvent event) 
 {
   printlnDebug("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+
+} 
+
+
+public void setOrient90()
+{
   
   //statusLabel.setText("Changing Mode...");
   
-  clearPoses();
+  if(currentOrientation != 2)
+  {
+   clearPoses();
+
+  }
  
   //set default mode if none has been set
   if (currentMode == 0)
   {
     currentMode =1;
     cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+
   }
+
   
   //DEPRECATED armStraightButton.setAlpha(128);
   //DEPRECATED arm90Button.setAlpha(255);
@@ -217,8 +237,8 @@ public void orient90Button_click(GButton source, GEvent event)
   setPositionParameters();
   changeArmMode();
   updateFlag = true;//set update flag to signal sending an update on the next cycle
-} 
 
+}
 
 //change ik mode to cartesian
 public void cartesianModeButton_click(GButton source, GEvent event) 
@@ -231,9 +251,12 @@ public void cartesianModeButton_click(GButton source, GEvent event)
 
 } 
 
-void setCartesian()
+public void setCartesian()
 {
-  clearPoses();
+  if(currentMode != 1)
+  {
+    clearPoses();
+  }
   
     //set ik mode buttons to correct colors
   cartesianModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
@@ -281,11 +304,21 @@ void setCartesian()
 //change ik mode to cylindrical
 public void cylindricalModeButton_click(GButton source, GEvent event) 
 { 
-  clearPoses();
    printlnDebug("cylindricalModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
   
+
+  setCylindrical();
+
+} 
+
+public void setCylindrical()
+{
+  if(currentMode != 2)
+  {
+    clearPoses();
+  }
   //set ik mode buttons to correct colors
-  source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  cylindricalModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   backhoeModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
@@ -318,7 +351,9 @@ public void cylindricalModeButton_click(GButton source, GEvent event)
   currentMode = 2;//set mode data
   setPositionParameters();//set parameters in gui and working vars
   changeArmMode();//change arm mode
-} 
+
+}
+
 
 
 public void clearPoses()
@@ -337,14 +372,27 @@ public void clearPoses()
 }
 
 
+
+
 //change ik mode to backhoe
 public void backhoeModeButton_click(GButton source, GEvent event) 
 { 
-  clearPoses();
   printlnDebug("backhoeModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
 
+
+  setBackhoe();
+
+
+}
+
+public void setBackhoe()
+{
+  if(currentMode != 3)
+  {
+    clearPoses();
+  }
   //set ik mode buttons to correct colors
-  source.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  backhoeModeButton.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   cylindricalModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   cartesianModeButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   
@@ -371,6 +419,9 @@ public void backhoeModeButton_click(GButton source, GEvent event)
 
 
 }
+
+
+
 //process when manual update button is pressed
 public void updateButton_click(GButton source, GEvent event) 
 {
@@ -1226,8 +1277,18 @@ public void savePosesButton_click(GButton source, GEvent event)
 
     
     File testFile = new File(sketchPath(""));
-selectFolder("Select a folder to save armSequence.h in", "savePoseToFile", testFile);
+    selectFolder("Select a folder to save armSequence.h in", "savePoseToFile", testFile);
 
+}
+
+public void loadPosesButton_click(GButton source, GEvent event) 
+{
+
+  selectInput("Select a file to process:", "readArmFile");
+
+  //File testFile = new File(sketchPath(""));
+  //readArmFile();
+  //readArmFile();
 }
 
 
@@ -1245,6 +1306,9 @@ public void savePoseToFile(File selection)
  
   
      pauseTime = int(pauseTextField.getText());
+
+
+
     
       String ikMode = "";
     if(currentMode == 1 && currentOrientation == 1)
@@ -1317,6 +1381,18 @@ public void savePoseToFile(File selection)
    // poseOutput = createWriter("poses.h"); //create a file in the same directory as the app - poses.h
     poseOutput = createWriter(selection.getAbsolutePath()+ "/armSequence.h");
     
+
+    poseOutput.print("//Arm ");
+    poseOutput.println(currentArm);
+
+    poseOutput.print("//Sequence ");
+    poseOutput.println(poses.size());
+
+    poseOutput.print("//Mode ");
+    poseOutput.println(currentMode);
+
+    poseOutput.print("//Orientation ");
+    poseOutput.println(currentOrientation);
     
     //set IK mode based on current IK mode
     poseOutput.println("#include \"Kinematics.h\"");
@@ -1419,9 +1495,9 @@ public void newPose_click(GButton source, GEvent event)
         println("after " + System.currentTimeMillis()%10000000 );
         println(poses.size());
 
+ // addNewPose();
 
-
-  //to figure out the placement we need to get the 'y' coordinate of the latest pose panel. 
+     //to figure out the placement we need to get the 'y' coordinate of the latest pose panel. 
   //However if the first button is being created, the panel offset is all that is needed
   
   float newY;
@@ -1482,13 +1558,107 @@ public void newPose_click(GButton source, GEvent event)
     }
     println("");
   }
-   
+
    
   
   
 } //_CODE_:button2:332945:
 
+public void addNewPose( int[] filePose)
+{
 
+
+
+    //to figure out the placement we need to get the 'y' coordinate of the latest pose panel. 
+    //However if the first button is being created, the panel offset is all that is needed
+    
+    float newY;
+    if(poses.size() == 0)
+    {
+      newY =  panelYOffset ;
+      
+      
+    }
+    
+    else
+    {
+      newY = poses.get(poses.size()-1).getY() + panelYOffset ;
+      
+    }
+    int[] tempPose = {0,0,0,0,0,0,0,0};
+    arrayCopy(filePose, tempPose);
+  
+    
+   
+   
+    poseData.add(tempPose);
+  
+  
+  
+  
+  
+  
+    poses.add(new GPanel(this, panelsX, newY, 50, 18, numPanels + ""));
+  
+            
+    poses.get(numPanels).setCollapsible(true);
+  
+            
+    poses.get(numPanels).setCollapsed(true);//there is an odd bug if this is set to 'setCollapsed(false)' where the first time you click on the panel, it jumps to the bottom. setting 'setCollapse(true) seems to  aleviate this.
+  
+  
+    poses.get(numPanels).setLocalColorScheme(numPanels%8);
+  
+  
+  
+    sequencePanel.addControl(poses.get(numPanels));
+  
+  
+          
+          
+    numPanels++;
+    
+   //int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte  };
+
+  
+  //poseData.set(poses.size()-1, tempPose);
+  
+  
+  
+  
+
+     if(currentTopPanel > poses.size()-1)
+   {
+     poses.get(poses.size()-1).setVisible(false);
+   }
+   
+   else if(currentTopPanel - poses.size() < -numberPanelsDisplay)
+   {
+     poses.get(poses.size()-1).setVisible(false);
+   }
+   
+   
+   else
+   {
+    
+     poses.get(poses.size()-1).setVisible(true); 
+   }
+   
+  // for(int i = 0; i < poseData.size();i++)
+  // {
+  //   for(int j = 0; j < (poseData.get(i).length);j++)
+  //   {
+  //      print(poseData.get(i)[j]); 
+      
+  //   }
+  //   println("");
+  // }
+
+
+
+
+
+}
 
 
 
@@ -1498,18 +1668,23 @@ public void newPose_click(GButton source, GEvent event)
 //display error and link of supplied strings
 void displayError(String message, String link)
 {
+  //show error panel
+  errorPanel.setVisible(true); 
+  errorPanel.setAlpha(255);
+
   //grey out other panels
   setupPanel.setAlpha(128);
   controlPanel.setAlpha(128);
   sequencePanel.setAlpha(128);
   modePanel.setAlpha(128);
+  ioPanel.setAlpha(128);
   setupPanel.setEnabled(false);
   controlPanel.setEnabled(false);
   sequencePanel.setEnabled(false);
   modePanel.setEnabled(false);
+  ioPanel.setEnabled(false);
+  setupPanel.setFocus(false);
 
-  //show error panel
-  errorPanel.setVisible(true); 
 
   //set text
   errorLabel.setText(message);
@@ -1526,6 +1701,10 @@ void displayError(String message, String link)
     errorLinkButton.setVisible(false);
     errorLinkButton.setEnabled(false);
   }
+  //show error panel
+  errorPanel.setVisible(true); 
+  errorPanel.setAlpha(255);
+
 }
 
 //hide error panel and other panels to their normal state
@@ -1536,10 +1715,12 @@ void hideError()
   controlPanel.setAlpha(255);
   sequencePanel.setAlpha(255);
   modePanel.setAlpha(255);
+  ioPanel.setAlpha(255);
   setupPanel.setEnabled(true);
   controlPanel.setEnabled(true);
   modePanel.setEnabled(true);
   sequencePanel.setEnabled(true);
+  ioPanel.setEnabled(true);
 
   //show error panel
   errorPanel.setVisible(false);
@@ -1610,6 +1791,41 @@ public void createGUI() {
   if (frame != null)
     frame.setTitle("InterbotiX Arm Control");
 
+
+
+
+  
+//error
+  errorPanel = new GPanel(this, 180, 49, 150, 150, "Error Panel");
+  errorPanel.setText("Error Panel");
+  errorPanel.setLocalColorScheme(GCScheme.RED_SCHEME);
+  errorPanel.setOpaque(true);
+  errorPanel.setVisible(false);
+  errorPanel.addEventHandler(this, "errorPanel_Click");
+  //errorPanel.setDraggable(false);
+  errorPanel.setCollapsible(false);
+  
+  errorLinkButton = new GButton(this, 15, 120, 50, 20);
+  errorLinkButton.setText("Link");
+  errorLinkButton.addEventHandler(this, "errorLinkButton_click");
+  errorLinkButton.setLocalColorScheme(GCScheme.RED_SCHEME);
+
+  errorOkButton = new GButton(this, 80, 120, 50, 20);
+  errorOkButton.setText("OK");
+  errorOkButton.addEventHandler(this, "errorOkButton_click");
+  errorOkButton.setLocalColorScheme(GCScheme.RED_SCHEME);
+
+  errorLabel = new GLabel(this, 10, 25, 130, 80);
+  errorLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  errorLabel.setText("Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: ");
+  errorLabel.setOpaque(false);
+  errorLabel.setFont(new Font("Dialog", Font.PLAIN, 10)); 
+
+
+
+  errorPanel.addControl(errorLinkButton);
+  errorPanel.addControl(errorOkButton);
+  errorPanel.addControl(errorLabel);
 
 
 
@@ -2250,7 +2466,7 @@ public void createGUI() {
   //gripperRightSlider.moveTo(258,100);
   
 
-  poses = new ArrayList<GPanel>();
+  poses = new CopyOnWriteArrayList<GPanel>();
   
   //poseData.add(blankPose);  
   poseData.add(defaultPose);
@@ -2324,6 +2540,10 @@ public void createGUI() {
   savePosesButton.setText("Save to File");
   savePosesButton.addEventHandler(this, "savePosesButton_click"); 
  
+  loadPosesButton = new GButton(this, 5, 400, 80, 30);
+  loadPosesButton.setText("Load From File");
+  loadPosesButton.addEventHandler(this, "loadPosesButton_click"); 
+ 
  
   
   
@@ -2341,6 +2561,7 @@ public void createGUI() {
   //sequencePanel.addControl(poses.get(0));
   
   sequencePanel.addControl(savePosesButton);
+  sequencePanel.addControl(loadPosesButton);
   sequencePanel.addControl(emergencyStopButton);
   
   sequencePanel.addControl(pauseTextField);
@@ -2421,39 +2642,6 @@ public void createGUI() {
   } 
   );
   waitingButton.setAlpha(0);
-  
-//error
-  errorPanel = new GPanel(this, 50, 280, 150, 150, "Error Panel");
-  errorPanel.setText("Error Panel");
-  errorPanel.setLocalColorScheme(GCScheme.RED_SCHEME);
-  errorPanel.setOpaque(true);
-  errorPanel.setVisible(false);
-  errorPanel.addEventHandler(this, "errorPanel_Click");
-  //errorPanel.setDraggable(false);
-  errorPanel.setCollapsible(false);
-  
-  errorLinkButton = new GButton(this, 15, 120, 50, 20);
-  errorLinkButton.setText("Link");
-  errorLinkButton.addEventHandler(this, "errorLinkButton_click");
-  errorLinkButton.setLocalColorScheme(GCScheme.RED_SCHEME);
-
-  errorOkButton = new GButton(this, 80, 120, 50, 20);
-  errorOkButton.setText("OK");
-  errorOkButton.addEventHandler(this, "errorOkButton_click");
-  errorOkButton.setLocalColorScheme(GCScheme.RED_SCHEME);
-
-  errorLabel = new GLabel(this, 10, 25, 130, 80);
-  errorLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  errorLabel.setText("Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: Error: ");
-  errorLabel.setOpaque(false);
-  errorLabel.setFont(new Font("Dialog", Font.PLAIN, 10)); 
-
-
-
-  errorPanel.addControl(errorLinkButton);
-  errorPanel.addControl(errorOkButton);
-  errorPanel.addControl(errorLabel);
-
 
 
 //settings
