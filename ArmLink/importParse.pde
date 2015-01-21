@@ -17,7 +17,7 @@ String line;
  
 public void readArmFile(File selection)
 {
-  //noLoop();
+  noLoop();
   String[] txtFile;
 
   if (selection == null) 
@@ -68,9 +68,9 @@ public void readArmFile(File selection)
   int armOrientationInt;
   String tempLine ;
   String[] splitPose = {"","","","","","","",""};
-  int[] tempPoseData = {0, 0, 0, 0,0 ,0 ,0 ,0};
-  int[] tempPoseData2 = {0, 0, 0, 0,0 ,0 ,0 ,0};
-  int[] tempPoseData5=  {0, 0, 0, 0,0 ,0 ,0 ,0};
+  int[] tempPoseData = {0, 0, 0, 0,0 ,0 ,0 ,0,0};
+  int[] tempPoseData2 = {0, 0, 0, 0,0 ,0 ,0 ,0,0};
+  int[] tempPoseData5=  {0, 0, 0, 0,0 ,0 ,0 ,0,0};
 
 
 
@@ -186,6 +186,7 @@ public void readArmFile(File selection)
          tempPoseData2[5] = tempPoseData[5];
          tempPoseData2[6] = tempPoseData[6]/16;
          tempPoseData2[7] = 0;
+         tempPoseData2[8] = tempPoseData[7];
 
 
          break;
@@ -206,7 +207,8 @@ public void readArmFile(File selection)
          tempPoseData2[4] = tempPoseData[4];
          tempPoseData2[5] = tempPoseData[5];
          tempPoseData2[6] = tempPoseData[6]/16;
-         tempPoseData2[7] = 0;         
+         tempPoseData2[7] = 0;   
+         tempPoseData2[8] = tempPoseData[7];      
 
 
 
@@ -223,10 +225,11 @@ public void readArmFile(File selection)
          tempPoseData2[5] = tempPoseData[5];
          tempPoseData2[6] = tempPoseData[6];
          tempPoseData2[7] = 0;
+         tempPoseData2[8] = tempPoseData[7];
         break; 
     }  
     
-     pauseTextField.setText(tempPoseData[7] + "");
+     //pauseTextField.setText(tempPoseData[7] + "");
 
 
 

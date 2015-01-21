@@ -38,6 +38,7 @@ int[] wristAngleParameters = {0,-90,90};
 int[] wristRotateParameters = {0,-512,511};
 int[] gripperParameters = {256,0,512};
 int[] deltaParameters = {125,0,256};
+int[] pauseParameters = {1000,0,10000};
 
 //values for the current value directly from the GUI element. These are updated by the slider/text boxes
 int xCurrent = xParameters[0]; //current x value in text field/slider
@@ -47,6 +48,7 @@ int wristAngleCurrent = wristAngleParameters[0]; //current Wrist Angle value in 
 int wristRotateCurrent = wristRotateParameters[0]; //current  Wrist Rotate value in text field/slider
 int gripperCurrent = gripperParameters[0]; //current Gripper value in text field/slider
 int deltaCurrent = deltaParameters[0]; //current delta value in text field/slider};
+int pauseCurrent = 1000;
 
 //offset values to be send to the ArbotiX/Arm. whether or not these values get offsets depends on the current mode
 //it will be possible for the 'Current' value to be the same as the 'currentOffset' value.

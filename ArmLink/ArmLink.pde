@@ -144,11 +144,11 @@ int currentPose = 0;  //current pose that has been selected.
 
 
 CopyOnWriteArrayList<int[]> poseData;
-int[] blankPose = new int[8]; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
+int[] blankPose = new int[9]; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals, pause
 
 
 int[] defaultPose = {
-  0, 200, 200, 0, 0, 256, 125, 0
+  0, 200, 200, 0, 0, 256, 125, 0, 1000
 }; //blank pose : x, y, z, wristangle, wristRotate, Gripper, Delta, digitals
 
 

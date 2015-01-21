@@ -60,6 +60,8 @@ GImageButton waitingButton;    //waiting button, unused
 GKnob baseKnob, shoulderKnob,elbowKnob ,wristAngleKnob ,wristRotateKnob; //knob to turn the base
 GCustomSlider gripperLeftSlider, gripperRightSlider;
 
+GSlider pauseSlider;//defunct
+
 //error panel
 GPanel errorPanel;//panel to warn users of errros
 GButton errorOkButton;   //button to dismiss error panel
@@ -510,7 +512,7 @@ public int armTextFieldChange(GTextField source, GEvent event, GValueControl tar
 }
 
 
-
+  
 
 public void xTextField_change(GTextField source, GEvent event) 
 {
@@ -614,6 +616,13 @@ public void extendedTextField_change(GTextField source, GEvent event)
 //text field to hold pause time between poses
 public void pauseTextField_change(GTextField source, GEvent event) 
 {
+  printlnDebug("pauseTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
+
+    pauseCurrent = armTextFieldChange(source, event, pauseSlider, pauseParameters[1], pauseParameters[2], pauseCurrent);
+
+
+
+
 }
 
 public void baseKnob_change(GKnob source, GEvent event) 
@@ -1027,7 +1036,7 @@ public void workspaceToPoseInternal()
   
   poseData.set(currentPose, tempPose);
   
-  for(int i = 0; i < 8; i++)
+  for(int i = 0; i < 9; i++)
   {
      print("-" + poseData.get(currentPose)[i]+"-");  
     
@@ -1081,7 +1090,8 @@ deltaCurrent = poseData.get(pose)[6];//set the value that will be sent
 deltaTextField.setText(Integer.toString(deltaCurrent));//set the text field
 deltaSlider.setValue(deltaCurrent);//set gui elemeent to same value
 
-
+pauseCurrent = poseData.get(pose)[8];
+pauseTextField.setText(Integer.toString(pauseCurrent));//set the text field
 
 
 
@@ -1452,7 +1462,7 @@ public void savePoseToFile(File selection)
        poseOutput.print(16 * poseData.get(i)[6]); //compute delta time in milliseconds
        poseOutput.print(" , ");
        //poseOutput.print("1000");//by defualt wait 1000ms between poses
-       poseOutput.print(pauseTime);//by defualt wait 1000ms between poses
+       poseOutput.print(poseData.get(i)[8]);//by defualt wait 1000ms between poses
          
       
       poseOutput.println(", playState);");
@@ -1524,7 +1534,7 @@ public void newPose_click(GButton source, GEvent event)
   sequencePanel.addControl(poses.get(numPanels));
   numPanels++;
   
-   int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte  };
+   int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte, pauseCurrent  };
   
   poseData.set(poses.size()-1, tempPose);
   
@@ -1585,7 +1595,7 @@ public void addNewPose( int[] filePose)
       newY = poses.get(poses.size()-1).getY() + panelYOffset ;
       
     }
-    int[] tempPose = {0,0,0,0,0,0,0,0};
+    int[] tempPose = {0,0,0,0,0,0,0,0,0};
     arrayCopy(filePose, tempPose);
   
     
@@ -2233,6 +2243,10 @@ public void createGUI() {
 
 
 
+  pauseSlider = new GSlider(this, 75, 245, 145, 40, 10.0);
+
+  pauseSlider.setVisible(false);
+
 
 
   deltaTextField = new GTextField(this, 5, 380, 60, 20, G4P.SCROLLBARS_NONE);
@@ -2521,7 +2535,7 @@ public void createGUI() {
   poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
   
   
-  pauseTextField = new GTextField(this, 5, 320, 80, 20, G4P.SCROLLBARS_NONE);
+  pauseTextField = new GTextField(this, 190, 320, 60, 20, G4P.SCROLLBARS_NONE);
   pauseTextField.setText("1000");
   pauseTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   pauseTextField.setOpaque(true);
@@ -2529,9 +2543,9 @@ public void createGUI() {
 
 
 
-  pauseLabel = new GLabel(this, 5, 340, 150, 14);
+  pauseLabel = new GLabel(this, 190, 340, 120, 14);
   pauseLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  pauseLabel.setText("Pause Time (Ms)");
+  pauseLabel.setText("Pause (Ms)");
   pauseLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   pauseLabel.setOpaque(false);
 
@@ -2564,9 +2578,11 @@ public void createGUI() {
   sequencePanel.addControl(loadPosesButton);
   sequencePanel.addControl(emergencyStopButton);
   
-  sequencePanel.addControl(pauseTextField);
-  sequencePanel.addControl(pauseLabel);
+  // sequencePanel.addControl(pauseTextField);
+  // sequencePanel.addControl(pauseLabel);
   
+  controlPanel.addControl(pauseTextField);
+  controlPanel.addControl(pauseLabel);
   
 
   
