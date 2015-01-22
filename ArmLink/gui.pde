@@ -1032,7 +1032,7 @@ poseToWorkspaceInternal(currentPose);
 public void workspaceToPoseInternal()
 {  
 
-  int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte  };
+  int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte, pauseCurrent  };
   
   poseData.set(currentPose, tempPose);
   
