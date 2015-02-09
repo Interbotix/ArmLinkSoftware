@@ -131,7 +131,7 @@ int panelYOffset = 25;//distance between panels
 int panelHeight = 15;//height of the panel
 int lastDraggedOverId = -1;
 int lastDraggedOverColor = -1;
-int numberPanelsDisplay = 16;
+int numberPanelsDisplay = 14;
 int draggingPosition = -1;
 float draggingY = 0;
 
