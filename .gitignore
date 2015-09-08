@@ -221,3 +221,5 @@ binaries
 ArmLink/build-tmp/
 ArmLink/poses.h
 ArmLink/binaries/
+
+ArmLink/debugArmLink.txt

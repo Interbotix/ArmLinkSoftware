@@ -1422,13 +1422,13 @@ public void savePoseToFile(File selection)
     poseOutput.println("  playState = 1;  //set playState to 1 as the sequence is now playing");
   
     //only add the g_bIKMode variable if the arm is NOT the snapper
-    if(currentArm != 5)
-      {
+  
+  
         poseOutput.print("    g_bIKMode = ");
         poseOutput.print(ikMode);
         poseOutput.println(";");
-      }
-    
+  
+
     
     //poseOutput.println("    playState = 1;  //set playState to 1 as the sequence is now playing ");
      
@@ -3176,7 +3176,7 @@ void setPositionParameters()
     
   if(currentArm == 5)
   {
-    modePanel.setVisible(false);
+//    modePanel.setVisible(false);
     wristPanel.setVisible(false);
     emergencyStopButton.setVisible(false);
 

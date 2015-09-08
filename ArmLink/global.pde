@@ -210,16 +210,16 @@ int[] snapperNormalWristAngle = {0,-30,30};
 
 
 int[] snapperWristRotate = {0,0,0};  //Not Implemented in Snapper hardware
-int[] snapperGripper = {256,0,512};
+int[] snapperGripper = {1500,750,2400};
 int[] snapper90X = {0,-200,200};          //Not Implemented in Snapper firmware
 int[] snapper90Y = {140,20,150};          //Not Implemented in Snapper firmware
 int[] snapper90Z = {30,10,150};          //Not Implemented in Snapper firmware
 int[] snapper90WristAngle = {-90,-90,-45};          //Not Implemented in Snapper firmware
-int[] snapperBase = {512,0,1023};          //Not Implemented in Snapper firmware
-int[] snapperBHShoulder = {512,205,815};          //Not Implemented in Snapper firmware
-int[] snapperBHElbow = {512,205,1023};          //Not Implemented in Snapper firmware
-int[] snapperBHWristAngle = {512,205,815};          //Not Implemented in Snapper firmware
-int[] snapperBHWristRot = {512,0,1023};          //Not Implemented in Snapper firmware
+int[] snapperBase = {1500,2400,600};          //Not Implemented in Snapper firmware
+int[] snapperBHShoulder = {1500,600,2400};          //Not Implemented in Snapper firmware
+int[] snapperBHElbow = {1500,2400,600};          //Not Implemented in Snapper firmware
+int[] snapperBHWristAngle = {1500,2400,600};          //Not Implemented in Snapper firmware
+int[] snapperBHWristRot = {1500,600,2400};          //Not Implemented in Snapper firmware
 
 int[] snapperBHWristAngleNormalKnob = {150,210};//angle data for knob limits
 int[] snapperBHWristAngle90Knob = {90,45};//angle data for knob limits
@@ -227,10 +227,10 @@ int[] snapperBHWristAngle90Knob = {90,45};//angle data for knob limits
 int[] snapperWristAngleBHKnob = {270,90};//angle data for knob limits
 int[] snapperWristRotKnob = {120,60};
 
-int[] snapperBaseKnob = {120,60};
-int[] snapperShoulderKnob = {120,60};
-int[] snapperElbowKnob = {120,60};
-float snapperElbowKnobRotation = -PI*1/3;
+int[] snapperBaseKnob = {180,360};
+int[] snapperShoulderKnob = {180,360};
+int[] snapperElbowKnob = {180,360};
+float snapperElbowKnobRotation = 0;//-PI*1/3;
 
 
 
