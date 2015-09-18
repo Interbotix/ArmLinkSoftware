@@ -484,6 +484,39 @@ void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, i
   byte extValByte = byte(extended);
   byte deltaValByte = byte(delta);
   boolean flag = true;
+  
+  static byte[] lastXValBytes;
+  static byte[] lastYValBytes;
+  static byte[] lastZValBytes;
+  static byte[] lastWristRotValBytes ;
+  static byte[] lastWristAngleValBytes;
+  static byte[] lastGripperValBytes ;
+  //cast int to bytes
+  static byte lastButtonByte = ;
+  static byte lastExtValByte = ;
+  static byte lastDeltaValByte =;
+  
+   lastXValBytes[0] != xValBytes[0];
+    lastXValBytes[1] = xValBytes[1];
+   lastYValBytes[0] = yValBytes[0];
+   lastYValBytes[1] = yValBytes[1];
+   lastZValBytes[0] = zValBytes[0];
+   lastZValBytes[1] = zValBytes[1];
+   lastWristRotValBytes[0] = wristRotValBytes[0];
+   lastWristRotValBytes[1] = wristRotValBytes[1];
+   lastWristAngleValBytes[0] = wristAngleValBytes[0];
+   lastWristAngleValBytes[1] = wristAngleValBytes[1];
+   lastGripperValBytes[0] = gripperValBytes[0];
+   lastGripperValBytes[1] = gripperValBytes[1];
+   ;
+  //cast int to bytes
+  lastButtonByte = buttonByte;
+  lastExtValByte = extValByte;
+   lastDeltaValByte = deltaValByte;
+  //check for changes
+  if(    lastXValBytes[0] != xValBytes[0] || lastXValBytes[1] != xValBytes[1] || lastYValBytes[0] != yValBytes[0] || lastYValBytes[1] != yValBytes[1] || lastZValBytes[0] != zValBytes[0] || lastZValBytes[1] != zValBytes[1] || lastWristRotValBytes[0] != wristRotValBytes[0] || lastWristRotValBytes[1] != wristRotValBytes[1] || lastWristAngleValBytes[0] != wristAngleValBytes[0] || lastWristAngleValBytes[1] != wristAngleValBytes[1] || lastGripperValBytes[0] != gripperValBytes[0] || lastGripperValBytes[1] != gripperValBytes[1] || lastButtonByte != buttonByte || lastExtValByte != extValByte || lastDeltaValByte != deltaValByte;)
+  {
+  
   //calculate checksum - add all values, take lower byte (%256) and invert result (~). you can also invert results by (255-sum)
   byte checksum = (byte)(~(xValBytes[1]+xValBytes[0]+yValBytes[1]+yValBytes[0]+zValBytes[1]+zValBytes[0]+wristAngleValBytes[1]+wristAngleValBytes[0]+wristRotValBytes[1]+wristRotValBytes[0]+gripperValBytes[1]+gripperValBytes[0]+deltaValByte + buttonByte+extValByte)%256);
 
@@ -519,7 +552,28 @@ void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, i
       sPorts[armPortIndex].write(checksum);  //checksum
       printlnDebug("Packet Sent: 0xFF 0x" +hex(xValBytes[1]) +" 0x" +hex(xValBytes[0]) +" 0x" +hex(yValBytes[1]) +" 0x" +hex(yValBytes[0])+" 0x" +hex(zValBytes[1])+" 0x" +hex(zValBytes[0]) +" 0x" +hex(wristAngleValBytes[1]) +" 0x" +hex(wristAngleValBytes[0]) +" 0x" + hex(wristRotValBytes[1])+" 0x" +hex(wristRotValBytes[0]) +" 0x" + hex(gripperValBytes[1])+" 0x" + hex(gripperValBytes[0])+" 0x" + hex(deltaValByte)+" 0x" +hex(buttonByte) +" 0x" +hex(extValByte) +" 0x"+hex(checksum) +"",2); 
     }
+  }
     
+    lastXValBytes[0] = xValBytes[0];
+    lastXValBytes[1] = xValBytes[1];
+   lastYValBytes[0] = yValBytes[0];
+   lastYValBytes[1] = yValBytes[1];
+   lastZValBytes[0] = zValBytes[0];
+   lastZValBytes[1] = zValBytes[1];
+   lastWristRotValBytes[0] = wristRotValBytes[0];
+   lastWristRotValBytes[1] = wristRotValBytes[1];
+   lastWristAngleValBytes[0] = wristAngleValBytes[0];
+   lastWristAngleValBytes[1] = wristAngleValBytes[1];
+   lastGripperValBytes[0] = gripperValBytes[0];
+   lastGripperValBytes[1] = gripperValBytes[1];
+   
+  //cast int to bytes
+  lastButtonByte = buttonByte;
+  lastExtValByte = extValByte;
+   lastDeltaValByte = deltaValByte;
+  
+  
+  
          
 }
 

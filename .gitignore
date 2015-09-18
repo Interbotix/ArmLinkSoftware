@@ -223,3 +223,15 @@ ArmLink/poses.h
 ArmLink/binaries/
 
 ArmLink/debugArmLink.txt
+
+ArmLink/application.macosx64/source/arbotix.pde
+
+ArmLink/application.macosx64/source/ArmLink.java
+
+ArmLink/application.macosx64/source/ArmLink.pde
+
+ArmLink/application.macosx64/source/gui.pde
+
+ArmLink/application.macosx64/source/global.pde
+
+ArmLink/application.macosx64/source/importParse.pde
