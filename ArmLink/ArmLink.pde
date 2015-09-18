@@ -173,6 +173,22 @@ Capture cam;
 
 int pauseTime = 1000;
 
+
+
+  //holds the data from the last packet sent
+  int lastX;
+  int lastY;
+  int lastZ;
+  int lastWristangle;
+  int lastWristRotate;
+  int lastGripper;
+  int lastButton;
+  int lastExtended;
+  int lastDelta;
+   
+  
+  
+  
 /***********/
 
 public void setup() {
@@ -483,8 +499,12 @@ public void draw()
       //check that the serial port is active - if the 'armPortIndex' variable is not -1, then a port has been connected and has an arm attached
       if (armPortIndex > -1)
       {
-        //send commander packet with the current global currentOffset coordinatges
-        sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+        //old style
+        //sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+
+        //send commander packet with the current global currentOffset coordinates, don't send the same data twice in a row
+        sendCommanderPacketWithCheck(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+
 
         //if a sequence is playing, wait for the arm response before moving on
         //        if(playSequence ==true)
