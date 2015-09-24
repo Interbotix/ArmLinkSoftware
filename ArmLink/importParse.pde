@@ -223,7 +223,7 @@ public void readArmFile(File selection)
          tempPoseData2[3] = tempPoseData[3];
          tempPoseData2[4] = tempPoseData[4];
          tempPoseData2[5] = tempPoseData[5];
-         tempPoseData2[6] = tempPoseData[6];
+         tempPoseData2[6] = tempPoseData[6]/16;
          tempPoseData2[7] = 0;
          tempPoseData2[8] = tempPoseData[7];
         break; 
