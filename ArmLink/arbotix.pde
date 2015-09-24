@@ -725,4 +725,23 @@ int analogRead(int analogPort)
   return(analog);
         
 }
+int registerRead()
+{
+
+ byte[] returnPacket = new byte[5];  //byte array to hold return packet, which is 5 bytes long
+  int registerVal = 0;
+  printlnDebug("sending request for anlaog 1"); 
+  int getRegExtentded = 0x81;
+  sendCommanderPacket (regIdCurrent,regNumCurrent,regLengthCurrent, 0, 0, 0, 0, 0, getRegExtentded);
+  returnPacket = readFromArmFast(5);//read raw data from arm, complete with wait time
+  byte[] registerBytes = {returnPacket[3],returnPacket[2]};
+  registerVal   = bytesToInt(registerBytes);
+  
+  printlnDebug("Return Packet" + int(returnPacket[0]) + "-" +  int(returnPacket[1]) + "-"  + int(returnPacket[2]) + "-"  + int(returnPacket[3]) + "-"  + int(returnPacket[4]));
+  printlnDebug("analog value: " + registerVal);
+  
+  return(registerVal);
+  
+
+}
 

@@ -1,4 +1,3 @@
-
 /***********************************************************************************
  *  }--\     InterbotiX     /--{
  *      |    Arm Link      |
@@ -25,6 +24,11 @@
  *   delta       |  delta         |  delta          |   n/a                 |
 ********************************************************************************/
 
+
+int regIdCurrent = 0;
+int regNumCurrent = 0;
+int regLengthCurrent = 0;
+int regValCurrent = 0;
 
 //WORKING POSITION VARIABLES
 

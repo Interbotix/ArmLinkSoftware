@@ -499,12 +499,7 @@ public void draw()
       //check that the serial port is active - if the 'armPortIndex' variable is not -1, then a port has been connected and has an arm attached
       if (armPortIndex > -1)
       {
-        //old style
-        //sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
-
-        //send commander packet with the current global currentOffset coordinates, don't send the same data twice in a row
-        sendCommanderPacketWithCheck(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
-
+        
 
         //if a sequence is playing, wait for the arm response before moving on
         //        if(playSequence ==true)
@@ -530,17 +525,28 @@ public void draw()
       //However in autoUpdate mode, the program should not change this flag (only unchecking the auto update flag should set the flag to false)
       if (autoUpdateCheckbox.isSelected() == false)
       {
+        sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
         updateFlag = false;//only set the updateFlag to false if the autoUpdate flag is false
+        //send normally
+        
       }
-      //use this oppurtunity to set the extended byte to 0 if autoupdate is enabled - this way the extended packet only gets sent once
       else
       {
+        //autoupdate,so send with check
+           //send commander packet with the current global currentOffset coordinates, don't send the same data twice in a row
+        sendCommanderPacketWithCheck(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
+ 
+        //use this oppurtunity to set the extended byte to 0 if autoupdate is enabled - this way the extended packet only gets sent once
+
         if (extendedByte != 0)
         {
           extendedByte = 0;
           extendedTextField.setText("0");
         }
+        
+        
       }
+ 
     }//end command code
   }
 

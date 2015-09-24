@@ -40,6 +40,8 @@ GPanel modePanel; //panel to hold current mode buttons
 GPanel wristPanel; //panel to hold current wrist buttons
 
 GButton cartesianModeButton, cylindricalModeButton, backhoeModeButton,orient90Button, orientStraightButton; //buttons to chage IK mode
+GButton setRegisterButton, getRegisterButton;
+
 //DEPRACATED GImageButton armStraightButton,arm90Button;//image buttons to hold wrist angle orientation mode
 
 //control panel
@@ -47,6 +49,8 @@ GPanel controlPanel;
 //text fields for positional data/delta/extended
 GTextField xTextField, yTextField, zTextField, wristAngleTextField, wristRotateTextField, gripperTextField, deltaTextField, extendedTextField;
 GTextField pauseTextField;
+GTextField regId, regLength, regNum, regVal;
+GLabel regIdLabel, regLengthLabel, regNumLabel, regValLabel;
 //sliders for positional data/delta
 GSlider xSlider, ySlider, zSlider, wristAngleSlider, wristRotateSlider, gripperSlider, deltaSlider; 
 //text labels for positional data/delta/extended
@@ -242,12 +246,53 @@ public void setOrient90()
 
 }
 
+
+//change ik mode to cartesian
+public void setRegisterButton_click(GButton source, GEvent event) 
+{ 
+  printlnDebug("setRegisterButton_click - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
+   regIdCurrent = int(regId.getText());
+ regNumCurrent = int(regNum.getText());
+regLengthCurrent = int(regLength.getText());
+regValCurrent = int(regVal.getText());
+
+  sendCommanderPacket (regIdCurrent,regNumCurrent,regLengthCurrent, regValCurrent, 0, 0, 0, 0, 0x82);
+
+
+} 
+
+//change ik mode to cartesian
+public void getRegisterButton_click(GButton source, GEvent event) 
+{ 
+  printlnDebug("getRegisterButton_click - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
+  
+  
+ regIdCurrent = int(regId.getText());
+ regNumCurrent = int(regNum.getText());
+regLengthCurrent = int(regLength.getText());
+regValCurrent = int(regVal.getText());
+
+  int tempReg = registerRead();
+
+  regVal.setText(Integer.toString(tempReg));
+  //sendCommanderPacket (regIdCurrent,regNumCurrent,regLengthCurrent, 0, 0, 0, 0, 0, 0x81);
+  
+
+} 
+
+
+
+
 //change ik mode to cartesian
 public void cartesianModeButton_click(GButton source, GEvent event) 
 { 
   printlnDebug("cartesianModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
   
 
+ regIdCurrent = int(regId.getText());
+ regNumCurrent = int(regNum.getText());
+regLengthCurrent = int(regLength.getText());
+regValCurrent = int(regVal.getText());
   
   setCartesian();
 
@@ -512,7 +557,30 @@ public int armTextFieldChange(GTextField source, GEvent event, GValueControl tar
 }
 
 
-  
+  public void regId_change(GTextField source, GEvent event) 
+{
+  printlnDebug("xTextField_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
+  //regIdCurrent = int(source.getText());
+}
+public void regLength_change(GTextField source, GEvent event) 
+{
+  printlnDebug("regLength_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
+  //regLengthCurrent = int(source.getText());
+}
+public void regNum_change(GTextField source, GEvent event) 
+{
+  printlnDebug("regNum_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
+  //regNumCurrent = int(source.getText());
+}
+public void regVal_change(GTextField source, GEvent event) 
+{
+  printlnDebug("regVal_change - GTextField event occured " + System.currentTimeMillis()%10000000, 1 );
+  //regValCurrent = int(source.getText());
+}
+
+
+
+
 
 public void xTextField_change(GTextField source, GEvent event) 
 {
@@ -1770,7 +1838,7 @@ public void settingsDismissButton_click(GButton source, GEvent event)
 public void fileDebugCheckbox_change(GCheckbox source, GEvent event)
 { 
 
-  printlnDebug("autoUpdateCheckbox_change - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+  printlnDebug(" - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
 
   debugFile = source.isSelected();//set the updateFlag to the current state of the autoUpdate checkbox
 } 
@@ -2293,54 +2361,54 @@ public void createGUI() {
   digitalCheckbox0.setVisible(false);
   digitalCheckbox0.setEnabled(false);
 
-  digitalCheckbox1 = new GCheckbox(this, 30, 35, 40, 20);
+  digitalCheckbox1 = new GCheckbox(this, 85, 18, 40, 20);
   digitalCheckbox1.setOpaque(false);
   digitalCheckbox1.addEventHandler(this, "digitalCheckbox1_change");
   digitalCheckbox1.setText("1");
 
-  digitalCheckbox2 = new GCheckbox(this, 70, 35, 40, 20);
+  digitalCheckbox2 = new GCheckbox(this, 125, 18, 40, 20);
   digitalCheckbox2.setOpaque(false);
   digitalCheckbox2.addEventHandler(this, "digitalCheckbox2_change");
   digitalCheckbox2.setText("2");
 
-  digitalCheckbox3 = new GCheckbox(this, 110, 35, 40, 20);
+  digitalCheckbox3 = new GCheckbox(this, 165, 18, 40, 20);
   digitalCheckbox3.setOpaque(false);
   digitalCheckbox3.addEventHandler(this, "digitalCheckbox3_change");
   digitalCheckbox3.setText("3");
 
-  digitalCheckbox4 = new GCheckbox(this, 150, 35, 40, 20);
+  digitalCheckbox4 = new GCheckbox(this, 205, 18, 40, 20);
   digitalCheckbox4.setOpaque(false);
   digitalCheckbox4.addEventHandler(this, "digitalCheckbox4_change");
   digitalCheckbox4.setText("4");
 
-  digitalCheckbox5 = new GCheckbox(this, 190, 35, 40, 20);
+  digitalCheckbox5 = new GCheckbox(this, 245, 18, 40, 20);
   digitalCheckbox5.setOpaque(false);
   digitalCheckbox5.addEventHandler(this, "digitalCheckbox5_change");
   digitalCheckbox5.setText("5");
 
-  digitalCheckbox6 = new GCheckbox(this, 230, 35, 40, 20);
+  digitalCheckbox6 = new GCheckbox(this, 285, 18, 40, 20);
   digitalCheckbox6.setOpaque(false);
   digitalCheckbox6.addEventHandler(this, "digitalCheckbox6_change");
   digitalCheckbox6.setText("6");
 
-  digitalCheckbox7 = new GCheckbox(this, 270, 35, 40, 20);
+  digitalCheckbox7 = new GCheckbox(this, 325, 18, 40, 20);
   digitalCheckbox7.setOpaque(false);
   digitalCheckbox7.addEventHandler(this, "digitalCheckbox7_change");
   digitalCheckbox7.setText("7");
 
 
 
-  cameraCheckbox = new GCheckbox(this, 330, 35, 150, 20);
+  cameraCheckbox = new GCheckbox(this, 150, 58, 150, 20);
   cameraCheckbox.setOpaque(false);
   cameraCheckbox.addEventHandler(this, "cameraCheckbox_change");
   cameraCheckbox.setText("Activate Camera");
   
-  cameraLabel = new GLabel(this, 330, 60, 100, 14);
+  cameraLabel = new GLabel(this, 5, 58, 100, 14);
   cameraLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   cameraLabel.setText("Experimental");
   cameraLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   cameraLabel.setOpaque(false);
-
+  cameraLabel.setVisible(false);
 
 
 
@@ -2353,17 +2421,17 @@ public void createGUI() {
 
 
 
-  analogCheckbox = new GCheckbox(this, 86, 58, 80, 20);
+  analogCheckbox = new GCheckbox(this, 5, 58, 180, 20);
   analogCheckbox.setOpaque(false);
   analogCheckbox.addEventHandler(this, "analogCheckbox_change");
-  analogCheckbox.setText("Enable:", GAlign.LEFT, GAlign.MIDDLE);
+  analogCheckbox.setText("Enable Analog Input:", GAlign.LEFT, GAlign.MIDDLE);
 
   analogCheckbox.setVisible(true);
   analogCheckbox.setEnabled(true);
   
   
   
-  analogTextLabel = new GLabel(this, 5, 60, 100, 14);
+  analogTextLabel = new GLabel(this, 5, 38, 100, 14);
   analogTextLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogTextLabel.setText("Analog Input");
   analogTextLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -2372,56 +2440,56 @@ public void createGUI() {
 
 
 
-  analogLabel[0] = new GLabel(this, 30, 80, 90, 14);
+  analogLabel[0] = new GLabel(this, 85, 38, 90, 14);
   analogLabel[0].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[0].setText("0");
   analogLabel[0].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[0].setOpaque(false);
   analogLabel[0].setVisible(false);
 
-  analogLabel[1] = new GLabel(this, 80, 80, 60, 14);
+  analogLabel[1] = new GLabel(this, 130, 38, 60, 14);
   analogLabel[1].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[1].setText("1");
   analogLabel[1].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[1].setOpaque(false);
   analogLabel[1].setVisible(false);
 
-  analogLabel[2] = new GLabel(this, 130, 80, 60, 14);
+  analogLabel[2] = new GLabel(this, 175, 38, 60, 14);
   analogLabel[2].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[2].setText("2");
   analogLabel[2].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[2].setOpaque(false);
   analogLabel[2].setVisible(false);
 
-  analogLabel[3] = new GLabel(this, 180, 80, 60, 14);
+  analogLabel[3] = new GLabel(this, 215, 38, 60, 14);
   analogLabel[3].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[3].setText("3");
   analogLabel[3].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[3].setOpaque(false);
   analogLabel[3].setVisible(false);
 
-  analogLabel[4] = new GLabel(this, 230, 80, 60, 14);
+  analogLabel[4] = new GLabel(this, 265, 38, 60, 14);
   analogLabel[4].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[4].setText("4");
   analogLabel[4].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[4].setOpaque(false);
   analogLabel[4].setVisible(false);
 
-  analogLabel[5] = new GLabel(this, 280, 80, 60, 14);
+  analogLabel[5] = new GLabel(this, 310, 38, 60, 14);
   analogLabel[5].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[5].setText("5");
   analogLabel[5].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[5].setOpaque(false);
   analogLabel[5].setVisible(false);
 
-  analogLabel[6] = new GLabel(this, 330, 80, 60, 14);
+  analogLabel[6] = new GLabel(this, 355, 38, 60, 14);
   analogLabel[6].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[6].setText("6");
   analogLabel[6].setLocalColorScheme(GCScheme.BLUE_SCHEME);
   analogLabel[6].setOpaque(false);
   analogLabel[6].setVisible(false);
 
-  analogLabel[7] = new GLabel(this, 380, 80, 60, 14);
+  analogLabel[7] = new GLabel(this, 395, 38, 60, 14);
   analogLabel[7].setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   analogLabel[7].setText("7");
   analogLabel[7].setLocalColorScheme(GCScheme.BLUE_SCHEME);
@@ -2429,6 +2497,71 @@ public void createGUI() {
   analogLabel[7].setVisible(false);
 
 
+
+  regId = new GTextField(this, 20, 75, 30, 20, G4P.SCROLLBARS_NONE);
+  regId.setText("1");
+  regId.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regId.setOpaque(true);
+  regId.addEventHandler(this, "regId_change");
+  
+  regNum = new GTextField(this, 105, 75, 30, 20, G4P.SCROLLBARS_NONE);
+  regNum.setText("0");
+  regNum.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regNum.setOpaque(true);
+  regNum.addEventHandler(this, "regNum_change");
+  
+  
+  regLength = new GTextField(this, 185, 75, 30, 20, G4P.SCROLLBARS_NONE);
+  regLength.setText("1");
+  regLength.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regLength.setOpaque(true);
+  regLength.addEventHandler(this, "regLength_change");
+  
+  regVal = new GTextField(this, 270, 75, 40, 20, G4P.SCROLLBARS_NONE);
+  regVal.setText("0");
+  regVal.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regVal.setOpaque(true);
+  regVal.addEventHandler(this, "regVal_change");
+
+
+
+  regIdLabel = new GLabel(this, 5, 78, 120, 14);
+  regIdLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  regIdLabel.setText("ID");
+  regIdLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regIdLabel.setOpaque(false);
+
+  regNumLabel = new GLabel(this, 65, 78, 120, 14);
+  regNumLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  regNumLabel.setText("Reg #");
+  regNumLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regNumLabel.setOpaque(false);
+  
+  regLengthLabel = new GLabel(this, 145, 78, 120, 14);
+  regLengthLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  regLengthLabel.setText("Length");
+  regLengthLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regLengthLabel.setOpaque(false);
+
+
+  regValLabel = new GLabel(this, 215, 78, 120, 14);
+  regValLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
+  regValLabel.setText("Value");
+  regValLabel.setLocalColorScheme(GCScheme.BLUE_SCHEME);
+  regValLabel.setOpaque(false);
+
+
+  setRegisterButton = new GButton(this, 310, 75, 75, 20);
+  setRegisterButton.setText("Set Register");
+  setRegisterButton.addEventHandler(this, "setRegisterButton_click");
+  setRegisterButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+
+  getRegisterButton = new GButton(this, 389, 75, 75, 20);
+  getRegisterButton.setText("Get Register");
+  getRegisterButton.addEventHandler(this, "getRegisterButton_click");
+  getRegisterButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+
+  
 
 
 //400 470
@@ -2534,12 +2667,16 @@ public void createGUI() {
   poseToWorkspace.setText(" Load Pose    <--");
   poseToWorkspace.addEventHandler(this, "poseToWorkspace_click");
   
+
   
   pauseTextField = new GTextField(this, 190, 320, 60, 20, G4P.SCROLLBARS_NONE);
   pauseTextField.setText("1000");
   pauseTextField.setLocalColorScheme(GCScheme.BLUE_SCHEME);
   pauseTextField.setOpaque(true);
   pauseTextField.addEventHandler(this, "pauseTextField_change");
+
+
+
 
 
 
@@ -2649,6 +2786,19 @@ public void createGUI() {
   ioPanel.addControl(analogLabel[7]);
   
   
+  ioPanel.addControl(regId);  
+  ioPanel.addControl(regIdLabel);  
+  ioPanel.addControl(regLength);  
+  ioPanel.addControl(regLengthLabel);  
+  ioPanel.addControl(regNum);  
+  ioPanel.addControl(regNumLabel);  
+  ioPanel.addControl(regVal);  
+  ioPanel.addControl(regValLabel);
+  ioPanel.addControl(setRegisterButton);  
+  ioPanel.addControl(getRegisterButton);
+  
+  
+    
 
   
   
