@@ -470,8 +470,19 @@ void delayMs(int ms)
  ******************************************************/ 
 void sendCommanderPacket(int x, int y, int z, int wristAngle, int wristRotate, int gripper, int delta, int button, int extended)
 {
-   sPorts[armPortIndex].clear();//clear the serial port for the next round of communications
-   
+  
+  
+      try
+    {
+       sPorts[armPortIndex].clear();//clear the serial port for the next round of communications  
+    }
+    //catch an exception in case of serial port problems
+    catch(Exception e)
+    {
+       printlnDebug("Error: serial port problem");
+       return;
+    }   
+    
   //convert each positional integer into 2 bytes using intToBytes()
   byte[] xValBytes = intToBytes(x);
   byte[] yValBytes = intToBytes(y);

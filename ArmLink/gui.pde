@@ -57,7 +57,7 @@ GSlider xSlider, ySlider, zSlider, wristAngleSlider, wristRotateSlider, gripperS
 GLabel xLabel, yLabel, zLabel, wristAngleLabel, wristRotateLabel, gripperLabel, deltaLabel, extendedLabel,digitalsLabel,analogTextLabel, cameraLabel;
 GLabel pauseLabel;
 //checkboxes for digital output values
-GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox, cameraCheckbox; 
+GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox, cameraCheckbox, setRegisterCheckbox; 
 GCheckbox autoUpdateCheckbox;   //checkbox to enable auto-update mode
 GButton updateButton;           //button to manually update
 GImageButton waitingButton;    //waiting button, unused
@@ -938,7 +938,24 @@ public void cameraCheckbox_change(GCheckbox source, GEvent event)
  // digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
 } 
 
+public void  setRegisterCheckbox_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("setRegisterCheckbox_change - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+    
+      if(source.isSelected())
+    {
+      displayError("Set register is intended for advanced use and has the capablity to change the baud/id of individual servos. Use Caution with this option.", "");
+      setRegisterButton.setVisible(true);
+    }
+    else
+    {
+       setRegisterButton.setVisible(false);
+      
+    }
 
+
+ // digitalButtons[6] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+} 
 
 
 
@@ -2403,6 +2420,7 @@ public void createGUI() {
   cameraCheckbox.addEventHandler(this, "cameraCheckbox_change");
   cameraCheckbox.setText("Activate Camera");
   
+  
   cameraLabel = new GLabel(this, 5, 58, 100, 14);
   cameraLabel.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   cameraLabel.setText("Experimental");
@@ -2410,6 +2428,12 @@ public void createGUI() {
   cameraLabel.setOpaque(false);
   cameraLabel.setVisible(false);
 
+
+  setRegisterCheckbox = new GCheckbox(this, 300, 58, 150, 20);
+  setRegisterCheckbox.setOpaque(false);
+  setRegisterCheckbox.addEventHandler(this, "setRegisterCheckbox_change");
+  setRegisterCheckbox.setText("Enable Set Register");
+  
 
 
   digitalsLabel = new GLabel(this, 5, 20, 100, 14);
@@ -2551,12 +2575,13 @@ public void createGUI() {
   regValLabel.setOpaque(false);
 
 
-  setRegisterButton = new GButton(this, 310, 75, 75, 20);
+  setRegisterButton = new GButton(this, 389, 75, 75, 20);
   setRegisterButton.setText("Set Register");
   setRegisterButton.addEventHandler(this, "setRegisterButton_click");
   setRegisterButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
+  setRegisterButton.setVisible(false);
 
-  getRegisterButton = new GButton(this, 389, 75, 75, 20);
+  getRegisterButton = new GButton(this, 310, 75, 75, 20);
   getRegisterButton.setText("Get Register");
   getRegisterButton.addEventHandler(this, "getRegisterButton_click");
   getRegisterButton.setLocalColorScheme(GCScheme.CYAN_SCHEME);
@@ -2772,6 +2797,7 @@ public void createGUI() {
   
   ioPanel.addControl(cameraCheckbox);
   ioPanel.addControl(cameraLabel);
+  ioPanel.addControl(setRegisterCheckbox);
   
   
   ioPanel.addControl(analogTextLabel);
@@ -3323,12 +3349,26 @@ void setPositionParameters()
   
             
     
-    
+    //hide and change for the snapper arm
   if(currentArm == 5)
   {
 //    modePanel.setVisible(false);
     wristPanel.setVisible(false);
     emergencyStopButton.setVisible(false);
+
+    getRegisterButton.setVisible(false);
+    setRegisterButton.setVisible(false);
+   regIdLabel.setVisible(false);
+   regLengthLabel.setVisible(false);
+   regNumLabel.setVisible(false);
+   regValLabel.setVisible(false);
+   regId.setVisible(false);
+   regLength.setVisible(false);
+   regNum.setVisible(false);
+   regVal.setVisible(false);
+   setRegisterCheckbox.setVisible(false);
+   
+
 
   digitalCheckbox1.setText("2");
   digitalCheckbox2.setText("4");
@@ -3347,6 +3387,20 @@ void setPositionParameters()
   {
     modePanel.setVisible(true);
     wristPanel.setVisible(true);
+    emergencyStopButton.setVisible(true);
+
+    getRegisterButton.setVisible(true);
+    //setRegisterButton.setVisible(true);
+   regIdLabel.setVisible(true);
+   regLengthLabel.setVisible(true);
+   regNumLabel.setVisible(true);
+   regValLabel.setVisible(true);
+   regId.setVisible(true);
+   regLength.setVisible(true);
+   regNum.setVisible(true);
+   regVal.setVisible(true);
+   setRegisterCheckbox.setVisible(true);
+   
   
 
   digitalCheckbox1.setText("1");
