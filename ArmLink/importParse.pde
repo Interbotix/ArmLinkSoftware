@@ -66,6 +66,11 @@ public void readArmFile(File selection)
   int armModeInt;
   String armOrientationString;
   int armOrientationInt;
+  String armDIOString;
+  int armDIOInt;
+  String singleDIOString;
+  int singleDIOInt = 0;
+  
   String tempLine ;
   String[] splitPose = {"","","","","","","",""};
   int[] tempPoseData = {0, 0, 0, 0,0 ,0 ,0 ,0,0};
@@ -136,6 +141,9 @@ public void readArmFile(File selection)
     armOrientationInt = Integer.parseInt(armOrientationString);
     //println(armOrientationString);
 
+    armDIOString = txtFile[4].substring(6, txtFile[4].length());
+    armDIOInt = Integer.parseInt(armDIOString);
+println(armDIOString);
 
     if (armOrientationInt == 1)
     {
@@ -152,13 +160,31 @@ public void readArmFile(File selection)
     for(int j = 0; j < sequenceNumberInt ;j++)
     {
 
-
-
-      tempLine = txtFile[22+(j*6)].replace("    IKSequencingControl(", "");
+       tempLine = "";
+      if(armDIOInt == 0)
+      {
+      tempLine = txtFile[23+(j*6)].replace("    IKSequencingControl(", "");
+      }
+      else if(armDIOInt == 1)
+      {
+      tempLine = txtFile[23+(j*21)].replace("    IKSequencingControl(", "");
+      singleDIOString = txtFile[24+(j*21)].replace("    //DIO", "");
+      
+      
+      
+      
+      
+       println(singleDIOString);
+        singleDIOInt = Integer.parseInt(singleDIOString);
+    
+      }
+      
       tempLine = tempLine.replace(", playState);", "");
 
 
       splitPose = tempLine.split(",");
+      
+      
 
 
      for(int i = 0;i < splitPose.length;i++)
@@ -186,7 +212,7 @@ public void readArmFile(File selection)
          tempPoseData2[4] = tempPoseData[4];
          tempPoseData2[5] = tempPoseData[5];
          tempPoseData2[6] = tempPoseData[6]/16;
-         tempPoseData2[7] = 0;
+         tempPoseData2[7] = singleDIOInt;
          tempPoseData2[8] = tempPoseData[7];
 
 
@@ -210,7 +236,7 @@ public void readArmFile(File selection)
          tempPoseData2[4] = tempPoseData[4];
          tempPoseData2[5] = tempPoseData[5];
          tempPoseData2[6] = tempPoseData[6]/16;
-         tempPoseData2[7] = 0;   
+         tempPoseData2[7] = singleDIOInt;   
          tempPoseData2[8] = tempPoseData[7];      
 
 
@@ -227,7 +253,7 @@ public void readArmFile(File selection)
          tempPoseData2[4] = tempPoseData[4];
          tempPoseData2[5] = tempPoseData[5];
          tempPoseData2[6] = tempPoseData[6]/16;
-         tempPoseData2[7] = 0;
+         tempPoseData2[7] = singleDIOInt;
          tempPoseData2[8] = tempPoseData[7];
         break; 
     }  

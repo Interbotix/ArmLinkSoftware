@@ -57,7 +57,7 @@ GSlider xSlider, ySlider, zSlider, wristAngleSlider, wristRotateSlider, gripperS
 GLabel xLabel, yLabel, zLabel, wristAngleLabel, wristRotateLabel, gripperLabel, deltaLabel, extendedLabel,digitalsLabel,analogTextLabel, cameraLabel;
 GLabel pauseLabel;
 //checkboxes for digital output values
-GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox, cameraCheckbox, setRegisterCheckbox; 
+GCheckbox digitalCheckbox0, digitalCheckbox1, digitalCheckbox2, digitalCheckbox3, digitalCheckbox4, digitalCheckbox5, digitalCheckbox6, digitalCheckbox7, analogCheckbox, cameraCheckbox, setRegisterCheckbox, digitalOutputFileCheckbox; 
 GCheckbox autoUpdateCheckbox;   //checkbox to enable auto-update mode
 GButton updateButton;           //button to manually update
 GImageButton waitingButton;    //waiting button, unused
@@ -867,6 +867,15 @@ public void autoUpdateCheckbox_change(GCheckbox source, GEvent event)
 } 
 
 
+//digitalOutputFileCheckbox
+public void digitalOutputFileCheckbox_change(GCheckbox source, GEvent event) 
+{
+  printlnDebug("digitalOutputFileCheckbox - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+
+  //digitalButtons[0] = source.isSelected();//set the current array item for the corresponding digital output to the current state of the checkbox
+} 
+
+
 //digital output 0 checkbox
 public void digitalCheckbox0_change(GCheckbox source, GEvent event) 
 {
@@ -1185,6 +1194,7 @@ pauseTextField.setText(Integer.toString(pauseCurrent));//set the text field
 //extendedByte
 
 
+
 int buttonByteFromPose = poseData.get(pose)[7];
 
  //I'm sure there's a better way to do this
@@ -1492,6 +1502,16 @@ public void savePoseToFile(File selection)
     poseOutput.print("//Orientation ");
     poseOutput.println(currentOrientation);
     
+    poseOutput.print("//DIO ");
+    if(digitalOutputFileCheckbox.isSelected())
+    {
+    poseOutput.println(1);
+    }
+    else
+    {
+    poseOutput.println(0);
+    }
+    
     //set IK mode based on current IK mode
     poseOutput.println("#include \"Kinematics.h\"");
     poseOutput.println("#include \"GlobalArm.h\"");
@@ -1554,7 +1574,71 @@ public void savePoseToFile(File selection)
          
       
       poseOutput.println(", playState);");
+   
       
+        int[] buttonPins = {1,2,3,4,5,6,7};
+      
+            if(currentArm == 5)
+            {
+              buttonPins[0] = 2;
+              buttonPins[1] = 4;
+              buttonPins[2] = 7;
+              buttonPins[3] = 8;
+              buttonPins[4] = 11;
+              buttonPins[5] = 12;
+              buttonPins[6] = 13;
+            }
+            else
+            {
+              buttonPins[0] = 1;
+              buttonPins[1] = 2;
+              buttonPins[2] = 3;
+              buttonPins[3] = 4;
+              buttonPins[4] = 5;
+              buttonPins[5] = 6;
+              buttonPins[6] = 7;
+              
+            }
+            if(digitalOutputFileCheckbox.isSelected() == true)
+            {      
+              int butByteFromPose = poseData.get(i)[7];
+                               
+  
+              poseOutput.println("    //DIO" + butByteFromPose);
+                      
+                for (int k = 6; k>=0;k--)
+                {
+                  //subtract 2^k from the button byte, if the value is non-negative, then that byte was active
+                  if(butByteFromPose - pow(2,k) >= 0 )
+                  {
+                    butByteFromPose = butByteFromPose - int(pow(2,k));
+              
+              
+                      
+                      poseOutput.println("    pinMode(" + buttonPins[k] + ", OUTPUT);");
+                      poseOutput.println("    digitalWrite(" + buttonPins[k] + ", HIGH);");
+                     
+                     
+               
+                 }
+                 else
+                 {      
+                   
+                   
+                     
+                      poseOutput.println("    pinMode(" + buttonPins[k] + ", OUTPUT);");
+                      poseOutput.println("    digitalWrite(" + buttonPins[k] + ", LOW);");
+                      
+                    
+                  
+                   
+                 }
+               
+               
+               }
+               
+            }
+  
       poseOutput.println("    //###########################################################// ");
       poseOutput.println("");
      
@@ -2375,6 +2459,17 @@ public void createGUI() {
   extendedLabel.setFont(new Font("Dialog", Font.PLAIN, 10));
 
 
+
+
+
+  digitalOutputFileCheckbox = new GCheckbox(this, 5, 430, 150, 20);
+  digitalOutputFileCheckbox.setOpaque(false);
+  digitalOutputFileCheckbox.addEventHandler(this, "digitalOutputFileCheckbox_change");
+  digitalOutputFileCheckbox.setText("Digital Outputs in File");
+  digitalOutputFileCheckbox.setVisible(true);
+  digitalOutputFileCheckbox.setEnabled(true);
+
+
   digitalCheckbox0 = new GCheckbox(this, 5, 20, 28, 20);
   digitalCheckbox0.setOpaque(false);
   digitalCheckbox0.addEventHandler(this, "digitalCheckbox0_change");
@@ -2738,6 +2833,11 @@ public void createGUI() {
   //sequencePanel.addControl(analog1);
   sequencePanel.addControl(playButton);
   sequencePanel.addControl(stopButton);
+  sequencePanel.addControl(digitalOutputFileCheckbox);
+  
+  
+  
+  
   //sequencePanel.addControl(poses.get(0));
   
   sequencePanel.addControl(savePosesButton);
