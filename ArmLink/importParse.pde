@@ -170,15 +170,16 @@ public void readArmFile(File selection)
 
         splitPose[i] = splitPose[i].replaceAll("\\s","") ;
         tempPoseData[i] = Integer.parseInt(splitPose[i]);
-
+        println( tempPoseData[i]); 
       }
 
 
+        println(" "); 
    switch(armModeInt)
     {
        case 1:        
          //x, wrist angle, and wrist rotate must be offset, all others are normal
-         tempPoseData2[0] = tempPoseData[0] - 512;
+         tempPoseData2[0] = tempPoseData[0] ;
          tempPoseData2[1] = tempPoseData[1];
          tempPoseData2[2] = tempPoseData[2];
          tempPoseData2[3] = tempPoseData[3];
@@ -189,6 +190,8 @@ public void readArmFile(File selection)
          tempPoseData2[8] = tempPoseData[7];
 
 
+        print("x" ); 
+        println( tempPoseData2[0]); 
          break;
         
        case 2:

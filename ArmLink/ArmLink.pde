@@ -525,6 +525,8 @@ public void draw()
       //However in autoUpdate mode, the program should not change this flag (only unchecking the auto update flag should set the flag to false)
       if (autoUpdateCheckbox.isSelected() == false)
       {
+        
+        updateButtonByte();
         sendCommanderPacket(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
         updateFlag = false;//only set the updateFlag to false if the autoUpdate flag is false
         //send normally
@@ -534,6 +536,8 @@ public void draw()
       {
         //autoupdate,so send with check
            //send commander packet with the current global currentOffset coordinates, don't send the same data twice in a row
+           
+        updateButtonByte();
         sendCommanderPacketWithCheck(xCurrentOffset, yCurrentOffset, zCurrentOffset, wristAngleCurrentOffset, wristRotateCurrentOffset, gripperCurrentOffset, deltaCurrentOffset, digitalButtonByte, extendedByte);  
  
         //use this oppurtunity to set the extended byte to 0 if autoupdate is enabled - this way the extended packet only gets sent once

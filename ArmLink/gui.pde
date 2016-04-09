@@ -472,7 +472,7 @@ public void setBackhoe()
 //process when manual update button is pressed
 public void updateButton_click(GButton source, GEvent event) 
 {
-  printlnDebug("backhoeModeButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
+  printlnDebug("updateButton - GButton event occured " + System.currentTimeMillis()%10000000, 1 );
   
   updateFlag = true;//set update flag to signal sending an update on the next cycle
   updateOffsetCoordinates();//update the coordinates to offset based on the current mode
@@ -1116,7 +1116,8 @@ poseToWorkspaceInternal(currentPose);
 
 public void workspaceToPoseInternal()
 {  
-
+  updateButtonByte();
+  print ("Digital Button " + digitalButtonByte); 
   int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte, pauseCurrent  };
   
   poseData.set(currentPose, tempPose);
@@ -1197,37 +1198,37 @@ int buttonByteFromPose = poseData.get(pose)[7];
       {
         case 0:
         digitalCheckbox1.setSelected(true);
-        digitalButtons[1] = true;
+        digitalButtons[0] = true;
         break;
         
         case 1:
         digitalCheckbox2.setSelected(true);
-        digitalButtons[2] = true;
+        digitalButtons[1] = true;
         break;
      
         case 2:
         digitalCheckbox3.setSelected(true);
-        digitalButtons[3] = true;
+        digitalButtons[2] = true;
         break;
         
         case 3:
         digitalCheckbox4.setSelected(true);
-        digitalButtons[4] = true;
+        digitalButtons[3] = true;
         break;
         
         case 4:
         digitalCheckbox5.setSelected(true);
-        digitalButtons[5] = true;
+        digitalButtons[4] = true;
         break;
         
         case 5:
         digitalCheckbox6.setSelected(true);
-        digitalButtons[6] = true;
+        digitalButtons[5] = true;
         break;
         
         case 6:
         digitalCheckbox7.setSelected(true);
-        digitalButtons[7] = true;
+        digitalButtons[6] = true;
         break;
         /*
         case 7:
@@ -1244,37 +1245,37 @@ int buttonByteFromPose = poseData.get(pose)[7];
       {
         case 0:
         digitalCheckbox1.setSelected(false);
-        digitalButtons[1] = false;
+        digitalButtons[0] = false;
         break;
         
         case 1:
         digitalCheckbox2.setSelected(false);
-        digitalButtons[2] = false;
+        digitalButtons[1] = false;
         break;
      
         case 2:
         digitalCheckbox3.setSelected(false);
-        digitalButtons[3] = false;
+        digitalButtons[2] = false;
         break;
         
         case 3:
         digitalCheckbox4.setSelected(false);
-        digitalButtons[4] = false;
+        digitalButtons[3] = false;
         break;
         
         case 4:
         digitalCheckbox5.setSelected(false);
-        digitalButtons[5] = false;
+        digitalButtons[4] = false;
         break;
         
         case 5:
         digitalCheckbox6.setSelected(false);
-        digitalButtons[6] = false;
+        digitalButtons[5] = false;
         break;
         
         case 6:
         digitalCheckbox7.setSelected(false);
-        digitalButtons[7] = false;
+        digitalButtons[6] = false;
         break;
         /*
         case 7:
@@ -1288,6 +1289,8 @@ int buttonByteFromPose = poseData.get(pose)[7];
  
  
  }
+ 
+  updateButtonByte();
 
 
 }
@@ -1619,6 +1622,7 @@ public void newPose_click(GButton source, GEvent event)
   sequencePanel.addControl(poses.get(numPanels));
   numPanels++;
   
+  updateButtonByte();
    int[] tempPose = {xCurrent, yCurrent, zCurrent,wristAngleCurrent,wristRotateCurrent,gripperCurrent,deltaCurrent,digitalButtonByte, pauseCurrent  };
   
   poseData.set(poses.size()-1, tempPose);
@@ -2672,7 +2676,7 @@ public void createGUI() {
   
  
   movePosesDown = new GButton(this, 5, 280, 80, 30);
-  movePosesDown.setText("Sccroll Down");
+  movePosesDown.setText("Scroll Down");
   movePosesDown.addEventHandler(this, "movePosesDown_click");
   
   
