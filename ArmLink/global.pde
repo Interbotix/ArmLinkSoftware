@@ -24,7 +24,7 @@
  *   delta       |  delta         |  delta          |   n/a                 |
 ********************************************************************************/
 
-float programVersion = 1.1;
+float programVersion = 1.101;
 
 int regIdCurrent = 0;
 int regNumCurrent = 0;

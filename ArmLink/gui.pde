@@ -1496,6 +1496,31 @@ public void savePoseToFile(File selection)
     }  
     
     
+      int[] buttonPins = {1,2,3,4,5,6,7};
+
+      if(currentArm == 5)
+      {
+        buttonPins[0] = 2;
+        buttonPins[1] = 4;
+        buttonPins[2] = 7;
+        buttonPins[3] = 8;
+        buttonPins[4] = 11;
+        buttonPins[5] = 12;
+        buttonPins[6] = 13;
+      }
+      else
+      {
+        buttonPins[0] = 1;
+        buttonPins[1] = 2;
+        buttonPins[2] = 3;
+        buttonPins[3] = 4;
+        buttonPins[4] = 5;
+        buttonPins[5] = 6;
+        buttonPins[6] = 7;
+        
+      }
+      
+            
   
   
   
@@ -1539,6 +1564,17 @@ public void savePoseToFile(File selection)
     poseOutput.println("");
     poseOutput.println("void playSequence()");
     poseOutput.println("{");
+    
+    
+    for(int l =0; l<7;l++)
+    {
+      poseOutput.println("    pinMode(" + buttonPins[l] + ", OUTPUT);");
+
+    }
+  
+  
+  
+  
     poseOutput.println("  delay(500);");
     poseOutput.println("  Serial.println(\"Sequencing Mode Active.\"); ");
     poseOutput.println("  Serial.println(\"Press Pushbutton  to stop\");");
@@ -1565,6 +1601,42 @@ public void savePoseToFile(File selection)
       poseOutput.print(i+1);
       poseOutput.println("");
       poseOutput.println("    //###########################################################// ");
+      
+      
+      
+            if(digitalOutputFileCheckbox.isSelected() == true)
+            {      
+              int butByteFromPose = poseData.get(i)[7];
+                               
+  
+              poseOutput.println("    //DIO" + butByteFromPose);
+                      
+                for (int k = 6; k>=0;k--)
+                {
+                  //subtract 2^k from the button byte, if the value is non-negative, then that byte was active
+                  if(butByteFromPose - pow(2,k) >= 0 )
+                  {
+                    butByteFromPose = butByteFromPose - int(pow(2,k));
+                      poseOutput.println("    digitalWrite(" + buttonPins[k] + ", HIGH);");
+                     
+                     
+               
+                 }
+                 else
+                 {      
+                      poseOutput.println("    digitalWrite(" + buttonPins[k] + ", LOW);");
+                                       
+                  
+                   
+                 }
+               
+               
+               }
+               
+            }
+            
+            
+            
       // 100, 150, 200, 0, 1500, 1000, 1000);
       poseOutput.print("    IKSequencingControl(");
       
@@ -1591,68 +1663,7 @@ public void savePoseToFile(File selection)
       poseOutput.println(", playState);");
    
       
-        int[] buttonPins = {1,2,3,4,5,6,7};
-      
-            if(currentArm == 5)
-            {
-              buttonPins[0] = 2;
-              buttonPins[1] = 4;
-              buttonPins[2] = 7;
-              buttonPins[3] = 8;
-              buttonPins[4] = 11;
-              buttonPins[5] = 12;
-              buttonPins[6] = 13;
-            }
-            else
-            {
-              buttonPins[0] = 1;
-              buttonPins[1] = 2;
-              buttonPins[2] = 3;
-              buttonPins[3] = 4;
-              buttonPins[4] = 5;
-              buttonPins[5] = 6;
-              buttonPins[6] = 7;
-              
-            }
-            if(digitalOutputFileCheckbox.isSelected() == true)
-            {      
-              int butByteFromPose = poseData.get(i)[7];
-                               
-  
-              poseOutput.println("    //DIO" + butByteFromPose);
-                      
-                for (int k = 6; k>=0;k--)
-                {
-                  //subtract 2^k from the button byte, if the value is non-negative, then that byte was active
-                  if(butByteFromPose - pow(2,k) >= 0 )
-                  {
-                    butByteFromPose = butByteFromPose - int(pow(2,k));
-              
-              
-                      
-                      poseOutput.println("    pinMode(" + buttonPins[k] + ", OUTPUT);");
-                      poseOutput.println("    digitalWrite(" + buttonPins[k] + ", HIGH);");
-                     
-                     
-               
-                 }
-                 else
-                 {      
-                   
-                   
-                     
-                      poseOutput.println("    pinMode(" + buttonPins[k] + ", OUTPUT);");
-                      poseOutput.println("    digitalWrite(" + buttonPins[k] + ", LOW);");
-                      
-                    
-                  
-                   
-                 }
-               
-               
-               }
-               
-            }
+
   
       poseOutput.println("    //###########################################################// ");
       poseOutput.println("");
@@ -3490,7 +3501,7 @@ void setPositionParameters()
   {
 //    modePanel.setVisible(false);
     wristPanel.setVisible(false);
-    emergencyStopButton.setVisible(false);
+    emergencyStopButton.setVisible(true);
 
     getRegisterButton.setVisible(false);
     setRegisterButton.setVisible(false);
@@ -3601,7 +3612,15 @@ println(gripperCurrent);
 public void emergencyStopMessageDialog() {
   String message = "Your Arms's servos should now be disabled. <br />If your arm has been damaged or cannot be moved, unplug power immediately.<br /> Setting a new arm move, position, or disconnecting the program will re-active your arm is power is plugged in.";
   String title = "Emergency Stop";
+  //snapper vs everything else
+  if(currentArm == 5)
+  {
+      message= "Your Arms's servos should now be disabled. <br />If your arm has been damaged or cannot be moved, unplug power immediately.<br /> You will need to disconnect the program and reset your arm before continuing";
+  
+  }
   G4P.showMessage(this, message, title, G4P.WARNING);
+  
+    
 }
 
 

@@ -1,4 +1,4 @@
-/***********************************************************************************
+ /***********************************************************************************
  *  }--\     InterbotiX     /--{
  *      |    Arm Link      |
  *   __/                    \__
@@ -178,8 +178,8 @@ println(armDIOString);
       }
       else if(armDIOInt == 1)
       {
-      tempLine = txtFile[23+(j*21)].replace("    IKSequencingControl(", "");
-      singleDIOString = txtFile[24+(j*21)].replace("    //DIO", "");
+      tempLine = txtFile[38+(j*14)].replace("    IKSequencingControl(", "");
+      singleDIOString = txtFile[30+(j*14)].replace("    //DIO", "");
       
       
       
