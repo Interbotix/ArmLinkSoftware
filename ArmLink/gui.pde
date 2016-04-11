@@ -176,6 +176,7 @@ public void orientStraightButton_click(GButton source, GEvent event)
 { 
   printlnDebug("armstraight - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
   
+setOrientStraight();
 
 } 
 public void setOrientStraight()
@@ -183,7 +184,7 @@ public void setOrientStraight()
   if(currentOrientation != 1)
   {
    clearPoses();
-
+  
   }
   if (currentMode == 0)
   {
@@ -208,6 +209,7 @@ public void setOrientStraight()
 public void orient90Button_click(GButton source, GEvent event) 
 {
   printlnDebug("arm90 - GCheckbox event occured " + System.currentTimeMillis()%10000000, 1 );
+      setOrient90();
 
 } 
 
@@ -953,7 +955,10 @@ public void  setRegisterCheckbox_change(GCheckbox source, GEvent event)
     
       if(source.isSelected())
     {
-      displayError("Set register is intended for advanced use and has the capablity to change the baud/id of individual servos. Use Caution with this option.", "");
+      //displayError("Set register is intended for advanced use and has the capablity to change the baud/id of individual servos. Use Caution with this option.", "");
+      genericMessageDialog("Set Register", "Set register is intended for advanced use and has the capablity to change<br /> the baud/id of individual servos. Use Caution with this option.", G4P.WARNING);
+
+      
       setRegisterButton.setVisible(true);
     }
     else
@@ -1019,12 +1024,21 @@ public void handlePanelEvents(GPanel source, GEvent event)
   
   if(source.isCollapsed() == false)
   {
+    
+    println(currentPose + " " +  poses.size() +" Select pose, collas" + System.currentTimeMillis()%10000000 );
+    
     currentPose = int(source.getText());
+    println(currentPose + " " +  poses.size() +" Select pose, collas" + System.currentTimeMillis()%10000000 );
+
+
     for(int i = 0; i < poses.size();i++)
     {
       if(i != currentPose)
       {
+        
         poses.get(i).setCollapsed(true);
+        poses.get(i).forceBufferUpdate();
+        
       }
     }
     
@@ -1374,6 +1388,7 @@ public void emergencyStopButton_click(GButton source, GEvent event)
   sendCommanderPacket(0, 0, 0, 0, 0, 0, 0, 0, 17);    //send a commander style packet - the first 8 bytes are inconsequntial, only the last byte matters. '17' is the extended byte that will stop the arm
   updateFlag = false;
   autoUpdateCheckbox.setSelected(false);
+  emergencyStopMessageDialog();
   
 }
 
@@ -1700,10 +1715,15 @@ public void newPose_click(GButton source, GEvent event)
   
   poses.add(new GPanel(this, panelsX, newY, 50, 18, numPanels + ""));
   poses.get(numPanels).setCollapsible(true);
-  poses.get(numPanels).setCollapsed(true);//there is an odd bug if this is set to 'setCollapsed(false)' where the first time you click on the panel, it jumps to the bottom. setting 'setCollapse(true) seems to  aleviate this.
+  poses.get(numPanels).setCollapsed(false);  //fixed??//there is an odd bug if this is set to 'setCollapsed(false)' where the first time you click on the panel, it jumps to the bottom. setting 'setCollapse(true) seems to  aleviate this.
   poses.get(numPanels).setLocalColorScheme(numPanels%8);
   
   sequencePanel.addControl(poses.get(numPanels));
+  
+  
+  currentPose = numPanels;
+       
+       
   numPanels++;
   
   updateButtonByte();
@@ -1742,7 +1762,19 @@ public void newPose_click(GButton source, GEvent event)
     println("");
   }
 
-   
+       println("curr " + currentPose);
+    for(int i = 0; i < poses.size();i++)
+    {
+      if(currentPose != i)
+      {
+       println("collapse" + i);
+       poses.get(i).setCollapsed(true);
+       poses.get(i).forceBufferUpdate();
+      }
+        
+    }
+    
+
   
   
 } //_CODE_:button2:332945:
@@ -1972,7 +2004,7 @@ public void createGUI() {
 
 
   if (frame != null)
-    frame.setTitle("InterbotiX Arm Control");
+    surface.setTitle("InterbotiX Arm Link " + programVersion);
 
 
 
@@ -2462,10 +2494,10 @@ public void createGUI() {
 
 
 
-  digitalOutputFileCheckbox = new GCheckbox(this, 5, 430, 150, 20);
+  digitalOutputFileCheckbox = new GCheckbox(this, 90, 360, 75, 40);
   digitalOutputFileCheckbox.setOpaque(false);
   digitalOutputFileCheckbox.addEventHandler(this, "digitalOutputFileCheckbox_change");
-  digitalOutputFileCheckbox.setText("Digital Outputs in File");
+  digitalOutputFileCheckbox.setText("Save Digital Outputs");
   digitalOutputFileCheckbox.setVisible(true);
   digitalOutputFileCheckbox.setEnabled(true);
 
@@ -3561,3 +3593,48 @@ println(wristAngleCurrent);
 println(wristRotateCurrent);
 println(gripperCurrent);
 }//end set postiion parameters
+
+
+
+
+// G4P code for message dialogs
+public void emergencyStopMessageDialog() {
+  String message = "Your Arms's servos should now be disabled. <br />If your arm has been damaged or cannot be moved, unplug power immediately.<br /> Setting a new arm move, position, or disconnecting the program will re-active your arm is power is plugged in.";
+  String title = "Emergency Stop";
+  G4P.showMessage(this, message, title, G4P.WARNING);
+}
+
+
+
+public void setRegisterMessageDialog() 
+{
+  String message = "";
+  String title = "Set Register";
+  G4P.showMessage(this, message, title, G4P.WARNING);
+}
+
+public void genericMessageDialog(String title, String message, int mtype) {
+  //// Determine message type
+  //int mtype;
+  //switch(md_mtype) {
+  //default:
+  //case 0: 
+  //  mtype = G4P.PLAIN; 
+  //  break;
+  //case 1: 
+  //  mtype = G4P.ERROR; 
+  //  break;
+  //case 2: 
+  //  mtype = G4P.INFO; 
+  //  break;
+  //case 3: 
+  //  mtype = G4P.WARNING; 
+  //  break;
+  //case 4: 
+  //  mtype = G4P.QUERY; 
+  //  break;
+  //}
+ // String message = "Your Arms's servos should now be disabled. If your arm has been damaged or cannot be moved, unplug power immediately. Setting a new arm move, position, or disconnecting the program will re-active your arm is power is plugged in.";
+  //String title = "Emergency Stop";
+  G4P.showMessage(this, message, title, mtype);
+}

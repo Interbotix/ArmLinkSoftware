@@ -24,7 +24,10 @@ public void readArmFile(File selection)
   {
 
     loop();
-    displayError("No File Selected.","");
+ //  displayError("No File Selected.","");
+    genericMessageDialog("File Error", "No File Selected.", G4P.WARNING);
+
+
     return;
   }
 
@@ -47,7 +50,10 @@ public void readArmFile(File selection)
       {
         txtFile = null;
         loop();
-        displayError("Problem With File.","");
+        displayError("","");
+        
+         genericMessageDialog("File Error", "Problem With File.", G4P.WARNING);
+    
         return;
       }
 
@@ -90,7 +96,9 @@ public void readArmFile(File selection)
     {
 
       loop();
-      displayError("Problem With File.","");
+      //displayError("Problem With File.","");
+      
+         genericMessageDialog("File Error", "Problem With File.", G4P.WARNING);
       return;
       
     }
@@ -101,7 +109,10 @@ public void readArmFile(File selection)
     {
       loop();
       printlnDebug("Wrong Arm"); 
-      displayError("Incorrect File - File for the wrong Arm or the wrong type of file","");
+      //displayError("Incorrect File - File for the wrong Arm or the wrong type of file","");
+      
+         genericMessageDialog("File Error", "Incorrect File - File for the wrong Arm or the wrong type of file", G4P.WARNING);
+         
       return;
     }
 
@@ -174,7 +185,7 @@ println(armDIOString);
       
       
       
-       println(singleDIOString);
+       println("DIOd" + singleDIOString);
         singleDIOInt = Integer.parseInt(singleDIOString);
     
       }

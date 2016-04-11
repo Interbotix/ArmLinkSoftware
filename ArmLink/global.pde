@@ -24,6 +24,7 @@
  *   delta       |  delta         |  delta          |   n/a                 |
 ********************************************************************************/
 
+float programVersion = 1.1;
 
 int regIdCurrent = 0;
 int regNumCurrent = 0;
@@ -240,5 +241,3 @@ float snapperElbowKnobRotation = 0;//-PI*1/3;
 
 
 //END DEFAULT ARM PARAMETERS 
-
-
