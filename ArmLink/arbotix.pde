@@ -305,7 +305,10 @@ boolean putArmToSleep()
   else
   {
     printlnDebug("Sleep mode-No return packet detected"); 
-    displayError("There was a problem putting the arm in sleep mode","");
+    //displayError("There was a problem putting the arm in sleep mode","");
+    
+    genericMessageDialog("Arm Error", "There was a problem putting the arm in sleep mode.", G4P.WARNING);
+    
     return(false); 
   }
 }
@@ -401,7 +404,9 @@ boolean changeArmMode()
   {
     printlnDebug("No Response - Failure?"); 
     
-    displayError("There was a problem setting the arm mode","");
+    //displayError("There was a problem setting the arm mode","");
+    
+    genericMessageDialog("Arm Error", "There was a problem setting the arm mode.", G4P.WARNING);
     
     return(false); 
   }
@@ -755,4 +760,3 @@ int registerRead()
   
 
 }
-

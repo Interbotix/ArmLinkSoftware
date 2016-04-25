@@ -239,50 +239,55 @@ public void draw()
         displayError("Unable to open selected serial port" + serialList.getSelectedText() +". See link for possible solutions.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
       }
     }
-
-    //check to see if the serial port connection has been made
-    if (sPorts[selectedSerialPort] != null)
-    {
-
-      //try to communicate with arm
-      if (checkArmStartup() == true)
-      {       
-        //disable connect button and serial list
-        connectButton.setEnabled(false);
-        connectButton.setAlpha(128);
-        serialList.setEnabled(false);
-        serialList.setAlpha(128);
-        autoConnectButton.setEnabled(false);
-        autoConnectButton.setAlpha(128);
-        //enable disconnect button
-        disconnectButton.setEnabled(true);
-        disconnectButton.setAlpha(255);
-
-        //enable & set visible control and mode panel
-        modePanel.setVisible(true);
-        modePanel.setEnabled(true);
-        controlPanel.setVisible(true);
-        controlPanel.setEnabled(true);
-        sequencePanel.setVisible(true);
-        sequencePanel.setEnabled(true);
-        ioPanel.setVisible(true);
-        ioPanel.setEnabled(true);
-        delayMs(100);//short delay 
-        setCartesian();
-        statusLabel.setText("Connected");
-      }
-
-      //if arm is not found return an error
-      else  
+      if(selectedSerialPort != -1)
       {
-        sPorts[selectedSerialPort].stop();
-        //      sPorts.get(selectedSerialPort) = null;
-        sPorts[selectedSerialPort] = null;
-        printlnDebug("No Arm Found on port "+serialList.getSelectedText()) ;
-
-        displayError("No Arm found on serial port" + serialList.getSelectedText() +". Make sure power is on and the arm is connected to the computer.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
-
-        statusLabel.setText("Not Connected");
+        //check to see if the serial port connection has been made
+        if (sPorts[selectedSerialPort] != null)
+        {
+    
+          //try to communicate with arm
+          if (checkArmStartup() == true)
+          {       
+            //disable connect button and serial list
+            connectButton.setEnabled(false);
+            connectButton.setAlpha(128);
+            serialList.setEnabled(false);
+            serialList.setAlpha(128);
+            autoConnectButton.setEnabled(false);
+            autoConnectButton.setAlpha(128);
+            //enable disconnect button
+            disconnectButton.setEnabled(true);
+            disconnectButton.setAlpha(255);
+    
+            //enable & set visible control and mode panel
+            modePanel.setVisible(true);
+            modePanel.setEnabled(true);
+            controlPanel.setVisible(true);
+            controlPanel.setEnabled(true);
+            sequencePanel.setVisible(true);
+            sequencePanel.setEnabled(true);
+            ioPanel.setVisible(true);
+            ioPanel.setEnabled(true);
+            delayMs(100);//short delay 
+            setCartesian();
+            statusLabel.setText("Connected");
+          }
+    
+          //if arm is not found return an error
+          else  
+          {
+            sPorts[selectedSerialPort].stop();
+            //      sPorts.get(selectedSerialPort) = null;
+            sPorts[selectedSerialPort] = null;
+            printlnDebug("No Arm Found on port "+serialList.getSelectedText()) ;
+    
+            //displayError("No Arm found on serial port" + serialList.getSelectedText() +". Make sure power is on and the arm is connected to the computer.", "http://learn.trossenrobotics.com/arbotix/8-advanced-used-of-the-tr-dynamixel-servo-tool");
+             genericMessageDialog("Arm Error", "No Arm found on serial port" + serialList.getSelectedText() +". <br /> Make sure power is on and the arm is connected to the computer.", G4P.WARNING);
+    
+            
+            
+            statusLabel.setText("Not Connected");
+          }
       }
     }
 
@@ -429,7 +434,11 @@ public void draw()
       disconnectButton.setAlpha(128);
       //disable & set invisible control and mode panel
 
-      displayError("No Arm found using auto seach. Please check power and connections", "");
+      //displayError("No Arm found using auto seach. Please check power and connections", "");
+      
+      genericMessageDialog("Arm Not Found", "No Arm found using auto seach. <br />Please check power and connections.", G4P.WARNING);
+        
+      
       statusLabel.setText("Not Connected");
     }
     //stop all serial ports without an arm connected 
@@ -666,6 +675,7 @@ public void draw()
         if (i == lastPose)
         {
           poses.get(i).setCollapsed(false);
+          poses.get(i).forceBufferUpdate();
           poseToWorkspaceInternal(lastPose);
           updateFlag = true;//set update flag to signal sending an update on the next cycle
           updateOffsetCoordinates();//update the coordinates to offset based on the current mode
@@ -676,6 +686,7 @@ public void draw()
         } else
         {
           poses.get(i).setCollapsed(true);
+          poses.get(i).forceBufferUpdate();
         }
       }
       lastPose = lastPose + 1;

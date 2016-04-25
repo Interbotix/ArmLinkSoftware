@@ -1,4 +1,4 @@
-/***********************************************************************************
+ /***********************************************************************************
  *  }--\     InterbotiX     /--{
  *      |    Arm Link      |
  *   __/                    \__
@@ -24,7 +24,10 @@ public void readArmFile(File selection)
   {
 
     loop();
-    displayError("No File Selected.","");
+ //  displayError("No File Selected.","");
+    genericMessageDialog("File Error", "No File Selected.", G4P.WARNING);
+
+
     return;
   }
 
@@ -47,7 +50,10 @@ public void readArmFile(File selection)
       {
         txtFile = null;
         loop();
-        displayError("Problem With File.","");
+        displayError("","");
+        
+         genericMessageDialog("File Error", "Problem With File.", G4P.WARNING);
+    
         return;
       }
 
@@ -90,7 +96,9 @@ public void readArmFile(File selection)
     {
 
       loop();
-      displayError("Problem With File.","");
+      //displayError("Problem With File.","");
+      
+         genericMessageDialog("File Error", "Problem With File.", G4P.WARNING);
       return;
       
     }
@@ -101,7 +109,10 @@ public void readArmFile(File selection)
     {
       loop();
       printlnDebug("Wrong Arm"); 
-      displayError("Incorrect File - File for the wrong Arm or the wrong type of file","");
+      //displayError("Incorrect File - File for the wrong Arm or the wrong type of file","");
+      
+         genericMessageDialog("File Error", "Incorrect File - File for the wrong Arm or the wrong type of file", G4P.WARNING);
+         
       return;
     }
 
@@ -167,14 +178,14 @@ println(armDIOString);
       }
       else if(armDIOInt == 1)
       {
-      tempLine = txtFile[23+(j*21)].replace("    IKSequencingControl(", "");
-      singleDIOString = txtFile[24+(j*21)].replace("    //DIO", "");
+      tempLine = txtFile[38+(j*14)].replace("    IKSequencingControl(", "");
+      singleDIOString = txtFile[30+(j*14)].replace("    //DIO", "");
       
       
       
       
       
-       println(singleDIOString);
+       println("DIOd" + singleDIOString);
         singleDIOInt = Integer.parseInt(singleDIOString);
     
       }
