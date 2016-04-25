@@ -1565,13 +1565,14 @@ public void savePoseToFile(File selection)
     poseOutput.println("void playSequence()");
     poseOutput.println("{");
     
+      if(digitalOutputFileCheckbox.isSelected() == true)
+      {  
+        for(int l =0; l<7;l++)
+        {
+          poseOutput.println("    pinMode(" + buttonPins[l] + ", OUTPUT);");
     
-    for(int l =0; l<7;l++)
-    {
-      poseOutput.println("    pinMode(" + buttonPins[l] + ", OUTPUT);");
-
-    }
-  
+        }
+      }
   
   
   
